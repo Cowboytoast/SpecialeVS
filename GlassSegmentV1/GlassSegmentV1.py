@@ -17,3 +17,5 @@ def func(tal, bogstave):
     return bogstave
 
 print("blah blah")
+
+print("Mit første forsøg")
