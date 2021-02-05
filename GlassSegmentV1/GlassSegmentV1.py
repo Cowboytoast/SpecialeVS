@@ -18,3 +18,5 @@ def func(tal, bogstave):
 
 def func2(tal2, bogstave2):
     return bogstave2
+
+print("blah blah")
