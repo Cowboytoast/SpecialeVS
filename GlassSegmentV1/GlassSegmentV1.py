@@ -16,7 +16,4 @@ def func(tal, bogstave):
         print(bogstave)
     return bogstave
 
-def func2(tal2, bogstave2):
-    return bogstave2
-
 print("blah blah")
