@@ -56,6 +56,7 @@ def ContourImage(img):
     drawing = cv2.cvtColor(drawing, cv2.COLOR_BGR2GRAY)
     return drawing
 
+print("test")
 # * Load image and resize
 img = cv2.imread('IMG_0005_cropped.png')
 img_screensized = ResizeToFit(img)
