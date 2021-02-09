@@ -1,21 +1,24 @@
 import cv2
-print("hej")
-print(("hej igen"))
-print(("hej igen igen"))
-bla = 2
-if (bla + (bla+2)) == 4:
-    print("hej 2 er 4")
-else:
-    print("NEJ")
+import numpy as np
+import matplotlib.pyplot as plt
 
+img = cv2.imread('IMG_0005_cropped.png')
 
-def func(tal, bogstave):
-    if tal > 5:
-        print("tal stor")
-    else:
-        print(bogstave)
-    return bogstave
+imwidth = img.shape[1]
+imheight = img.shape[0]
 
-print("blah blah")
+des_width = int(imwidth * 0.25)
+des_height = int(imheight * 0.25)
+des_dim = (des_width, des_height)
+img_screensized = cv2.resize(img, des_dim, interpolation=cv2.INTER_LANCZOS4)
 
-print("Mit første forsøg")
+cv2.imshow('image_window',img_screensized)
+edges = cv2.Canny(img_screensized, 40, 40)
+kernel = np.ones((5,5))
+
+edges_closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+edges_opened = cv2.morphologyEx(edges_closed, cv2.MORPH_OPEN, kernel)
+
+cv2.imshow('edge_window',edges)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
