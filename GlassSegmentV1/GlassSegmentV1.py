@@ -32,9 +32,6 @@ def ContourImage(img):
     for i in range(len(contours)):
         if contours[i].size > 50:
             cv2.drawContours(drawing, contours, i, (255, 255, 255), 2, cv2.LINE_8, hierarchy, 0)
-        #cv2.imshow('window1', drawing)
-        #cv2.waitKey(100)
-    #print(contours[4].size)
     drawing = cv2.cvtColor(drawing, cv2.COLOR_BGR2GRAY)
     return drawing
 
@@ -60,7 +57,7 @@ template = cv2.resize(template, dsize)
 # * Detect edges on image and remove noise
 img_blurred = cv2.blur(img_screensized, (5,5))
 cv2.imshow('filtered', img_blurred)
-edges = cv2.Canny(img_blurred, 5, 15)
+edges = cv2.Canny(img_blurred, 45, 45)
 edges_lownoise = RemoveNoise(edges, 5)
 
 # * Rotating template in 5 deg. increments
