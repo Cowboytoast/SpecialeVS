@@ -56,7 +56,18 @@ def ContourImage(img):
     drawing = cv2.cvtColor(drawing, cv2.COLOR_BGR2GRAY)
     return drawing
 
-print("test")
+def rotate_image(image, angle):
+    image_center = tuple(np.array(image.shape[1::-1]) / 2)
+    rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
+    result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
+    return result
+
+def getThreshold(img, sigma):
+    v = np.median(img)
+    l = int(max(0, (1.0 - sigma) * v))
+    u = int(min(255, (1.0 + sigma) * v))
+    return l, u
+
 # * Load image and resize
 img = cv2.imread('IMG_0005_cropped.png')
 img_screensized = ResizeToFit(img)
@@ -67,26 +78,34 @@ scale_pct = 33.585
 template_width, template_height = template.shape[::-1]
 template_width = int(template.shape[1] * scale_pct / 100)
 template_height = int(template.shape[0] * scale_pct / 100)
-dsize = (template_width, template_height)
+#dsize = (template_width, template_height)
+dsize = (template_height, template_height)
 template = cv2.resize(template, dsize)
-template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 
 # * Show unaltered image
 #cv2.imshow('image_window',img_screensized)
 
+(lower, upper) = getThreshold(img, 0.3)
+
+
 # * Detect edges on image and remove noise
-edges = cv2.Canny(img_screensized, 40, 40)
+edges = cv2.Canny(img_screensized, 10, 50)
 edges_lownoise = RemoveNoise(edges, 5)
 #BLOBs = BLOBanalysis(edges_lownoise)
 contours = ContourImage(edges_lownoise)
-res = cv2.matchTemplate(contours, template, cv2.TM_CCORR_NORMED)
-threshold = 0.3
-loc = np.where(res >= threshold)
-added_image = img_screensized
-for pt in zip(*loc[::-1]):
+
+# * Rotating template in 5 deg. increments
+angle_inc = 5 # 5 deg. increment
+
+for i in range(0, int(360/angle_inc)):
+    template = rotate_image(template, angle_inc)
+    res = cv2.matchTemplate(edges_lownoise, template, cv2.TM_CCOEFF_NORMED)
+    threshold = 0.44
+    loc = np.where(res >= threshold)
+    for pt in zip(*loc[::-1]):
         cv2.rectangle(img_screensized, pt, (pt[0] + template_width, pt[1] + template_height), (0,0,255), 2)
 
-cv2.imshow('Matching result', res)
-cv2.imshow('edge_window',img_screensized)
+cv2.imshow('Matches', img_screensized)
+cv2.imshow('Contour image', contours)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
