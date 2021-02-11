@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import linregress
 
 def HoughLinesSearch(img, houghLength=40, houghDist=10):
     #img has to be the edge detected image.
@@ -10,12 +11,27 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
     linesP = cv2.HoughLinesP(img, 1, np.pi / 180, 50, None, houghLength, houghDist)
     #If-statement drawing lines on the copy, if any lines are found.
     if linesP is not None:
+        slope_sorted=[0 for i in range(len(linesP))]
         for i in range(0, len(linesP)):
             l = linesP[i][0]
             cv2.line(houghImage, (l[0], l[1]), (l[2], l[3]), (0,0,255), 3, cv2.LINE_AA)
+            x = [l[0], l[2]]
+            y = [l[1], l[3]]
+            slope = linregress(x,y)
+            slope_sorted[i] = slope.slope
+        slope_sorted.sort()
+        print("slopes: ")
+        print(slope_sorted)
+        print("number of lines found: ")
+        print(len(linesP))
     return houghImage
 
-img = cv2.imread('IR_test.png')
+def lineDistance(linesP):
+    #This fundtion finds the distance between two lines, calculated from the HoughLinesP() function.
+        
+    return dist
+
+img = cv2.imread('IR_test_cropped.png')
 
 imwidth = img.shape[1]
 imheight = img.shape[0]
@@ -30,6 +46,8 @@ edges = cv2.Canny(img_screensized, 45, 45)
 kernel = np.ones((5,5))
 
 edges_hough = HoughLinesSearch(edges)
+
+#Add calculations of the distance between lines, and the angle bestween lines. Use this to decide if to lines belong to the same vial.
 
 cv2.imshow('edge_window',edges)
 cv2.imshow('edge_hough',edges_hough)
