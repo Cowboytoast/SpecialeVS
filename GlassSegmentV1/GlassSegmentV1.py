@@ -11,20 +11,30 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
     linesP = cv2.HoughLinesP(img, 1, np.pi / 180, 50, None, houghLength, houghDist)
     #If-statement drawing lines on the copy, if any lines are found.
     if linesP is not None:
-        slope_sorted=[0 for i in range(len(linesP))]
         for i in range(0, len(linesP)):
             l = linesP[i][0]
             cv2.line(houghImage, (l[0], l[1]), (l[2], l[3]), (0,0,255), 3, cv2.LINE_AA)
+    sortedLines = SortLines(linesP)
+    return houghImage
+
+def SortLines(linesP):
+    if linesP is not None:
+        slope_sorted=[0 for i in range(len(linesP))]
+        for i in range(0, len(linesP)):
+            l = linesP[i][0]
             x = [l[0], l[2]]
             y = [l[1], l[3]]
             slope = linregress(x,y)
-            slope_sorted[i] = slope.slope
-        slope_sorted.sort()
+            #                 slope         x1   y1     x2   y2
+            slope_sorted[i] = [slope.slope,[l[0],l[1]],[l[2],l[3]]]
+        slope_sorted.sort(key=lambda x:x[0])
         print("slopes: ")
         print(slope_sorted)
         print("number of lines found: ")
         print(len(linesP))
-    return houghImage
+        sortedLines = slope_sorted
+    
+    return sortedLines
 
 def lineDistance(linesP):
     #This fundtion finds the distance between two lines, calculated from the HoughLinesP() function.
