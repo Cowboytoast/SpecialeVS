@@ -2,13 +2,21 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+from scipy import ndimage
+import pylab
 
-# * Do simple morphology to remove noise from image
-def RemoveNoise(img, dim = 3):
-    kernel = np.ones((dim, dim))
-    img_closed = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
-    img_opened = cv2.morphologyEx(img_closed, cv2.MORPH_OPEN, kernel)
-    return img_opened
+# * Histogram stretching function
+def HistStretch(img):
+    tmp = img.copy()
+    maxval = tmp.max()
+    minval = tmp.min()
+    for height in range(img.shape[0]):
+        for width in range(img.shape[1]):
+            tmp[height, width] = ((tmp[height, width] - minval) / (maxval - minval)) * 255
+    return tmp
+
+def SharpenImage(img, rad, amount, threshold):
+    
 
 # * Resize image to fit screen while keeping aspect ratio
 def ResizeToFit(oriimg):
@@ -26,18 +34,6 @@ def ResizeToFit(oriimg):
     newimg = cv2.resize(oriimg,(int(newX),int(newY)))
     return newimg
 
-def ContourImage(img):
-    contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    drawing = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
-    for i in range(len(contours)):
-        if contours[i].size > 50:
-            cv2.drawContours(drawing, contours, i, (255, 255, 255), 2, cv2.LINE_8, hierarchy, 0)
-        #cv2.imshow('window1', drawing)
-        #cv2.waitKey(100)
-    #print(contours[4].size)
-    drawing = cv2.cvtColor(drawing, cv2.COLOR_BGR2GRAY)
-    return drawing
-
 def rotate_image(image, angle):
     image_center = tuple(np.array(image.shape[1::-1]) / 2)
     rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
@@ -48,32 +44,29 @@ def rotate_image(image, angle):
 img = cv2.imread('IMG_0005_cropped.png')
 img_screensized = ResizeToFit(img)
 
-# * Template stuff
-template = cv2.imread('VialOutline.png', 0)
-scale_pct = 33.585 #33.585
-template_width, template_height = template.shape[::-1]
-template_width = int(template.shape[1] * scale_pct / 100)
-template_height = int(template.shape[0] * scale_pct / 100)
-dsize = (template_height, template_height)
-template = cv2.resize(template, dsize)
+# * Chain should be:
+# * Gray -> Hist. stretch -> median filtering (size 7, 23rd percentile) ...
+# * -> sharpening (radius 3.058, amount 6.371, threshold 0.131) ...
+# * -> Diff. of Gaussians (rad 1 3.912, rad 2: 6.463)
 
-# * Detect edges on image and remove noise
-img_blurred = cv2.blur(img_screensized, (5,5))
-cv2.imshow('filtered', img_blurred)
+# * Grayscaling
+img_gray = cv2.cvtColor(img_screensized, cv2.COLOR_BGR2GRAY)
+img_stretched = HistStretch(img_gray)
+img_percentile = ndimage.filters.percentile_filter(img_stretched, 23, (7,7))
+img_sharpen = SharpenImage(img, 3, 6.4, 0.131)
+
+'''
+# * Filters
+img_blurred = cv2.blur(img, (5,5))
+
+# * Edge detection
 edges = cv2.Canny(img_blurred, 5, 15)
 edges_lownoise = RemoveNoise(edges, 5)
 
-# * Rotating template in 5 deg. increments
-angle_inc = 5 # 5 deg. increment
-for i in range(0, int(360/angle_inc)):
-    template = rotate_image(template, angle_inc)
-    res = cv2.matchTemplate(edges_lownoise, template, cv2.TM_CCORR_NORMED)
-    threshold = 0.4
-    loc = np.where(res >= threshold)
-    for pt in zip(*loc[::-1]):
-        cv2.rectangle(img_screensized, pt, (pt[0] + template_width, pt[1] + template_height), (0,0,255), 2)
 
-cv2.imshow('Matches', img_screensized)
-cv2.imshow('Contour image', edges_lownoise)
+img_blurred = ResizeToFit(img_blurred)
+'''
+cv2.imshow('Low-pass', img_gray)
+cv2.imshow('Original', img_stretched)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
