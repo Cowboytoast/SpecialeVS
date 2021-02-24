@@ -73,7 +73,7 @@ def rotate_image(image, angle):
     return result
 
 # * Load image and resize
-img = cv2.imread('IMG_0003.jpg')
+img = cv2.imread('IMG_0005_cropped.png')
 img_screensized = ResizeToFit(img)
 
 # * Chain should be:
