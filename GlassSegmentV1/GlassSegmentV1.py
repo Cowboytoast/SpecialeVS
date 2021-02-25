@@ -48,7 +48,7 @@ template_bin = cvt_to_bin(template)
 
 # * Rotating template in 15 deg. increments
 # * and match with image patch
-angle_inc = 15 # 15 deg. increment
+angle_inc = 5 # 15 deg. increment
 template_rot = template
 matches = np.empty([1000, 2000])
 # ? Perhaps scaling down the image significantly would 
@@ -60,10 +60,13 @@ matches = np.empty([1000, 2000])
     # TODO: Get array instead of single value when &'ing arrays
 for angle in np.arange(0, 360, angle_inc):
     for h in np.arange(0, img.shape[0] - template_rot.shape[0], int(img.shape[0] / 25)):
-        for w in np.arange(0, img.shape[1] - template_rot.shape[1], int(img.shape[1] / 25)):       
+        for w in np.arange(0, img.shape[1] - template_rot.shape[1], int(img.shape[1] / 25)):
+            #i = 0       
             match_array = np.logical_and(img[h : h + template_rot.shape[0] : 1, w : w + template_rot.shape[1] : 1], template_rot)
             matches[h, w] = np.count_nonzero(match_array)
     template_rot = imutils.rotate_bound(template, angle)
+    #cv2.imshow('bla',template_rot)
+    #cv2.waitKey(50)
 print(np.amax(match_array))
 time.sleep(1)
 #cv2.imshow('Binary', img)
