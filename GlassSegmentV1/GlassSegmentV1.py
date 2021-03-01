@@ -57,9 +57,12 @@ def templatematch(img, template, angle_inc = 5, h_steps = 25, w_steps = 40):
     max_idx = np.where(matches == np.amax(matches))
     max_h = np.amax(max_idx[1])
     max_w = np.amax(max_idx[2])
-    detection = imutils.rotate_bound(template, np.amax(max_idx[0]) * angle_inc)
+    overlay = cv2.imread('VialOutlineOverlay.png', 0)
+    detection = imutils.rotate_bound(overlay, np.amax(max_idx[0]) * angle_inc)
     final = img
+    
     final[max_h:max_h + detection.shape[0]:1, max_w:max_w+detection.shape[1]:1] += detection
+    cv2.imwrite('IMG0005_Detection.png', final)
     return final
 
 # * Load image and convert to binary
@@ -80,6 +83,7 @@ final = templatematch(img, template, angle_inc = 5, w_steps = 40, h_steps = 25)
 # TODO Search in the point-wise vicinity, search within , e.g +- 10 deg, turn 180 deg, search again within +-10 deg, use best fit
 cv2.imshow('bla1', img)
 cv2.imshow('bla', final)
+cv2.imwrite('detection.png', final)
 
 #cv2.imshow('Binary', img)
 #cv2.imshow('Contour image', edges_lownoise)
