@@ -51,7 +51,9 @@ def templatematch(img, template, angle_inc = 5, h_steps = 25, w_steps = 40):
         for h in np.arange(0, img.shape[0] - template_rot.shape[0], int(img.shape[0] / h_steps)):
             for w in np.arange(0, img.shape[1] - template_rot.shape[1], int(img.shape[1] / w_steps)):
                 match_array = np.logical_and(img[h : h + template_rot.shape[0] : 1, w : w + template_rot.shape[1] : 1], template_rot)
+                cv2.imshow(img[h : h + template_rot.shape[0] : 1, w : ])
                 matches[int(angle/angle_inc), h, w] = np.count_nonzero(match_array)
+                
         template_rot = imutils.rotate_bound(template, angle)
 
     max_idx = np.where(matches == np.amax(matches))
@@ -83,7 +85,6 @@ final = templatematch(img, template, angle_inc = 5, w_steps = 40, h_steps = 25)
 # TODO Search in the point-wise vicinity, search within , e.g +- 10 deg, turn 180 deg, search again within +-10 deg, use best fit
 cv2.imshow('bla1', img)
 cv2.imshow('bla', final)
-cv2.imwrite('detection.png', final)
 
 #cv2.imshow('Binary', img)
 #cv2.imshow('Contour image', edges_lownoise)
