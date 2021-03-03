@@ -31,17 +31,26 @@ def LineMerge(glassLines):
     # * function that merge the lines of a side to only one line
     lineMerged = np.zeros([2,6])
     k = 0
-    if len(glassLines) == 2:
+    if len(glassLines) == 2: # check if there exist only 2 lines
         a0 = abs(glassLines[0,1]-glassLines[0,3])
-        b0 = abs(glassLines[0,2]-glassLines[0,4])# check if there exist only 2 lines
+        b0 = abs(glassLines[0,2]-glassLines[0,4])
         a1 = abs(glassLines[1,1]-glassLines[1,3])
         b1 = abs(glassLines[1,2]-glassLines[1,4])
         c0 = np.hypot(a0,b0)
         c1 = np.hypot(a1,b1)
-        lineMerged = glassLines
+        lineMerged[0,0] = glassLines[0,0]
+        lineMerged[0,1] = glassLines[0,1]
+        lineMerged[0,2] = glassLines[0,2]
+        lineMerged[0,3] = glassLines[0,3]
+        lineMerged[0,4] = glassLines[0,4]
         lineMerged[0,5] = c0
+        lineMerged[1,0] = glassLines[1,0]
+        lineMerged[1,1] = glassLines[1,1]
+        lineMerged[1,2] = glassLines[1,2]
+        lineMerged[1,3] = glassLines[1,3]
+        lineMerged[1,4] = glassLines[1,4]
         lineMerged[1,5] = c1
-    elif len(glassLines) == 3:
+    elif len(glassLines) == 3: # check if there exist only 3 lines
         angleRangeLower = glassLines[0,0]-0.2
         angleRangeUpper = glassLines[0,0]+0.2
         
@@ -131,7 +140,7 @@ def LineMerge(glassLines):
             lineMerged[1,4] = y0End
             lineMerged[1,5] = c
             
-    else:
+    else: # For 3+ lines
         for i in range(0,len(glassLines)):
             for j in range(i,len(glassLines)):
                 if j == i:
@@ -218,7 +227,7 @@ def LinesGrouping(sortedLines):
             glass4[k,3] = sortedLinesArray[i,3]
             glass4[k,4] = sortedLinesArray[i,4]
         k+=1
-    lineGroup=glass4
+    lineGroup=glass3
     
     # deletion of zero rows
     for i in range(len(lineGroup)-1,0,-1):
