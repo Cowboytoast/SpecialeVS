@@ -31,26 +31,116 @@ def LineMerge(glassLines):
     # * function that merge the lines of a side to only one line
     lineMerged = np.zeros([2,6])
     k = 0
-    if len(glassLines) == 2: # check if there exist only 2 lines
+    if len(glassLines) == 2:
+        a0 = abs(glassLines[0,1]-glassLines[0,3])
+        b0 = abs(glassLines[0,2]-glassLines[0,4])# check if there exist only 2 lines
+        a1 = abs(glassLines[1,1]-glassLines[1,3])
+        b1 = abs(glassLines[1,2]-glassLines[1,4])
+        c0 = np.hypot(a0,b0)
+        c1 = np.hypot(a1,b1)
         lineMerged = glassLines
+        lineMerged[0,5] = c0
+        lineMerged[1,5] = c1
+    elif len(glassLines) == 3:
+        angleRangeLower = glassLines[0,0]-0.2
+        angleRangeUpper = glassLines[0,0]+0.2
+        
+        x0Start = glassLines[0,1]
+        y0Start = glassLines[0,2]
+        x0End = glassLines[0,3]
+        y0End = glassLines[0,4]
+            
+        x1Start = glassLines[1,1]
+        y1Start = glassLines[1,2]
+        x1End = glassLines[1,3]
+        y1End = glassLines[1,4]
+            
+        x2Start = glassLines[2,1]
+        y2Start = glassLines[2,2]
+        x2End = glassLines[2,3]
+        y2End = glassLines[2,4]
+            
+        slope01 = linregress([x0Start,x1End],[y0Start,y1End])
+        slope02 = linregress([x0Start,x2End],[y0Start,y2End])
+        slope12 = linregress([x1Start,x2End],[y1Start,y2End])
+        
+        slope01 = slope01.slope
+        slope02 = slope02.slope
+        slope12 = slope12.slope
+            
+        if (slope01 > angleRangeLower) and (slope01 < angleRangeUpper):
+            a = abs(glassLines[0,1]-glassLines[1,3])
+            b = abs(glassLines[0,2]-glassLines[1,4])
+            c = np.hypot(a,b)
+            lineMerged[0,0] = slope01
+            lineMerged[0,1] = x0Start
+            lineMerged[0,2] = y0Start
+            lineMerged[0,3] = x1End
+            lineMerged[0,4] = y1End
+            lineMerged[0,5] = c
+            
+            a = abs(glassLines[2,1]-glassLines[2,3])
+            b = abs(glassLines[2,2]-glassLines[2,4])
+            c = np.hypot(a,b)
+            lineMerged[1,0] = glassLines[2,0]
+            lineMerged[1,1] = x2Start
+            lineMerged[1,2] = y2Start
+            lineMerged[1,3] = x2End
+            lineMerged[1,4] = y2End
+            lineMerged[1,5] = c
+            
+        elif (slope02 > angleRangeLower and slope02 < angleRangeUpper):
+            a = abs(glassLines[0,1]-glassLines[2,3])
+            b = abs(glassLines[0,2]-glassLines[2,4])
+            c = np.hypot(a,b)
+            lineMerged[0,0] = slope01
+            lineMerged[0,1] = x0Start
+            lineMerged[0,2] = y0Start
+            lineMerged[0,3] = x2End
+            lineMerged[0,4] = y2End
+            lineMerged[0,5] = c
+            
+            a = abs(glassLines[1,1]-glassLines[1,3])
+            b = abs(glassLines[1,2]-glassLines[1,4])
+            c = np.hypot(a,b)
+            lineMerged[1,0] = glassLines[1,0]
+            lineMerged[1,1] = x1Start
+            lineMerged[1,2] = y1Start
+            lineMerged[1,3] = x1End
+            lineMerged[1,4] = y1End
+            lineMerged[1,5] = c
+            
+        else:
+            a = abs(glassLines[1,1]-glassLines[2,3])
+            b = abs(glassLines[1,2]-glassLines[2,4])
+            c = np.hypot(a,b)
+            lineMerged[0,0] = slope12
+            lineMerged[0,1] = x1Start
+            lineMerged[0,2] = y1Start
+            lineMerged[0,3] = x2End
+            lineMerged[0,4] = y2End
+            lineMerged[0,5] = c
+            
+            a = abs(glassLines[0,1]-glassLines[0,3])
+            b = abs(glassLines[0,2]-glassLines[0,4])
+            c = np.hypot(a,b)
+            lineMerged[1,0] = glassLines[0,0]
+            lineMerged[1,1] = x0Start
+            lineMerged[1,2] = y0Start
+            lineMerged[1,3] = x0End
+            lineMerged[1,4] = y0End
+            lineMerged[1,5] = c
+            
     else:
         for i in range(0,len(glassLines)):
-            x = glassLines[i,1]
-            y = glassLines[i,2]
             for j in range(i,len(glassLines)):
                 if j == i:
                     continue
-                if x < glassLines[j,3]:
-                    a = glassLines[j,3]-x
-                else:
-                    a = x-glassLines[j,3]
-                    
-                if y > glassLines[j,4]:
-                    b = y-glassLines[j,4]
-                else:
-                    b = glassLines[j,4]-y
-                xStart=x
-                yStart=y
+                a = abs(glassLines[i,1]-glassLines[j,3])
+                b = abs(glassLines[i,2]-glassLines[j,4])
+
+                xStart=glassLines[i,1]
+                yStart=glassLines[i,2]
                 xEnd=glassLines[j,3]
                 yEnd=glassLines[j,4]
                 
@@ -128,7 +218,7 @@ def LinesGrouping(sortedLines):
             glass4[k,3] = sortedLinesArray[i,3]
             glass4[k,4] = sortedLinesArray[i,4]
         k+=1
-    lineGroup=glass0
+    lineGroup=glass4
     
     # deletion of zero rows
     for i in range(len(lineGroup)-1,0,-1):
