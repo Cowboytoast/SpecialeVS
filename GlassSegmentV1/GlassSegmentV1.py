@@ -54,39 +54,50 @@ def templatematch(img, template, houghLocation, angle_inc = 1, h_steps = 6, w_st
         if np.sign(slopes[cnt]) == -1:
             slopes[cnt] += 360
             
+    slope_offset = np.average(slopes)
     template_rot = imutils.rotate_bound(template, np.average(slopes))
-    matches = np.empty([int(11/angle_inc), img.shape[0] - template_rot.shape[1] + 10, img.shape[1] - template_rot.shape[1] + 10])
-    
-
+    #matches = np.empty([int(10/angle_inc), img.shape[0] - template_rot.shape[1] + 10, img.shape[1] - template_rot.shape[1] + 10])
+    # TODO Allocate the array in a better way for speed!!
+    #matches = np.empty([360, 1000, 1000], dtype = np.uint16)
+    maxval = 0
     # ? Perhaps scaling down the image significantly would 
     # ? increase performance. But at what cost?
 
     # Do & operation in increments, that is moving the template image a few pixels right/down
     # for each iteration and store most pixel hits
-    #for updown in range(1,2): # 1 for up, 2 for down
-        #for h in np.arange(int(np.amin(pointsy)), int(np.amax(pointsy)), int((np.amax(pointsy) - np.amax(pointsy) /h_steps))):
-    for h in np.arange(int(np.amin(pointsy)), int(np.amax(pointsy)), 10):
-        #for w in np.arange(int(np.amin(pointsx)), int(np.amax(pointsx)), int((np.amax(pointsx) - np.amax(pointsx) /w_steps))):
-        for w in np.arange(int(np.amin(pointsx)), int(np.amax(pointsx)), 10):
-            for angle in np.arange(angle_inc, 11, angle_inc):
-                match_array = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
-                rotatingim = np.copy(img)
-                rotatingim[h : h + template_rot.shape[0], w : w+template_rot.shape[1]] = template_rot
-                cv2.imshow('Rotating progress', rotatingim)
-                cv2.waitKey(0)
-                matches[int(angle/angle_inc), h, w] = np.count_nonzero(match_array)
-                template_rot = imutils.rotate_bound(template, angle)
+    start_time = time.time()
+
+    for updown in range(0,2): # 1 for up, 2 for down
+        for h in np.arange(int(np.amin(pointsy)) - 10, int(np.amin(pointsy)) + 10, 4):
+            for w in np.arange(int(np.amin(pointsx)) - 10, int(np.amin(pointsx)) + 10, 4):
+                for angle in np.arange(slope_offset - 5, slope_offset + 5, angle_inc):
+                    matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+                    matches = np.count_nonzero(matches)
+                    if matches > maxval:
+                        maxval = matches
+                        max_idx = np.array([angle - angle_inc, h, w])
+                    template_rot = imutils.rotate_bound(template, angle)
+                    rotatingim = np.copy(img)
+                    rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+                    cv2.imshow('Rotating progress', rotatingim)
+                    cv2.waitKey(80)
+                    #matches[int(angle/angle_inc), h, w] = np.count_nonzero(match_array)
+        slope_offset += 180
+        template_rot = imutils.rotate_bound(template, slope_offset)
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 
-    max_idx = np.where(matches == np.amax(matches))
-    max_h = np.amax(max_idx[1])
-    max_w = np.amax(max_idx[2])
+    #max_idx = np.where(matches == np.amax(matches))
+    #max_h = np.amax(max_idx[1])
+    #max_w = np.amax(max_idx[2])
+    max_rot = int(max_idx[0])
+    max_h = int(max_idx[1])
+    max_w = int(max_idx[2])
     overlay = cv2.imread('VialOutlineOverlay.png', 0)
     detection = imutils.rotate_bound(overlay, np.amax(max_idx[0]) * angle_inc)
     final = img
-    
-    #final[max_h:max_h + detection.shape[0]:1, max_w:max_w+detection.shape[1]:1] += detection
-    cv2.imwrite('IMG0005_Detection.png', final)
+    final[max_h : max_h + detection.shape[0], max_w : max_w+detection.shape[1]] += detection
+    #cv2.imwrite('IMG0005_Detection.png', final)
     return final
 
 # * Load image and convert to binary
@@ -100,7 +111,7 @@ template = cv2.imread('VialOutlineHollow.png', 0)
 # * Rotating template in increments
 # * and match with image patch
 
-houghLocation = np.array([2.1, 697, 54, 915, 365, 2.1, 648, 87, 861, 396])
+houghLocation = np.array([2.5, 697, 54, 915, 365, 2.5, 648, 87, 861, 396])
 final = templatematch(img, template, houghLocation)
 
 # TODO Prepare to function with line coordinates to narrow down position
