@@ -1,7 +1,43 @@
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.stats import linregress
+from skimage.feature import canny
+from skimage.transform import hough_line,hough_line_peaks
+
+# TODO: Lær at forstå hvordan matplot virker.
+# TODO: Se om vi kan få rho og theta ud af cv2's hough transform.
+
+def HoughLinesSearchSkimage(img):
+    
+    minDist = 20
+    maxDist = 50
+    
+    hspace,angles,distance = hough_line(img)
+    #hspace,angles,distance = hough_line_peaks(hspace,angles,distance,minDist,maxDist)
+    
+    fix, axes = plt.subplots(1, 2, figsize=(7, 4))
+
+    axes[0].imshow(img, cmap=plt.cm.gray)
+    axes[0].set_title('Input image')
+
+    angle_step = 0.5 * np.rad2deg(np.diff(angles).mean())
+    d_step = 0.5 * np.diff(distance).mean()
+    bounds = (np.rad2deg(angles[0]) - angle_step,
+          np.rad2deg(angles[-1]) + angle_step,
+          distance[-1] + d_step, distance[0] - d_step)
+
+    axes[1].imshow(hspace)
+    axes[1].set_title('Hough transform')
+    axes[1].set_xlabel('Angle (degree)')
+    axes[1].set_ylabel('Distance (pixel)')
+
+    plt.tight_layout()
+    plt.show()
+    
+    houghImage = img
+    
+    return houghImage
 
 def HoughLinesSearch(img, houghLength=40, houghDist=10):
     #img has to be the edge detected image.
@@ -78,15 +114,27 @@ def LineMerge(glassLines):
         slope12 = slope12.slope
             
         if (slope01 > angleRangeLower) and (slope01 < angleRangeUpper):
-            a = abs(glassLines[0,1]-glassLines[1,3])
-            b = abs(glassLines[0,2]-glassLines[1,4])
-            c = np.hypot(a,b)
-            lineMerged[0,0] = slope01
-            lineMerged[0,1] = x0Start
-            lineMerged[0,2] = y0Start
-            lineMerged[0,3] = x1End
-            lineMerged[0,4] = y1End
-            lineMerged[0,5] = c
+            a1 = abs(glassLines[0,1]-glassLines[1,3])
+            b1 = abs(glassLines[0,2]-glassLines[1,4])
+            c1 = np.hypot(a1,b1)
+            a2 = abs(glassLines[1,1]-glassLines[0,3])
+            b2 = abs(glassLines[1,2]-glassLines[0,4])
+            c2 = np.hypot(a2,b2)
+            
+            if c1 > c2:
+                lineMerged[0,0] = slope01
+                lineMerged[0,1] = x0Start
+                lineMerged[0,2] = y0Start
+                lineMerged[0,3] = x1End
+                lineMerged[0,4] = y1End
+                lineMerged[0,5] = c1
+            else:
+                lineMerged[0,0] = slope01
+                lineMerged[0,1] = x1Start
+                lineMerged[0,2] = y1Start
+                lineMerged[0,3] = x0End
+                lineMerged[0,4] = y0End
+                lineMerged[0,5] = c2
             
             a = abs(glassLines[2,1]-glassLines[2,3])
             b = abs(glassLines[2,2]-glassLines[2,4])
@@ -99,15 +147,27 @@ def LineMerge(glassLines):
             lineMerged[1,5] = c
             
         elif (slope02 > angleRangeLower and slope02 < angleRangeUpper):
-            a = abs(glassLines[0,1]-glassLines[2,3])
-            b = abs(glassLines[0,2]-glassLines[2,4])
-            c = np.hypot(a,b)
-            lineMerged[0,0] = slope01
-            lineMerged[0,1] = x0Start
-            lineMerged[0,2] = y0Start
-            lineMerged[0,3] = x2End
-            lineMerged[0,4] = y2End
-            lineMerged[0,5] = c
+            a1 = abs(glassLines[0,1]-glassLines[2,3])
+            b1 = abs(glassLines[0,2]-glassLines[2,4])
+            c1 = np.hypot(a1,b1)
+            a2 = abs(glassLines[2,1]-glassLines[0,3])
+            b2 = abs(glassLines[2,2]-glassLines[0,4])
+            c2 = np.hypot(a2,b2)
+            
+            if c1 > c2:
+                lineMerged[0,0] = slope02
+                lineMerged[0,1] = x0Start
+                lineMerged[0,2] = y0Start
+                lineMerged[0,3] = x2End
+                lineMerged[0,4] = y2End
+                lineMerged[0,5] = c1
+            else:
+                lineMerged[0,0] = slope02
+                lineMerged[0,1] = x2Start
+                lineMerged[0,2] = y2Start
+                lineMerged[0,3] = x0End
+                lineMerged[0,4] = y0End
+                lineMerged[0,5] = c2
             
             a = abs(glassLines[1,1]-glassLines[1,3])
             b = abs(glassLines[1,2]-glassLines[1,4])
@@ -120,15 +180,27 @@ def LineMerge(glassLines):
             lineMerged[1,5] = c
             
         else:
-            a = abs(glassLines[1,1]-glassLines[2,3])
-            b = abs(glassLines[1,2]-glassLines[2,4])
-            c = np.hypot(a,b)
-            lineMerged[0,0] = slope12
-            lineMerged[0,1] = x1Start
-            lineMerged[0,2] = y1Start
-            lineMerged[0,3] = x2End
-            lineMerged[0,4] = y2End
-            lineMerged[0,5] = c
+            a1 = abs(glassLines[1,1]-glassLines[2,3])
+            b1 = abs(glassLines[1,2]-glassLines[2,4])
+            c1 = np.hypot(a1,b1)
+            a2 = abs(glassLines[2,1]-glassLines[1,3])
+            b2 = abs(glassLines[2,2]-glassLines[1,4])
+            c2 = np.hypot(a2,b2)
+            
+            if c1 > c2:
+                lineMerged[0,0] = slope12
+                lineMerged[0,1] = x1Start
+                lineMerged[0,2] = y1Start
+                lineMerged[0,3] = x2End
+                lineMerged[0,4] = y2End
+                lineMerged[0,5] = c1
+            else:
+                lineMerged[0,0] = slope12
+                lineMerged[0,1] = x2Start
+                lineMerged[0,2] = y2Start
+                lineMerged[0,3] = x1End
+                lineMerged[0,4] = y1End
+                lineMerged[0,5] = c2
             
             a = abs(glassLines[0,1]-glassLines[0,3])
             b = abs(glassLines[0,2]-glassLines[0,4])
@@ -153,8 +225,8 @@ def LineMerge(glassLines):
                 xEnd=glassLines[j,3]
                 yEnd=glassLines[j,4]
                 
-                angleRangeLower = glassLines[i,0]-0.2
-                angleRangeUpper = glassLines[i,0]+0.2
+                angleRangeLower = glassLines[i,0]-0.4
+                angleRangeUpper = glassLines[i,0]+0.4
                 
                 slope = linregress([xStart,xEnd],[yStart,yEnd])
                 if slope.slope > angleRangeLower and slope.slope < angleRangeUpper:
@@ -227,7 +299,7 @@ def LinesGrouping(sortedLines):
             glass4[k,3] = sortedLinesArray[i,3]
             glass4[k,4] = sortedLinesArray[i,4]
         k+=1
-    lineGroup=glass3
+    lineGroup=glass0
     
     # deletion of zero rows
     for i in range(len(lineGroup)-1,0,-1):
@@ -272,8 +344,8 @@ img_screensized = cv2.resize(img, des_dim, interpolation=cv2.INTER_LANCZOS4)
 
 cv2.imshow('image_window',img_screensized)
 edges = cv2.Canny(img_screensized, 45, 45)
-kernel = np.ones((5,5))
 
+#houghTeest = HoughLinesSearchSkimage(edges)
 edges_hough = HoughLinesSearch(edges)
 
 # ? Add calculations of the distance between lines, and the angle bestween lines. Use this to decide if to lines belong to the same vial.
