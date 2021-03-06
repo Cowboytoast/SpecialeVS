@@ -1,36 +1,37 @@
 import cv2
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import numpy as np
+import time
 from scipy.stats import linregress
-from skimage.feature import canny
-from skimage.transform import hough_line,hough_line_peaks
+from skimage.transform import hough_line
 
 # TODO: Lær at forstå hvordan matplot virker.
-# TODO: Se om vi kan få rho og theta ud af cv2's hough transform.
-
+#? Matplot giver stadig ikke mening når det kommer til Hough space.
+start_time = time.time()
 def HoughLinesSearchSkimage(img):
     
     minDist = 20
     maxDist = 50
+    h,theta,d = hough_line(img)
     
-    hspace,angles,distance = hough_line(img)
-    #hspace,angles,distance = hough_line_peaks(hspace,angles,distance,minDist,maxDist)
-    
-    fix, axes = plt.subplots(1, 2, figsize=(7, 4))
+    fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+    ax = axes.ravel()
 
-    axes[0].imshow(img, cmap=plt.cm.gray)
-    axes[0].set_title('Input image')
+    ax[0].imshow(img, cmap=cm.gray)
+    ax[0].set_title('Input image')
+    ax[0].set_axis_off()
 
-    angle_step = 0.5 * np.rad2deg(np.diff(angles).mean())
-    d_step = 0.5 * np.diff(distance).mean()
-    bounds = (np.rad2deg(angles[0]) - angle_step,
-          np.rad2deg(angles[-1]) + angle_step,
-          distance[-1] + d_step, distance[0] - d_step)
-
-    axes[1].imshow(hspace)
-    axes[1].set_title('Hough transform')
-    axes[1].set_xlabel('Angle (degree)')
-    axes[1].set_ylabel('Distance (pixel)')
+    angle_step = 0.5 * np.diff(theta).mean()
+    d_step = 0.5 * np.diff(d).mean()
+    bounds = [np.rad2deg(theta[0] - angle_step),
+            np.rad2deg(theta[-1] + angle_step),
+            d[-1] + d_step, d[0] - d_step]
+    ax[1].imshow(np.log(1 + h), extent=bounds, cmap=cm.gray, aspect=1 / 1.5)
+    ax[1].set_title('Hough transform')
+    ax[1].set_xlabel('Angles (degrees)')
+    ax[1].set_ylabel('Distance (pixels)')
+    ax[1].axis('image')
 
     plt.tight_layout()
     plt.show()
@@ -349,7 +350,7 @@ edges = cv2.Canny(img_screensized, 45, 45)
 edges_hough = HoughLinesSearch(edges)
 
 # ? Add calculations of the distance between lines, and the angle bestween lines. Use this to decide if to lines belong to the same vial.
-
+print("--- %s seconds ---" % (time.time()-start_time))
 cv2.imshow('edge_window',edges)
 cv2.imshow('edge_hough',edges_hough)
 cv2.imwrite('hough_edges.png',edges_hough)
