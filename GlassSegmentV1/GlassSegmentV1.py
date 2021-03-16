@@ -144,7 +144,7 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
 
 def LineMerge(glassLines):
     # * function that merge the lines of a side to only one line
-    lineMerged = np.zeros([2,6])
+    lineMerged = np.zeros([100,6])
     k = 0
     if len(glassLines) == 2: # check if there exist only 2 lines
         a = np.array(abs(glassLines[0:2,1] - glassLines[0:2, 3]))
@@ -292,22 +292,17 @@ def LineMerge(glassLines):
                 a = abs(glassLines[i,1]-glassLines[j,3])
                 b = abs(glassLines[i,2]-glassLines[j,4])
 
-                xStart=glassLines[i,1]
-                yStart=glassLines[i,2]
-                xEnd=glassLines[j,3]
-                yEnd=glassLines[j,4]
-                
+                coordinates = np.array(np.r_[glassLines[i,1:3], glassLines[j, 3:5]]) #xstart ystart xend yend
+
                 angleRangeLower = glassLines[i,0]-0.4
                 angleRangeUpper = glassLines[i,0]+0.4
                 
-                slope = linregress([xStart,xEnd],[yStart,yEnd])
+                slope = linregress([coordinates[0], coordinates[2]], [coordinates[1], coordinates[3]])
                 if slope.slope > angleRangeLower and slope.slope < angleRangeUpper:
                     c = np.hypot(a,b)
+                    
                     lineMerged[k,0] = slope.slope
-                    lineMerged[k,1] = xStart
-                    lineMerged[k,2] = yStart
-                    lineMerged[k,3] = xEnd
-                    lineMerged[k,4] = yEnd
+                    lineMerged[k,1:5] = coordinates
                     lineMerged[k,5] = c
                     k+=1
     return lineMerged
@@ -337,7 +332,6 @@ def LinesGrouping(sortedLines):
     for i in range(len(lineGroup)-1,0,-1):
         if ((lineGroup[i,1] == 0) and (lineGroup[i,2] == 0) and (lineGroup[i,3] == 0) and (lineGroup[i,4] == 0)):
             lineGroup = np.delete(lineGroup, (i), axis=0)
-    
     return lineGroup
 
 def SortLines(linesP):
@@ -364,7 +358,7 @@ def SortLines(linesP):
 
 #**********************Main loop********************************
 
-
+'''
 #*****************FOR MATHIAS' IR IMAGE USE:********************
 img = cv2.imread('IR_test_cropped.png')
 imwidth = img.shape[1]
@@ -374,7 +368,7 @@ img_screensized = cv2.resize(img, des_dim, interpolation=cv2.INTER_LANCZOS4)
 
 edges = cv2.Canny(img_screensized, 45, 45)
 edges_hough = HoughLinesSearch(edges)
-
+print("--- %s seconds ---" % (time.time()-start_time))
 cv2.imshow('edge_hough',edges_hough)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
@@ -397,15 +391,8 @@ img_edges = img_as_ubyte(img_edges)
 img_binary = image_threshold(img_edges, 4)
 
 edges_hough = HoughLinesSearch(img_binary)
-
+print("--- %s seconds ---" % (time.time()-start_time))
 cv2.imshow('edge_hough',edges_hough)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 #***************************************************************
-'''
-
-
-
-# ? Add calculations of the distance between lines, and the angle bestween lines. Use this to decide if to lines belong to the same vial.
-print("--- %s seconds ---" % (time.time()-start_time))
-
