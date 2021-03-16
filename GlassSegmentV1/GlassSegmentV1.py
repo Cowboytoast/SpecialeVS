@@ -129,6 +129,7 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
             cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 3, cv2.LINE_AA)
             g+=-255
             r+=255
+        print(len(glassSides),"lines found")
     else:
         print("No lines found")
     return houghImage
@@ -315,9 +316,8 @@ def LinesGrouping(sortedLines):
     value = None
     lineGroup = []
     range_upper = 0
-    j = 0
     k = 0
-
+    glass = np.zeros([20, 5])
     sortedLinesArray = np.array(sortedLines)
     np.set_printoptions(precision=6,suppress=True)
     
@@ -327,29 +327,15 @@ def LinesGrouping(sortedLines):
             value=sortedLinesArray[0,0]
             range_upper=value+0.45
         elif range_upper < sortedLinesArray[i,0]:
-            value=sortedLinesArray[i,0]
-            range_upper=value+0.45
-            j+=1
+            break
+        glass[k, 0:4] = sortedLinesArray[i, 0:4]
+        #glass[k,0] = sortedLinesArray[i,0]
+        #glass[k,1] = sortedLinesArray[i,1]
+        #glass[k,2] = sortedLinesArray[i,2]
+        #glass[k,3] = sortedLinesArray[i,3]
+        #glass[k,4] = sortedLinesArray[i,4]
         k += 1
-    glass = np.zeros([j, k, 5])
-    j = 0
-    k = 0
-    for i in range(0, len(sortedLinesArray)):
-        if value is None:
-            value=sortedLinesArray[0,0]
-            range_upper=value+0.45
-        elif range_upper < sortedLinesArray[i,0]:
-            value=sortedLinesArray[i,0]
-            range_upper=value+0.45
-            j += 1
-            k = 0
-        glass[j,k,0] = sortedLinesArray[i,0]
-        glass[j,k,1] = sortedLinesArray[i,1]
-        glass[j,k,2] = sortedLinesArray[i,2]
-        glass[j,k,3] = sortedLinesArray[i,3]
-        glass[j,k,4] = sortedLinesArray[i,4]
-        k += 1
-    lineGroup=glass[0,:,:]
+    lineGroup=glass
     
     # deletion of zero rows
     for i in range(len(lineGroup)-1,0,-1):
@@ -382,7 +368,7 @@ def SortLines(linesP):
 
 #**********************Main loop***************************
 
-img = cv2.imread('IR_test_cropped.png')
+#img = cv2.imread('IR_test_cropped.png')
 
 # * Chain should be:
 # * Gray -> Hist. stretch -> median filtering (size 7, 23rd percentile) ...
@@ -394,9 +380,10 @@ img_screensized = ResizeToFit(img)
 # * Grayscaling
 img_gray = cv2.cvtColor(img_screensized, cv2.COLOR_BGR2GRAY)
 img_stretched = HistStretch(img_gray)
-#img_percentile = ndimage.filters.percentile_filter(img_stretched, 23, (7,7))
+img_percentile = ndimage.filters.percentile_filter(img_stretched, 23, (7,7))
+#img_percentile = cv2.blur(img_stretched, (7,7))
 #img_sharpen = SharpenImage(img, 3, 6.4, 0.131)
-img_sharpen = unsharp_mask(img_stretched, kernel_size = (3,3), amount = 6.4, threshold = 0.131)
+img_sharpen = unsharp_mask(img_percentile, kernel_size = (3,3), amount = 6.4, threshold = 0.131)
 img_edges = difference_of_gaussians(img_sharpen, 2, 8)
 img_edges = img_as_ubyte(img_edges)
 img_binary = image_threshold(img_edges, 4)
