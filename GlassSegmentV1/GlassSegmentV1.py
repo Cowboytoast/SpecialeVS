@@ -54,8 +54,7 @@ def image_threshold(image, lower, upper = 255):
     return tmp
 
 # * Resize image to fit screen while keeping aspect ratio
-def ResizeToFit(oriimg):
-    H, W = (980, 1820)
+def ResizeToFit(oriimg, H = 980, W = 1820):
     height, width, depth = oriimg.shape
     scaleWidth = float(W)/float(width)
     scaleHeight = float(H)/float(height)
@@ -123,8 +122,17 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
         b = 255
         g = 0
         r = 0
+        '''
+        # * For printing all lines use:
+        for i in range(0, len(linesP)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
+            l = linesP[i] # same as above
+            l = l.astype(int)
+            cv2.line(houghImage, (l[0,0], l[0,1]), (l[0,2], l[0,3]), (b,g,r), 3, cv2.LINE_AA)
+            g+=-255
+            r+=255
+        '''
         for i in range(0, len(glassSides)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
-            l = glassSides[i]
+            l = glassSides[i] # same as above
             l = l.astype(int)
             cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 3, cv2.LINE_AA)
             g+=-255
@@ -139,23 +147,16 @@ def LineMerge(glassLines):
     lineMerged = np.zeros([2,6])
     k = 0
     if len(glassLines) == 2: # check if there exist only 2 lines
-        a0 = abs(glassLines[0,1]-glassLines[0,3])
+        a = np.array(abs(glassLines[0:2,1] - glassLines[0:2, 3]))
+        #a0 = abs(glassLines[0,1]-glassLines[0,3])
         b0 = abs(glassLines[0,2]-glassLines[0,4])
-        a1 = abs(glassLines[1,1]-glassLines[1,3])
+        #a1 = abs(glassLines[1,1]-glassLines[1,3])
         b1 = abs(glassLines[1,2]-glassLines[1,4])
-        c0 = np.hypot(a0,b0)
-        c1 = np.hypot(a1,b1)
-        lineMerged[0,0] = glassLines[0,0]
-        lineMerged[0,1] = glassLines[0,1]
-        lineMerged[0,2] = glassLines[0,2]
-        lineMerged[0,3] = glassLines[0,3]
-        lineMerged[0,4] = glassLines[0,4]
+        c0 = np.hypot(a[0],b0)
+        c1 = np.hypot(a[1],b1)
+        lineMerged[0,0:5] = glassLines[0,0:5]
+        lineMerged[1,0:5] =glassLines[1,0:5]
         lineMerged[0,5] = c0
-        lineMerged[1,0] = glassLines[1,0]
-        lineMerged[1,1] = glassLines[1,1]
-        lineMerged[1,2] = glassLines[1,2]
-        lineMerged[1,3] = glassLines[1,3]
-        lineMerged[1,4] = glassLines[1,4]
         lineMerged[1,5] = c1
     elif len(glassLines) == 3: # check if there exist only 3 lines
         angleRangeLower = glassLines[0,0]-0.2
@@ -317,7 +318,7 @@ def LinesGrouping(sortedLines):
     lineGroup = []
     range_upper = 0
     k = 0
-    glass = np.zeros([20, 5])
+    glass = np.zeros([100, 5])
     sortedLinesArray = np.array(sortedLines)
     np.set_printoptions(precision=6,suppress=True)
     
@@ -328,12 +329,7 @@ def LinesGrouping(sortedLines):
             range_upper=value+0.45
         elif range_upper < sortedLinesArray[i,0]:
             break
-        glass[k, 0:4] = sortedLinesArray[i, 0:4]
-        #glass[k,0] = sortedLinesArray[i,0]
-        #glass[k,1] = sortedLinesArray[i,1]
-        #glass[k,2] = sortedLinesArray[i,2]
-        #glass[k,3] = sortedLinesArray[i,3]
-        #glass[k,4] = sortedLinesArray[i,4]
+        glass[k, 0:5] = sortedLinesArray[i, 0:5]
         k += 1
     lineGroup=glass
     
@@ -366,51 +362,50 @@ def SortLines(linesP):
     
     return sortedLines
 
-#**********************Main loop***************************
+#**********************Main loop********************************
 
-#img = cv2.imread('IR_test_cropped.png')
 
+#*****************FOR MATHIAS' IR IMAGE USE:********************
+img = cv2.imread('IR_test_cropped.png')
+imwidth = img.shape[1]
+imheight = img.shape[0]
+des_dim = (imwidth, imheight)
+img_screensized = cv2.resize(img, des_dim, interpolation=cv2.INTER_LANCZOS4)
+
+edges = cv2.Canny(img_screensized, 45, 45)
+edges_hough = HoughLinesSearch(edges)
+
+cv2.imshow('edge_hough',edges_hough)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+#***************************************************************
+'''
+#**************FOR FREDERIK'S VISUAL IMAGE USE:*****************
 # * Chain should be:
 # * Gray -> Hist. stretch -> median filtering (size 7, 23rd percentile) ...
 # * -> sharpening (radius 3.058, amount 6.371, threshold 0.131) ...
 # * -> Diff. of Gaussians (rad 1 3.912, rad 2: 6.463)
 # * Load image and resize
 img = cv2.imread('IMG_0005_cropped.png')
-img_screensized = ResizeToFit(img)
-# * Grayscaling
+img_screensized = ResizeToFit(img, H = 477, W = 620)
 img_gray = cv2.cvtColor(img_screensized, cv2.COLOR_BGR2GRAY)
 img_stretched = HistStretch(img_gray)
 img_percentile = ndimage.filters.percentile_filter(img_stretched, 23, (7,7))
-#img_percentile = cv2.blur(img_stretched, (7,7))
-#img_sharpen = SharpenImage(img, 3, 6.4, 0.131)
 img_sharpen = unsharp_mask(img_percentile, kernel_size = (3,3), amount = 6.4, threshold = 0.131)
 img_edges = difference_of_gaussians(img_sharpen, 2, 8)
 img_edges = img_as_ubyte(img_edges)
 img_binary = image_threshold(img_edges, 4)
-#cv2.imshow('Original', img_screensized)
-#cv2.imshow('Gray', img_gray)
-#cv2.imshow('Stretched Hist.', img_stretched)
-#cv2.imshow('Percentile', img_percentile)
-#cv2.imshow('Sharp', img_sharpen)
-#cv2.imshow('DoG', img_edges)
-#cv2.imshow('Binary', img_binary)
-'''
-# * Filters
-img_blurred = cv2.blur(img, (5,5))
-
-# * Edge detection
-edges = cv2.Canny(img_blurred, 5, 15)
-edges_lownoise = RemoveNoise(edges, 5)
-
-
-img_blurred = ResizeToFit(img_blurred)
-'''
 
 edges_hough = HoughLinesSearch(img_binary)
 
-# ? Add calculations of the distance between lines, and the angle bestween lines. Use this to decide if to lines belong to the same vial.
-print("--- %s seconds ---" % (time.time()-start_time))
 cv2.imshow('edge_hough',edges_hough)
-cv2.imwrite('hough_edges.png',edges_hough)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+#***************************************************************
+'''
+
+
+
+# ? Add calculations of the distance between lines, and the angle bestween lines. Use this to decide if to lines belong to the same vial.
+print("--- %s seconds ---" % (time.time()-start_time))
+
