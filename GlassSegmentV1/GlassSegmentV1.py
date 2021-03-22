@@ -47,7 +47,10 @@ def unsharp_mask(image, kernel_size=(5, 5), sigma=1.0, amount=1.0, threshold=0):
     return sharpened
 
 def image_threshold(image, lower, upper = 255):
+   
+
     tmp = image.copy()
+
     for height in range(tmp.shape[0]):
         for width in range(tmp.shape[1]):
             if tmp[height, width] < lower:
@@ -56,6 +59,8 @@ def image_threshold(image, lower, upper = 255):
                 tmp[height, width] = 0
             else:
                 tmp[height, width] = 255
+                
+
     return tmp
 
 # * Resize image to fit screen while keeping aspect ratio
@@ -84,7 +89,6 @@ def rotate_image(image, angle):
 
 # TODO: Lær at forstå hvordan matplot virker.
 #? Matplot giver stadig ikke mening når det kommer til Hough space.
-start_time = time.time()
 def HoughLinesSearchSkimage(img):
     
     minDist = 20
@@ -170,9 +174,9 @@ def LineMerge(glassLines):
         angleRangeLower = glassLines[0,0]-0.2
         angleRangeUpper = glassLines[0,0]+0.2
 
-        x0Start,y0Start,x0End,y0End = glassLines[0,1:4]
-        x1Start,y1Start,x1End,y1End = glassLines[1,1:4]
-        x2Start,y2Start,x2End,y2End = glassLines[2,1:4]
+        x0Start,y0Start,x0End,y0End = glassLines[0,1:5]
+        x1Start,y1Start,x1End,y1End = glassLines[1,1:5]
+        x2Start,y2Start,x2End,y2End = glassLines[2,1:5]
 
         slope01 = linregress([x0Start,x1End],[y0Start,y1End])
         slope02 = linregress([x0Start,x2End],[y0Start,y2End])
@@ -331,32 +335,32 @@ cv2.destroyAllWindows()
 '''
 #**************FOR FREDERIK'S VISUAL IMAGE USE:*****************
 # * Chain should be:
-# * Gray -> Hist. stretch -> median filtering (size 7, 23rd percentile) ...
-# * -> sharpening (radius 3.058, amount 6.371, threshold 0.131) ...
-# * -> Diff. of Gaussians (rad 1 3.912, rad 2: 6.463)
-# * Load image and resize
+# * Crop -> Resize to (H,W = 303, 450) -> Cvt to gray -> ...
+# * Hist. stretch -> Blur (rad. = (3,3), SigmaX = 1.5) -> ...
+# * Unsharp mask (Size (3,3), amount 1.2, thresh. .131) -> ...
+# * Laplacian edge (delta = 5.3) -> Cvt. to UByte -> ...
+# * Threshold @ 30
 
-img = cv2.imread('opencv_frame_4.png')
+img = cv2.imread('opencv_frame_5.png')
+start_time = time.time()
+
 img_cropped = img[60:60+505, 325:325+740]
 img_screensized = ResizeToFit(img_cropped, H= 303, W = 450)
-cv2.imwrite('hahaha.png', img_screensized)
 img_gray = cv2.cvtColor(img_screensized, cv2.COLOR_BGR2GRAY)
-img_stretched = HistStretch(img_gray)
-#img_percentile = ndimage.filters.percentile_filter(img_stretched, 23, (3,3))
-img_blur = cv2.GaussianBlur(img_stretched, (3,3), 1.5)
-img_sharpen = unsharp_mask(img_blur, kernel_size = (3,3), amount = 0.565, threshold = 0.131)
-#img_edges = difference_of_gaussians(img_sharpen, 2, 8)
-img_edges = cv2.Laplacian(img_sharpen, ddepth = cv2.CV_16S, delta = 5.3)
+img_stretched = cv2.equalizeHist(img_gray)
+img_blur = cv2.GaussianBlur(img_stretched, (3,3), 7)
+img_sharpen = unsharp_mask(img_blur, kernel_size = (3,3), amount = 1, threshold = 0.131)
+img_edges = cv2.Laplacian(img_sharpen, ddepth = cv2.CV_16S, delta = 5)
 img_edges = img_as_ubyte(img_edges)
-#cv2.imwrite('EvalMe.png', img_edges)
-img_binary = image_threshold(img_edges, 20)
-upscaled = ResizeToFit(img_binary, H = 720, W = 1080)
-cv2.imshow('Final image', upscaled)
-cv2.waitKey(20)
+img_binary = cv2.threshold(img_edges, 30, maxval = 255, type = cv2.THRESH_BINARY)
+img_binary = img_binary[1]
+#upscaled = ResizeToFit(img_binary, H = 720, W = 1080)
+print("--- %s seconds ---" % (time.time()-start_time))
+
+
 
 
 edges_hough = HoughLinesSearch(img_binary)
-print("--- %s seconds ---" % (time.time()-start_time))
 cv2.imshow('edge_hough',edges_hough)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
