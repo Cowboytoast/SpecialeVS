@@ -10,6 +10,11 @@ import numpy as np
 from scipy.stats import linregress
 from skimage.transform import hough_line
 
+#*********** GLOBAL PARAMETERS **************
+angleTolerance = 0.3
+
+#********************************************
+
 # * Histogram stretching function
 def HistStretch(img):
     tmp = img.copy()
@@ -55,7 +60,10 @@ def image_threshold(image, lower, upper = 255):
 
 # * Resize image to fit screen while keeping aspect ratio
 def ResizeToFit(oriimg, H = 980, W = 1820):
-    height, width, depth = oriimg.shape
+    if(len(oriimg.shape) == 3):
+        height, width, depth = oriimg.shape
+    else:
+        height, width = oriimg.shape
     scaleWidth = float(W)/float(width)
     scaleHeight = float(H)/float(height)
 
@@ -144,7 +152,7 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
 
 def LineMerge(glassLines):
     # * function that merge the lines of a side to only one line
-    lineMerged = np.zeros([100,6])
+    lineMerged = np.zeros([800,6])
     k = 0
     if len(glassLines) == 2: # check if there exist only 2 lines
         a = np.array(abs(glassLines[0:2,1] - glassLines[0:2, 3]))
@@ -252,8 +260,8 @@ def LineMerge(glassLines):
 
                 coordinates = np.array(np.r_[glassLines[i,1:3], glassLines[j, 3:5]]) #xstart ystart xend yend
 
-                angleRangeLower = glassLines[i,0]-0.4
-                angleRangeUpper = glassLines[i,0]+0.4
+                angleRangeLower = glassLines[i,0]-angleTolerance
+                angleRangeUpper = glassLines[i,0]+angleTolerance
                 
                 slope = linregress([coordinates[0], coordinates[2]], [coordinates[1], coordinates[3]])
                 if slope.slope > angleRangeLower and slope.slope < angleRangeUpper:
@@ -271,7 +279,7 @@ def LinesGrouping(sortedLines):
     lineGroup = []
     range_upper = 0
     k = 0
-    glass = np.zeros([100, 5])
+    glass = np.zeros([1200, 5])
     sortedLinesArray = np.array(sortedLines)
     np.set_printoptions(precision=6,suppress=True)
     
@@ -338,15 +346,25 @@ cv2.destroyAllWindows()
 # * -> sharpening (radius 3.058, amount 6.371, threshold 0.131) ...
 # * -> Diff. of Gaussians (rad 1 3.912, rad 2: 6.463)
 # * Load image and resize
-img = cv2.imread('IMG_0005_cropped.png')
-img_screensized = ResizeToFit(img, H = 477, W = 620)
+
+img = cv2.imread('opencv_frame_4.png')
+img_cropped = img[60:60+505, 325:325+740]
+img_screensized = ResizeToFit(img_cropped, H= 303, W = 450)
+cv2.imwrite('hahaha.png', img_screensized)
 img_gray = cv2.cvtColor(img_screensized, cv2.COLOR_BGR2GRAY)
 img_stretched = HistStretch(img_gray)
-img_percentile = ndimage.filters.percentile_filter(img_stretched, 23, (7,7))
-img_sharpen = unsharp_mask(img_percentile, kernel_size = (3,3), amount = 6.4, threshold = 0.131)
-img_edges = difference_of_gaussians(img_sharpen, 2, 8)
+#img_percentile = ndimage.filters.percentile_filter(img_stretched, 23, (3,3))
+img_blur = cv2.GaussianBlur(img_stretched, (3,3), 1.5)
+img_sharpen = unsharp_mask(img_blur, kernel_size = (3,3), amount = 0.565, threshold = 0.131)
+#img_edges = difference_of_gaussians(img_sharpen, 2, 8)
+img_edges = cv2.Laplacian(img_sharpen, ddepth = cv2.CV_16S, delta = 5.3)
 img_edges = img_as_ubyte(img_edges)
-img_binary = image_threshold(img_edges, 4)
+#cv2.imwrite('EvalMe.png', img_edges)
+img_binary = image_threshold(img_edges, 20)
+upscaled = ResizeToFit(img_binary, H = 720, W = 1080)
+cv2.imshow('Final image', upscaled)
+cv2.waitKey(20)
+
 
 edges_hough = HoughLinesSearch(img_binary)
 print("--- %s seconds ---" % (time.time()-start_time))
