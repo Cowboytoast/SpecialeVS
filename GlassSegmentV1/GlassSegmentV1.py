@@ -169,22 +169,11 @@ def LineMerge(glassLines):
     elif len(glassLines) == 3: # check if there exist only 3 lines
         angleRangeLower = glassLines[0,0]-0.2
         angleRangeUpper = glassLines[0,0]+0.2
-        
-        x0Start = glassLines[0,1]
-        y0Start = glassLines[0,2]
-        x0End = glassLines[0,3]
-        y0End = glassLines[0,4]
-            
-        x1Start = glassLines[1,1]
-        y1Start = glassLines[1,2]
-        x1End = glassLines[1,3]
-        y1End = glassLines[1,4]
-            
-        x2Start = glassLines[2,1]
-        y2Start = glassLines[2,2]
-        x2End = glassLines[2,3]
-        y2End = glassLines[2,4]
-            
+
+        x0Start,y0Start,x0End,y0End = glassLines[0,1:4]
+        x1Start,y1Start,x1End,y1End = glassLines[1,1:4]
+        x2Start,y2Start,x2End,y2End = glassLines[2,1:4]
+
         slope01 = linregress([x0Start,x1End],[y0Start,y1End])
         slope02 = linregress([x0Start,x2End],[y0Start,y2End])
         slope12 = linregress([x1Start,x2End],[y1Start,y2End])
