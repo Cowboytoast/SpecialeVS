@@ -38,7 +38,7 @@ def cvt_to_bin(image):
                 image_bin[y,x] = True
     return image_bin
 
-def templatematch(img, templateTop, templateBot, houghLocation, angle_inc = 1, h_steps = 6, w_steps = 6):
+def templatematch(img, templateTop, templateBot, houghLocation, angle_inc = 1, h_steps = 10, w_steps = 10):
     start_time = time.time()
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
     
@@ -56,8 +56,8 @@ def templatematch(img, templateTop, templateBot, houghLocation, angle_inc = 1, h
             slopes[cnt] += 360
             
     slope_offset = np.average(slopes)
-    template_rot = imutils.rotate_bound(templateTop, np.average(slopes))
-    template_rot = imutils.rotate_bound(templateBot, np.average(slopes))
+    templateTop_rot = imutils.rotate_bound(templateTop, slope_offset)
+    templateBot_rot = imutils.rotate_bound(templateBot, slope_offset)
     #matches = np.empty([int(10/angle_inc), img.shape[0] - template_rot.shape[1] + 10, img.shape[1] - template_rot.shape[1] + 10])
     # TODO Allocate the array in a better way for speed!!
     #matches = np.empty([360, 1000, 1000], dtype = np.uint16)
@@ -70,11 +70,11 @@ def templatematch(img, templateTop, templateBot, houghLocation, angle_inc = 1, h
     
 
     for updown in range(0,2): # 1 for up, 2 for down
-        for h in np.arange(int(np.amin(pointsy)) - 30, int(np.amin(pointsy)) + 30, 1):
-            for w in np.arange(int(np.amin(pointsx)) - 30, int(np.amin(pointsx)) + 30, 1):
+        for h in np.arange(int(np.amin(pointsy)) - int(h_steps/2), int(np.amin(pointsy)) + int(h_steps/2), 1):
+            for w in np.arange(int(np.amin(pointsx)) - int(w_steps/2), int(np.amin(pointsx)) + int(w_steps/2), 1):
                 #for angle in np.arange(slope_offset - 5, slope_offset + 5, angle_inc):
             
-                matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+                matches = np.logical_and(img[h : h + templateTop_rot.shape[0], w : w + templateTop_rot.shape[1]], templateTop_rot)
                 matches = np.count_nonzero(matches)
                 if matches > maxval:
                     maxval = matches
@@ -86,7 +86,9 @@ def templatematch(img, templateTop, templateBot, houghLocation, angle_inc = 1, h
                 #cv2.waitKey(20)
                     #matches[int(angle/angle_inc), h, w] = np.count_nonzero(match_array)
         slope_offset += 180
-        template_rot = imutils.rotate_bound(templateTop, slope_offset)
+        templateTop_rot = imutils.rotate_bound(templateTop, slope_offset)
+        templateBot_rot = imutils.rotate_bound(templateBot, slope_offset)
+        
     
 
 
@@ -113,7 +115,7 @@ templateBot = cv2.imread('TemplateBottom.png', 0)
 # * Rotating template in increments
 # * and match with image patch
 
-houghLocation = np.array([2.5, 697, 54, 915, 365, 2.5, 648, 87, 861, 396])
+houghLocation = np.array([2.55, 697, 54, 915, 365, 2.55, 648, 87, 861, 396])
 final = templatematch(img, templateTop, templateBot, houghLocation)
 
 # TODO Prepare to function with line coordinates to narrow down position
