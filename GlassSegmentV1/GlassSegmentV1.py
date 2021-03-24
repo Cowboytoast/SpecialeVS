@@ -63,7 +63,7 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     # for each iteration and store most pixel hits
     
     UpDown = 1 # 1 for up, 0 for down
-    '''
+    
     for h in np.arange(int(np.amin(pointsy)) - int(h_steps/2), int(np.amin(pointsy)) + int(h_steps/2), 1):
         for w in np.arange(int(np.amin(pointsx)) - int(w_steps/2), int(np.amin(pointsx)) + int(w_steps/2), 1):
             matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
@@ -90,29 +90,12 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     detection = imutils.rotate_bound(overlay, np.average(slopes))
     final = img
     final[max_h : max_h + detection.shape[0], max_w : max_w+detection.shape[1]] += detection
-    #cv2.imwrite('IMG0005_Detection.png', final)
-    '''
-    img2 = img.copy()
-    w, h = template_rot.shape[::-1]
     
-    img = img2.copy()
-    method = cv2.TM_CCORR
-    res = cv2.matchTemplate(img, template_rot, method)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-    top_left = max_loc
-    bottom_right = (top_left[0] + w, top_left[1] + h)
-    cv2.rectangle(img,top_left, bottom_right, 255, 2)
-    plt.subplot(121),plt.imshow(res,cmap = 'gray')
-    plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
-    plt.subplot(122),plt.imshow(img,cmap = 'gray')
-    plt.title('Detected Point'), plt.xticks([]), plt.yticks([])
-    plt.show()
-    return img
-
+    return final
 start_time = time.time()
 
 # * Load image and convert to binary
-img = cv2.imread('PrepResult.png', 0)
+img = cv2.imread('Frame4_Prep.png', 0)
 #img = ResizeToFit(img)
 #img_bin = cvt_to_bin(img)
 
