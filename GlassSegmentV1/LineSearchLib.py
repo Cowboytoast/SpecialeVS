@@ -233,3 +233,36 @@ def HoughLinesSearchSkimage(img):
     houghImage = img
     
     return houghImage
+
+def LineExtend(glassSides,lineLength=100):
+    line0,line1 = False, False
+    if glassSides[0,5]<lineLength:
+        xDist,yDist,line0 = np.sin(glassSides[0,0])*lineLength, np.cos(glassSides[0,0])*lineLength,True
+        
+    elif glassSides[1,5]<lineLength:
+        xDist,yDist,line1 = np.cos(glassSides[1,0])*lineLength, np.sin(glassSides[1,0])*lineLength,True
+        
+    else:
+        return glassSides    
+    
+    if abs(glassSides[0,1]-glassSides[1,1]) > abs(glassSides[0,3]-glassSides[1,3]):
+        if line0==True:
+            glassSides[0,1],glassSides[0,2] = glassSides[0,1]+np.round(xDist), glassSides[0,2]+np.round(yDist)
+        elif line1==True:
+            glassSides[1,1],glassSides[1,2] = glassSides[1,1]+np.round(xDist), glassSides[1,2]+np.round(yDist)
+    else:
+        if line0==True:
+            glassSides[0,3],glassSides[0,4] = glassSides[0,3]+np.round(xDist), glassSides[0,4]+np.round(yDist)
+        elif line1==True:
+            glassSides[1,3],glassSides[1,4] = glassSides[1,3]+np,round(xDist), glassSides[1,4]+np.round(yDist)
+           
+    return glassSides
+
+def grapperPoint(glassSides):
+    grapPoint=[]
+    
+    grapPoint[0,0],grapPoint[0,1] = abs(glassSides[0,1]-glassSides[0,3]), abs(glassSides[0,2]-glassSides[0,4])
+    grapPoint[1,0],grapPoint[1,1] = abs(glassSides[1,1]-glassSides[1,3]), abs(glassSides[1,2]-glassSides[1,4])
+    grapPointAngle = glassSides[0,0]
+    
+    return grapPoint,grapPointAngle
