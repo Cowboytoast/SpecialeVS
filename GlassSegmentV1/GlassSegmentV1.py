@@ -18,7 +18,7 @@ def templatematch(img, template, houghLocation, h_steps = 20, w_steps = 20):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
     pointsx = np.array([houghLocation[1], houghLocation[3], houghLocation[6], houghLocation[8]])
     pointsy = np.array([houghLocation[2], houghLocation[4], houghLocation[7], houghLocation[9]])
-    slopes = np.array([math.degrees(houghLocation[0]), math.degrees(houghLocation[5])])
+    slopes = np.array([360 - math.degrees(houghLocation[0]), 360 - math.degrees(houghLocation[5])])
 
     # Convert to positive slope angle
     for cnt in range(slopes.shape[0]):
@@ -34,7 +34,7 @@ def templatematch(img, template, houghLocation, h_steps = 20, w_steps = 20):
     # for each iteration and store most pixel hits
     maxval = 0
     UpDown = 1 # 1 for up, 0 for down
-    
+    max_idx = np.zeros((2,1))
     for h in np.arange(int(np.amin(pointsy)) - int(h_steps/2), int(np.amin(pointsy)) + int(h_steps/2), 1):
         for w in np.arange(int(np.amin(pointsx)) - int(w_steps/2), int(np.amin(pointsx)) + int(w_steps/2), 1):
             matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
@@ -43,10 +43,10 @@ def templatematch(img, template, houghLocation, h_steps = 20, w_steps = 20):
             if matches > maxval:
                 maxval = matches
                 max_idx = np.array([h, w])
-            #rotatingim = np.copy(img)
-            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            #cv2.imshow('Rotating progress', rotatingim)
-            #cv2.waitKey(10)
+            rotatingim = np.copy(img)
+            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            cv2.imshow('Rotating progress', rotatingim)
+            cv2.waitKey(10)
     slope_offset += 180
     template_rot = imutils.rotate_bound(template, slope_offset)
     UpDown = 0 # 1 for up, 0 for down
@@ -87,7 +87,7 @@ cv2.destroyAllWindows()
 # * Threshold @ 30
 start_time = time.time()
 
-img = cv2.imread('opencv_frame_2.png')
+img = cv2.imread('opencv_frame_4.png')
 template = cv2.imread('VialTop.png', 0) # * Load template
 
 img_cropped = img[60:60+505, 325:325+740]
@@ -114,10 +114,8 @@ edges_hough = ls.HoughLinesSearch(img_binary)
 
 
 
-# * Rotating template in increments
-# * and match with image patch
-
-houghLocation = np.array([math.radians(343), 186, 56, 225, 185, math.radians(343), 208, 51, 247, 179])
+houghLocation = np.ndarray.flatten(edges_hough)
+#houghLocation = np.array([math.radians(343), 186, 56, 225, 185, math.radians(343), 208, 51, 247, 179])
 final = templatematch(img_binary, template, houghLocation)
 print("--- %s seconds ---" % (time.time() - start_time))
 
