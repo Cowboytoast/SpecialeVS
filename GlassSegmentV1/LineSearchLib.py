@@ -240,24 +240,53 @@ def HoughLinesSearchSkimage(img):
 def LineExtend(glassSides,lineLength=100):
     line0,line1 = False, False
     if glassSides[0,5]<lineLength:
-        xDist,yDist,line0 = np.sin(glassSides[0,0])*lineLength, np.cos(glassSides[0,0])*lineLength,True
+        xDist0,yDist0,line0 = np.sin(glassSides[0,0])*lineLength, np.cos(glassSides[0,0])*lineLength,True
+    else:
+        pass
         
-    elif glassSides[1,5]<lineLength:
-        xDist,yDist,line1 = np.cos(glassSides[1,0])*lineLength, np.sin(glassSides[1,0])*lineLength,True
+    if glassSides[1,5]<lineLength:
+        xDist1,yDist1,line1 = np.cos(glassSides[1,0])*lineLength, np.sin(glassSides[1,0])*lineLength,True
         
     else:
-        return glassSides    
+        pass   
     
     if abs(glassSides[0,1]-glassSides[1,1]) > abs(glassSides[0,3]-glassSides[1,3]):
         if line0==True:
-            glassSides[0,1],glassSides[0,2] = glassSides[0,1]+np.round(xDist), glassSides[0,2]+np.round(yDist)
-        elif line1==True:
-            glassSides[1,1],glassSides[1,2] = glassSides[1,1]+np.round(xDist), glassSides[1,2]+np.round(yDist)
-    else:
+            glassSides[0,1],glassSides[0,2] = glassSides[0,1]+np.round(xDist0), glassSides[0,2]+np.round(yDist0)
+        else:
+            pass
+        if line1==True:
+            glassSides[1,1],glassSides[1,2] = glassSides[1,1]+np.round(xDist1), glassSides[1,2]+np.round(yDist1)
+        else:
+            pass
+            
+    elif abs(glassSides[0,1]-glassSides[1,1]) < abs(glassSides[0,3]-glassSides[1,3]):
         if line0==True:
-            glassSides[0,3],glassSides[0,4] = glassSides[0,3]+np.round(xDist), glassSides[0,4]+np.round(yDist)
-        elif line1==True:
-            glassSides[1,3],glassSides[1,4] = glassSides[1,3]+np,round(xDist), glassSides[1,4]+np.round(yDist)
+            glassSides[0,3],glassSides[0,4] = glassSides[0,3]+np.round(xDist0), glassSides[0,4]+np.round(yDist0)
+        else:
+            pass
+        if line1==True:
+            glassSides[1,3],glassSides[1,4] = glassSides[1,3]+np.round(xDist1), glassSides[1,4]+np.round(yDist1)
+        else:
+            pass
+            
+    elif abs(glassSides[0,2]-glassSides[1,2]) > abs(glassSides[0,4]-glassSides[1,4]):
+        if line0==True:
+            glassSides[0,1],glassSides[0,2] = glassSides[0,1]+np.round(xDist0), glassSides[0,2]+np.round(yDist0)
+        else:
+            pass
+        if line1==True:
+            glassSides[1,1],glassSides[1,2] = glassSides[1,1]+np.round(xDist1), glassSides[1,2]+np.round(yDist1)
+        else:
+            pass
+            
+    elif abs(glassSides[0,2]-glassSides[1,2]) < abs(glassSides[0,4]-glassSides[1,4]):
+        if line0==True:
+            glassSides[0,3],glassSides[0,4] = glassSides[0,3]+np.round(xDist0), glassSides[0,4]+np.round(yDist0)
+        if line1==True:
+            glassSides[1,3],glassSides[1,4] = glassSides[1,3]+np.round(xDist1), glassSides[1,4]+np.round(yDist1)
+    else:
+        pass
            
     return glassSides
 
