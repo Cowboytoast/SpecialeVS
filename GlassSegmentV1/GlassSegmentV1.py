@@ -18,15 +18,26 @@ def templatematch(img, template, houghLocation, h_steps = 20, w_steps = 20):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
     pointsx = np.array([houghLocation[1], houghLocation[3], houghLocation[6], houghLocation[8]])
     pointsy = np.array([houghLocation[2], houghLocation[4], houghLocation[7], houghLocation[9]])
-    slopes = np.array([360 - math.degrees(houghLocation[0]), 360 - math.degrees(houghLocation[5])])
+    slopes = np.array([math.degrees(houghLocation[0]), math.degrees(houghLocation[5])])
 
     # Convert to positive slope angle
     for cnt in range(slopes.shape[0]):
-        if np.sign(slopes[cnt]) == -1:
-            slopes[cnt] += 360
-
+        PosAng = 180 - abs(slopes[cnt])
+        slopes[cnt] = 90 - PosAng
+        if slopes[cnt] < 0:
+            slopes[cnt] += 45
+    '''
+    for cnt in range(slopes.shape[0]):
+        origSlope = slopes[cnt]
+        slopes[cnt] += 180
+        while slopes[cnt] > 45:
+            slopes[cnt] -= 45
+        slopes[cnt] += 45 / 2
+    '''
     slope_offset = np.average(slopes)
     template_rot = imutils.rotate_bound(template, slope_offset)
+    startPoint = np.argmin(pointsx + pointsy)
+    
     pointsy -= int(template_rot.shape[0]/2)
     pointsx -= int(template_rot.shape[1]/4)
     
@@ -35,29 +46,32 @@ def templatematch(img, template, houghLocation, h_steps = 20, w_steps = 20):
     maxval = 0
     UpDown = 1 # 1 for up, 0 for down
     max_idx = np.zeros((2,1))
-    for h in np.arange(int(np.amin(pointsy)) - int(h_steps/2), int(np.amin(pointsy)) + int(h_steps/2), 1):
-        for w in np.arange(int(np.amin(pointsx)) - int(w_steps/2), int(np.amin(pointsx)) + int(w_steps/2), 1):
+    #for h in np.arange(int()
+    for h in np.arange(int(pointsy[startPoint]) - int(h_steps/2), int(pointsy[startPoint]) + int(h_steps/2), 1):
+        for w in np.arange(int(pointsx[startPoint]) - int(w_steps/2), int(pointsx[startPoint]) + int(w_steps/2), 1):
             matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
             matches = np.count_nonzero(matches)
             
-            if matches > maxval:
+            if matches >= maxval:
                 maxval = matches
                 max_idx = np.array([h, w])
-            rotatingim = np.copy(img)
-            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            cv2.imshow('Rotating progress', rotatingim)
-            cv2.waitKey(10)
-    slope_offset += 180
-    template_rot = imutils.rotate_bound(template, slope_offset)
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(10)
+    #slope_offset += 180
+    #template_rot = imutils.rotate_bound(template, slope_offset)
     UpDown = 0 # 1 for up, 0 for down
 
     max_h = int(max_idx[0])
     max_w = int(max_idx[1])
+
     overlay = cv2.imread('VialOutline.png', 0)
-    detection = imutils.rotate_bound(overlay, np.average(slopes))
+    detection = imutils.rotate_bound(overlay, slope_offset)
+    #max_h += int(template_rot.shape[0] / 2)
+    #max_w -= int(template_rot.shape[1])
     final = img
-    final[max_h : max_h + detection.shape[0], max_w : max_w+detection.shape[1]] += detection
-    
+    final[max_h : max_h + template_rot.shape[0], max_w : max_w + template_rot.shape[1]] += template_rot
     return final
 
 #**********************Main loop********************************
@@ -115,6 +129,8 @@ edges_hough = ls.HoughLinesSearch(img_binary)
 
 
 houghLocation = np.ndarray.flatten(edges_hough)
+#houghLocation[0] = math.radians(36)
+#houghLocation[5] = math.radians(36)
 #houghLocation = np.array([math.radians(343), 186, 56, 225, 185, math.radians(343), 208, 51, 247, 179])
 final = templatematch(img_binary, template, houghLocation)
 print("--- %s seconds ---" % (time.time() - start_time))
