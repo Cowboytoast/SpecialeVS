@@ -1,76 +1,142 @@
 import cv2
-import numpy as np
-import matplotlib.pyplot as plt
 import time
+import LineSearchLib as ls
+import PreprocessingLib as prep
+from skimage.util import img_as_ubyte
+import numpy as np
 
-# * Do simple morphology to remove noise from image
-def RemoveNoise(img, dim = 3):
-    kernel = np.ones((dim, dim))
-    img_closed = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
-    img_opened = cv2.morphologyEx(img_closed, cv2.MORPH_OPEN, kernel)
-    return img_opened
+import math
+import imutils
+from scipy import ndimage
 
-# * Resize image to fit screen while keeping aspect ratio
-def ResizeToFit(oriimg):
-    H, W = (980, 1820)
-    height, width, depth = oriimg.shape
-    scaleWidth = float(W)/float(width)
-    scaleHeight = float(H)/float(height)
+#*********** GLOBAL PARAMETERS **************
+angleTolerance = 0.3
 
-    if scaleHeight>scaleWidth:
-        imgScale = scaleWidth
-    else:
-        imgScale = scaleHeight
+#********************************************
 
-    newX,newY = oriimg.shape[1]*imgScale, oriimg.shape[0]*imgScale
-    newimg = cv2.resize(oriimg,(int(newX),int(newY)))
-    return newimg
+def templatematch(img, template, houghLocation, h_steps = 20, w_steps = 20):
+    # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
+    pointsx = np.array([houghLocation[1], houghLocation[3], houghLocation[6], houghLocation[8]])
+    pointsy = np.array([houghLocation[2], houghLocation[4], houghLocation[7], houghLocation[9]])
+    slopes = np.array([math.degrees(houghLocation[0]), math.degrees(houghLocation[5])])
 
-def ContourImage(img):
-    contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    drawing = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
-    for i in range(len(contours)):
-        if contours[i].size > 50:
-            cv2.drawContours(drawing, contours, i, (255, 255, 255), 2, cv2.LINE_8, hierarchy, 0)
-    drawing = cv2.cvtColor(drawing, cv2.COLOR_BGR2GRAY)
-    return drawing
+    # Convert to positive slope angle
+    for cnt in range(slopes.shape[0]):
+        PosAng = 180 - abs(slopes[cnt])
+        slopes[cnt] = 90 - PosAng
+        if slopes[cnt] < 0:
+            slopes[cnt] += 45
+    '''
+    for cnt in range(slopes.shape[0]):
+        origSlope = slopes[cnt]
+        slopes[cnt] += 180
+        while slopes[cnt] > 45:
+            slopes[cnt] -= 45
+        slopes[cnt] += 45 / 2
+    '''
+    slope_offset = np.average(slopes)
+    template_rot = imutils.rotate_bound(template, slope_offset)
+    startPoint = np.argmin(pointsx + pointsy)
+    
+    pointsy -= int(template_rot.shape[0]/2)
+    pointsx -= int(template_rot.shape[1]/4)
+    
+    # Do & operation in increments, that is moving the template image a few pixels right/down
+    # for each iteration and store most pixel hits
+    maxval = 0
+    UpDown = 1 # 1 for up, 0 for down
+    max_idx = np.zeros((2,1))
+    #for h in np.arange(int()
+    for h in np.arange(int(pointsy[startPoint]) - int(h_steps/2), int(pointsy[startPoint]) + int(h_steps/2), 1):
+        for w in np.arange(int(pointsx[startPoint]) - int(w_steps/2), int(pointsx[startPoint]) + int(w_steps/2), 1):
+            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+            matches = np.count_nonzero(matches)
+            
+            if matches >= maxval:
+                maxval = matches
+                max_idx = np.array([h, w])
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(10)
+    #slope_offset += 180
+    #template_rot = imutils.rotate_bound(template, slope_offset)
+    UpDown = 0 # 1 for up, 0 for down
 
-def rotate_image(image, angle):
-    image_center = tuple(np.array(image.shape[1::-1]) / 2)
-    rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
-    result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
-    return result
+    max_h = int(max_idx[0])
+    max_w = int(max_idx[1])
 
-# * Load image and resize
-img = cv2.imread('IMG_0005_cropped.png')
-img_screensized = ResizeToFit(img)
+    overlay = cv2.imread('VialOutline.png', 0)
+    detection = imutils.rotate_bound(overlay, slope_offset)
+    #max_h += int(template_rot.shape[0] / 2)
+    #max_w -= int(template_rot.shape[1])
+    final = img
+    final[max_h : max_h + template_rot.shape[0], max_w : max_w + template_rot.shape[1]] += template_rot
+    return final
 
-# * Template stuff
-template = cv2.imread('VialOutline.png', 0)
-scale_pct = 33.585 #33.585
-template_width, template_height = template.shape[::-1]
-template_width = int(template.shape[1] * scale_pct / 100)
-template_height = int(template.shape[0] * scale_pct / 100)
-dsize = (template_height, template_height)
-template = cv2.resize(template, dsize)
+#**********************Main loop********************************
 
-# * Detect edges on image and remove noise
-img_blurred = cv2.blur(img_screensized, (5,5))
-cv2.imshow('filtered', img_blurred)
-edges = cv2.Canny(img_blurred, 45, 45)
-edges_lownoise = RemoveNoise(edges, 5)
+'''
+#*****************FOR MATHIAS' IR IMAGE USE:********************
+img = cv2.imread('IR_test_cropped.png')
+imwidth = img.shape[1]
+imheight = img.shape[0]
+des_dim = (imwidth, imheight)
+img_screensized = cv2.resize(img, des_dim, interpolation=cv2.INTER_LANCZOS4)
 
-# * Rotating template in 5 deg. increments
-angle_inc = 5 # 5 deg. increment
-for i in range(0, int(360/angle_inc)):
-    template = rotate_image(template, angle_inc)
-    res = cv2.matchTemplate(edges_lownoise, template, cv2.TM_CCORR_NORMED)
-    threshold = 0.4
-    loc = np.where(res >= threshold)
-    for pt in zip(*loc[::-1]):
-        cv2.rectangle(img_screensized, pt, (pt[0] + template_width, pt[1] + template_height), (0,0,255), 2)
+edges = cv2.Canny(img_screensized, 45, 45)
+edges_hough = HoughLinesSearch(edges)
+print("--- %s seconds ---" % (time.time()-start_time))
+cv2.imshow('edge_hough',edges_hough)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+#***************************************************************
+'''
+#**************FOR FREDERIK'S VISUAL IMAGE USE:*****************
+# * Chain should be:
+# * Crop -> Resize to (H,W = 403, 550) -> Cvt to gray -> ...
+# * Hist. stretch -> Blur (rad. = (3,3), SigmaX = 7) -> ...
+# * Unsharp mask (Size (3,3), amount 1, thresh. .131) -> ...
+# * Laplacian edge (delta = 5) -> Cvt. to UByte -> ...
+# * Threshold @ 30
+start_time = time.time()
 
-cv2.imshow('Matches', img_screensized)
-cv2.imshow('Contour image', edges_lownoise)
+img = cv2.imread('opencv_frame_4.png')
+template = cv2.imread('VialTop.png', 0) # * Load template
+
+img_cropped = img[60:60+505, 325:325+740]
+img_screensized = prep.ResizeToFit(img_cropped, H= 403, W = 550)
+img_gray = cv2.cvtColor(img_screensized, cv2.COLOR_BGR2GRAY)
+img_stretched = cv2.equalizeHist(img_gray)
+img_blur = cv2.GaussianBlur(img_stretched, (3,3), 7)
+img_sharpen = prep.unsharp_mask(img_blur, kernel_size = (3,3), amount = 1, threshold = 0.131)
+img_edges = cv2.Laplacian(img_sharpen, ddepth = cv2.CV_16S, delta = 5)
+img_edges = img_as_ubyte(img_edges)
+# ! Consider using Otsu's binarization THRESH_OTSU instead
+img_binary = cv2.threshold(img_edges, 30, maxval = 255, type = cv2.THRESH_OTSU)
+img_binary = img_binary[1]
+#upscaled = prep.ResizeToFit(img_binary, H = 720, W = 1080)
+#cv2.imshow('Preprocessing', upscaled)
+
+edges_hough = ls.HoughLinesSearch(img_binary)
+#print("--- %s seconds ---" % (time.time()-start_time))
+
+#cv2.imshow('edge_hough',edges_hough)
+#cv2.waitKey(0)
+#cv2.destroyAllWindows()
+#***************************************************************
+
+
+
+houghLocation = np.ndarray.flatten(edges_hough)
+#houghLocation[0] = math.radians(36)
+#houghLocation[5] = math.radians(36)
+#houghLocation = np.array([math.radians(343), 186, 56, 225, 185, math.radians(343), 208, 51, 247, 179])
+final = templatematch(img_binary, template, houghLocation)
+print("--- %s seconds ---" % (time.time() - start_time))
+
+# TODO Function with Mathias' program which sends:
+# TODO line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
+cv2.imshow('bla', final)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
