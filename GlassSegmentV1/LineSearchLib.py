@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import linregress
 
 #*********** GLOBAL PARAMETERS **************
-angleTolerance = 0.3
+angleTolerance = 0.1
 
 #********************************************
 
@@ -40,11 +40,11 @@ def LinesGrouping(sortedLines):
     sortedLinesArray = np.array(sortedLines)
     np.set_printoptions(precision=6,suppress=True)
     
-    # for-loop to determind the range of allowed difference in slope            
+    # for-loop to determine the range of allowed difference in slope            
     for i in range(0,len(sortedLinesArray)):
         if value is None:
             value=sortedLinesArray[0,0]
-            range_upper=value+0.45
+            range_upper=value+angleTolerance
         elif range_upper < sortedLinesArray[i,0]:
             break
         glass[k, 0:5] = sortedLinesArray[i, 0:5]
@@ -70,12 +70,12 @@ def LineMerge(glassLines):
         c0 = np.hypot(a[0],b0)
         c1 = np.hypot(a[1],b1)
         lineMerged[0,0:5] = glassLines[0,0:5]
-        lineMerged[1,0:5] =glassLines[1,0:5]
+        lineMerged[1,0:5] = glassLines[1,0:5]
         lineMerged[0,5] = c0
         lineMerged[1,5] = c1
     elif len(glassLines) == 3: # check if there exist only 3 lines
-        angleRangeLower = glassLines[0,0]-0.2
-        angleRangeUpper = glassLines[0,0]+0.2
+        angleRangeLower = glassLines[0,0]-angleTolerance
+        angleRangeUpper = glassLines[0,0]+angleTolerance
 
         x0Start,y0Start,x0End,y0End = glassLines[0,1:5]
         x1Start,y1Start,x1End,y1End = glassLines[1,1:5]
@@ -195,9 +195,10 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
         for i in range(0, len(glassSides)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
             l = glassSides[i] # same as above
             l = l.astype(int)
-            cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 3, cv2.LINE_AA)
+            cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 1, cv2.LINE_AA)
             g+=-255
             r+=255
+        
         print(len(glassSides),"lines found")
     else:
         print("No lines found")

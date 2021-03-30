@@ -4,6 +4,8 @@ import LineSearchLib as ls
 import PreprocessingLib as prep
 from skimage.util import img_as_ubyte
 import numpy as np
+# mb delete later
+from scipy.stats import linregress
 
 import math
 import imutils
@@ -14,27 +16,23 @@ angleTolerance = 0.3
 
 #********************************************
 
-def templatematch(img, template, houghLocation, h_steps = 20, w_steps = 20):
+def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
     pointsx = np.array([houghLocation[1], houghLocation[3], houghLocation[6], houghLocation[8]])
     pointsy = np.array([houghLocation[2], houghLocation[4], houghLocation[7], houghLocation[9]])
     slopes = np.array([math.degrees(houghLocation[0]), math.degrees(houghLocation[5])])
 
-    # Convert to positive slope angle
-    for cnt in range(slopes.shape[0]):
-        PosAng = 180 - abs(slopes[cnt])
-        slopes[cnt] = 90 - PosAng
-        if slopes[cnt] < 0:
-            slopes[cnt] += 45
-    '''
-    for cnt in range(slopes.shape[0]):
-        origSlope = slopes[cnt]
-        slopes[cnt] += 180
-        while slopes[cnt] > 45:
-            slopes[cnt] -= 45
-        slopes[cnt] += 45 / 2
-    '''
+    debugval = linregress([314,252],[157,277])
     slope_offset = np.average(slopes)
+    # Convert to positive slope angle
+    PosAng = 180 - abs(slope_offset)
+    slope_offset = 90 - PosAng
+    if slope_offset < 0:
+        slope_offset += 45
+    
+    
+    
+    #slope_offset = 27
     template_rot = imutils.rotate_bound(template, slope_offset)
     startPoint = np.argmin(pointsx + pointsy)
     
@@ -55,24 +53,40 @@ def templatematch(img, template, houghLocation, h_steps = 20, w_steps = 20):
             if matches >= maxval:
                 maxval = matches
                 max_idx = np.array([h, w])
-            #rotatingim = np.copy(img)
-            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            #cv2.imshow('Rotating progress', rotatingim)
-            #cv2.waitKey(10)
-    #slope_offset += 180
-    #template_rot = imutils.rotate_bound(template, slope_offset)
+            rotatingim = np.copy(img)
+            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            cv2.imshow('Rotating progress', rotatingim)
+            cv2.waitKey(10)
+
     UpDown = 0 # 1 for up, 0 for down
 
     max_h = int(max_idx[0])
     max_w = int(max_idx[1])
 
     overlay = cv2.imread('VialOutline.png', 0)
+    
     detection = imutils.rotate_bound(overlay, slope_offset)
-    #max_h += int(template_rot.shape[0] / 2)
-    #max_w -= int(template_rot.shape[1])
-    final = img
-    final[max_h : max_h + template_rot.shape[0], max_w : max_w + template_rot.shape[1]] += template_rot
+    #max_h -= int(template_rot.shape[0] / 4)
+    #max_w += int(template_rot.shape[1] / 4)
+    final = np.copy(img)
+    overlayStartH, overlayStartW = shiftIdx(detection)
+    templateStartH, templateStartW = shiftIdx(template_rot)
+    adjustH = int(-templateStartH - overlayStartH)
+    adjustW = int(templateStartW - overlayStartW)
+    # * To overlay entire vial use code below
+    final[max_h + adjustH : max_h + detection.shape[0] + adjustH, 
+          max_w + adjustW : max_w + detection.shape[1] + adjustW] += detection
+    # * To overlay template use code below
+    final[max_h : max_h + template_rot.shape[0],
+          max_w : max_w + template_rot.shape[1]] += template_rot
     return final
+
+def shiftIdx(array):
+    # * Finds first non-zero value in a 2D array or 2D array of arrays
+    for H in range(array.shape[0]):
+        for W in range(array.shape[1]):
+            if array[H, W] > 0:
+                return H, W
 
 #**********************Main loop********************************
 
@@ -101,8 +115,8 @@ cv2.destroyAllWindows()
 # * Threshold @ 30
 start_time = time.time()
 
-img = cv2.imread('opencv_frame_4.png')
-template = cv2.imread('VialTop.png', 0) # * Load template
+img = cv2.imread('opencv_frame_0.png')
+template = cv2.imread('vialTop.png', 0) # * Load template
 
 img_cropped = img[60:60+505, 325:325+740]
 img_screensized = prep.ResizeToFit(img_cropped, H= 403, W = 550)
