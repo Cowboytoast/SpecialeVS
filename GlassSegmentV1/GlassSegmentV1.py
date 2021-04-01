@@ -4,9 +4,6 @@ import LineSearchLib as ls
 import PreprocessingLib as prep
 from skimage.util import img_as_ubyte
 import numpy as np
-# mb delete later
-from scipy.stats import linregress
-
 import math
 import imutils
 from scipy import ndimage
@@ -20,13 +17,12 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
     pointsx = np.array([houghLocation[1], houghLocation[3], houghLocation[6], houghLocation[8]])
     pointsy = np.array([houghLocation[2], houghLocation[4], houghLocation[7], houghLocation[9]])
-    slopes = np.array([math.degrees(houghLocation[0]), math.degrees(houghLocation[5])])
-
-    debugval = linregress([314,252],[157,277])
-    slope_offset = np.average(slopes)
+    slopes = np.array([houghLocation[0], houghLocation[5]])
+    
+    slope_offset = math.degrees(math.atan(np.average(slopes)))
     # Convert to positive slope angle
-    PosAng = 180 - abs(slope_offset)
-    slope_offset = 90 - PosAng
+    #PosAng = 180 - abs(slope_offset)
+    slope_offset = 90 - abs(slope_offset)
     if slope_offset < 0:
         slope_offset += 45
     
