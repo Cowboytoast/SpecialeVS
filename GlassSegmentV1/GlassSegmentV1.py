@@ -15,9 +15,13 @@ angleTolerance = 0.3
 
 def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
-    pointsx = np.array([houghLocation[1], houghLocation[3], houghLocation[6], houghLocation[8]])
-    pointsy = np.array([houghLocation[2], houghLocation[4], houghLocation[7], houghLocation[9]])
-    slopes = np.array([houghLocation[0], houghLocation[5]])
+    if houghLocation.size== 0:
+        print("One or no lines found!")
+        exit()
+        
+    pointsx = np.array([houghLocation[1], houghLocation[3], houghLocation[7], houghLocation[9]])
+    pointsy = np.array([houghLocation[2], houghLocation[4], houghLocation[8], houghLocation[10]])
+    slopes = np.array([houghLocation[0], houghLocation[6]])
     
     slope_offset = math.degrees(math.atan(np.average(slopes)))
     # Convert to positive slope angle
@@ -49,32 +53,63 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
             if matches >= maxval:
                 maxval = matches
                 max_idx = np.array([h, w])
-            rotatingim = np.copy(img)
-            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            cv2.imshow('Rotating progress', rotatingim)
-            cv2.waitKey(10)
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(10)
 
-    UpDown = 0 # 1 for up, 0 for down
+    startPoint = np.argmax(pointsx + pointsy)
+    template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
+    
+    pointsy += int(template_rot.shape[0]/4)
+    pointsx -= int(template_rot.shape[1]/2)
+    for h in np.arange(int(pointsy[startPoint]) + int(h_steps/2), int(pointsy[startPoint]) - int(h_steps/2), -1):
+        for w in np.arange(int(pointsx[startPoint]) + int(w_steps/2), int(pointsx[startPoint]) - int(w_steps/2), -1):
+            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+            matches = np.count_nonzero(matches)
+            
+            if matches >= maxval:
+                UpDown = 0 # 1 for up, 0 for down
+                maxval = matches
+                max_idx = np.array([h, w])
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(30)
 
     max_h = int(max_idx[0])
     max_w = int(max_idx[1])
 
+
+    # * OVERLAY STUFF***************************************
     overlay = cv2.imread('VialOutline.png', 0)
-    
-    detection = imutils.rotate_bound(overlay, slope_offset)
-    #max_h -= int(template_rot.shape[0] / 4)
-    #max_w += int(template_rot.shape[1] / 4)
     final = np.copy(img)
-    overlayStartH, overlayStartW = shiftIdx(detection)
     templateStartH, templateStartW = shiftIdx(template_rot)
-    adjustH = int(-templateStartH - overlayStartH)
-    adjustW = int(templateStartW - overlayStartW)
+    
     # * To overlay entire vial use code below
-    final[max_h + adjustH : max_h + detection.shape[0] + adjustH, 
-          max_w + adjustW : max_w + detection.shape[1] + adjustW] += detection
     # * To overlay template use code below
-    final[max_h : max_h + template_rot.shape[0],
-          max_w : max_w + template_rot.shape[1]] += template_rot
+    if UpDown == 1:
+        template_rot = imutils.rotate_bound(template_rot, 180)
+        detection = imutils.rotate_bound(overlay, slope_offset)
+        final[max_h : max_h + template_rot.shape[0],
+        max_w : max_w + template_rot.shape[1]] += template_rot
+        overlayStartH, overlayStartW = shiftIdx(detection)
+        adjustH = int(-templateStartH - overlayStartH)
+        adjustW = int(templateStartW - overlayStartW)
+        final[max_h + adjustH : max_h + detection.shape[0] + adjustH, 
+            max_w + adjustW : max_w + detection.shape[1] + adjustW] += detection
+    else:
+        detection = imutils.rotate_bound(overlay, slope_offset + 180)
+        final[max_h : max_h + template_rot.shape[0],
+        max_w : max_w + template_rot.shape[1]] += template_rot
+        overlayStartH, overlayStartW = shiftIdx(detection)
+        adjustH = int(templateStartH - overlayStartH)
+        adjustW = int(templateStartW - overlayStartW)
+        final[max_h + template_rot.shape[0] : max_h + template_rot.shape[0] - detection.shape[0], 
+            max_w + template_rot.shape[1] : max_w + template_rot.shape[1] - detection.shape[1]] += detection
+    
+    
+    
     return final
 
 def shiftIdx(array):
@@ -111,7 +146,7 @@ cv2.destroyAllWindows()
 # * Threshold @ 30
 start_time = time.time()
 
-img = cv2.imread('opencv_frame_0.png')
+img = cv2.imread('opencv_frame_0R.png')
 template = cv2.imread('vialTop.png', 0) # * Load template
 
 img_cropped = img[60:60+505, 325:325+740]
@@ -126,8 +161,8 @@ img_edges = img_as_ubyte(img_edges)
 img_binary = cv2.threshold(img_edges, 30, maxval = 255, type = cv2.THRESH_OTSU)
 img_binary = img_binary[1]
 #upscaled = prep.ResizeToFit(img_binary, H = 720, W = 1080)
-#cv2.imshow('Preprocessing', upscaled)
-
+#cv2.imshow('Preprocessing', img_binary)
+#cv2.waitKey(0)
 edges_hough = ls.HoughLinesSearch(img_binary)
 #print("--- %s seconds ---" % (time.time()-start_time))
 
