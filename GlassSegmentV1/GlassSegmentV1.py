@@ -61,7 +61,7 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     startPoint = np.argmax(pointsx + pointsy)
     template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
     
-    pointsy += int(template_rot.shape[0]/4)
+    #pointsy -= int(template_rot.shape[0]/4)
     pointsx -= int(template_rot.shape[1]/2)
     for h in np.arange(int(pointsy[startPoint]) + int(h_steps/2), int(pointsy[startPoint]) - int(h_steps/2), -1):
         for w in np.arange(int(pointsx[startPoint]) + int(w_steps/2), int(pointsx[startPoint]) - int(w_steps/2), -1):
@@ -72,10 +72,10 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
                 UpDown = 0 # 1 for up, 0 for down
                 maxval = matches
                 max_idx = np.array([h, w])
-            #rotatingim = np.copy(img)
-            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            #cv2.imshow('Rotating progress', rotatingim)
-            #cv2.waitKey(30)
+            rotatingim = np.copy(img)
+            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            cv2.imshow('Rotating progress', rotatingim)
+            cv2.waitKey(20)
 
     max_h = int(max_idx[0])
     max_w = int(max_idx[1])
@@ -105,8 +105,8 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
         overlayStartH, overlayStartW = shiftIdx(detection)
         adjustH = int(templateStartH - overlayStartH)
         adjustW = int(templateStartW - overlayStartW)
-        final[max_h + template_rot.shape[0] : max_h + template_rot.shape[0] - detection.shape[0], 
-            max_w + template_rot.shape[1] : max_w + template_rot.shape[1] - detection.shape[1]] += detection
+        #final[max_h + template_rot.shape[0] : max_h  - detection.shape[0], 
+        #    max_w + template_rot.shape[1] : max_w + template_rot.shape[1] - detection.shape[1]] += detection
     
     
     
@@ -146,7 +146,7 @@ cv2.destroyAllWindows()
 # * Threshold @ 30
 start_time = time.time()
 
-img = cv2.imread('opencv_frame_0R.png')
+img = cv2.imread('opencv_frame_1R.png')
 template = cv2.imread('vialTop.png', 0) # * Load template
 
 img_cropped = img[60:60+505, 325:325+740]
