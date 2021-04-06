@@ -59,7 +59,7 @@ def LinesGrouping(sortedLines):
 
 def LineMerge(glassLines):
     # * function that merge the lines of a side to only one line
-    lineMerged = np.zeros([800,6])
+    lineMerged = np.zeros([1800,6])
     k = 0
     if len(glassLines) == 2: # check if there exist only 2 lines
         a = np.array(abs(glassLines[0:2,1] - glassLines[0:2, 3]))
@@ -203,8 +203,8 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
     else:
         print("No lines found")
     #return houghImage
-    #cv2.imshow('Lines', houghImage)
-    #cv2.waitKey(0)
+    cv2.imshow('Lines', houghImage)
+    cv2.waitKey(10)
     return glassSides
 
 def HoughLinesSearchSkimage(img):
