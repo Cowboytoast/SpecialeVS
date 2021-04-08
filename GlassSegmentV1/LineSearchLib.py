@@ -62,13 +62,15 @@ def LineMerge(glassLines):
     lineMerged = np.zeros([1800,6])
     k = 0
     if len(glassLines) == 2: # check if there exist only 2 lines
-        a = np.array(abs(glassLines[0:2,1] - glassLines[0:2, 3]))
-        #a0 = abs(glassLines[0,1]-glassLines[0,3])
+        #a = np.array(abs(glassLines[0:2,1] - glassLines[0:2, 3]))
+        a0 = abs(glassLines[0,1]-glassLines[0,3])
         b0 = abs(glassLines[0,2]-glassLines[0,4])
-        #a1 = abs(glassLines[1,1]-glassLines[1,3])
+        a1 = abs(glassLines[1,1]-glassLines[1,3])
         b1 = abs(glassLines[1,2]-glassLines[1,4])
-        c0 = np.hypot(a[0],b0)
-        c1 = np.hypot(a[1],b1)
+        #c0 = np.hypot(a[0],b0)
+        c0 = np.hypot(a0,b0)
+        #c1 = np.hypot(a[1],b1)
+        c1 = np.hypot(a1,b1)
         lineMerged[0,0:5] = glassLines[0,0:5]
         lineMerged[1,0:5] = glassLines[1,0:5]
         lineMerged[0,5] = c0

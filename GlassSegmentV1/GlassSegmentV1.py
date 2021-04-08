@@ -7,7 +7,7 @@ import numpy as np
 import math
 import imutils
 from scipy import ndimage
-
+# TODO: Fix line merge. Der sker en fejl ved billede opencv_frame_1
 #*********** GLOBAL PARAMETERS **************
 angleTolerance = 0.3
 
