@@ -48,15 +48,14 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
             if matches >= maxval:
                 maxval = matches
                 max_idx = np.array([h, w])
-            rotatingim = np.copy(img)
-            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            cv2.imshow('Rotating progress', rotatingim)
-            cv2.waitKey(20)
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(20)
 
     startPoint = np.argmax(pointsx + pointsy)
     
     # ! Shift based on the BB of the glass?
-    #Yshifted = pointsy - 
     
     #Yshifted = pointsy - int(template_rot.shape[0]/2)
     Xshifted = pointsx - int(template_rot.shape[1])
@@ -71,10 +70,10 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
                 UpDown = 0 # 1 for up, 0 for down
                 maxval = matches
                 max_idx = np.array([h, w])
-            rotatingim = np.copy(img)
-            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            cv2.imshow('Rotating progress', rotatingim)
-            cv2.waitKey(20)
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(20)
 
     max_h = int(max_idx[0])
     max_w = int(max_idx[1])
@@ -91,20 +90,22 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
         detection = imutils.rotate_bound(overlay, slope_offset)
         final[max_h : max_h + template_rot.shape[0],
         max_w : max_w + template_rot.shape[1]] += template_rot
-        overlayStartH, overlayStartW = shiftIdx(detection)
-        adjustH = int(-templateStartH - overlayStartH)
-        adjustW = int(templateStartW - overlayStartW)
-        final[max_h + adjustH : max_h + detection.shape[0] + adjustH, 
-            max_w + adjustW : max_w + detection.shape[1] + adjustW] += detection
+        cv2.putText(final, 'Orientation: Up', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+        #overlayStartH, overlayStartW = shiftIdx(detection)
+        #adjustH = int(-templateStartH - overlayStartH)
+        #adjustW = int(templateStartW - overlayStartW)
+        #final[max_h + adjustH : max_h + detection.shape[0] + adjustH, 
+        #    max_w + adjustW : max_w + detection.shape[1] + adjustW] += detection
     else:
         detection = imutils.rotate_bound(overlay, slope_offset + 180)
         final[max_h : max_h + template_rot.shape[0],
         max_w : max_w + template_rot.shape[1]] += template_rot
-        overlayStartH, overlayStartW = shiftIdx(detection)
-        adjustH = int(-templateStartH - overlayStartH)
-        adjustW = int(templateStartW - overlayStartW)
-        final[max_h + adjustH - detection.shape[0] : max_h + adjustH, 
-            max_w + adjustW - detection.shape[1] : max_w + adjustW] += detection
+        cv2.putText(final, 'Orientation: Down', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+        #overlayStartH, overlayStartW = shiftIdx(detection)
+        #adjustH = int(-templateStartH - overlayStartH)
+        #adjustW = int(templateStartW - overlayStartW)
+        #final[max_h + adjustH - detection.shape[0] : max_h + adjustH,
+        #    max_w + adjustW - detection.shape[1] : max_w + adjustW] += detection
 
     return final
 
@@ -139,10 +140,10 @@ cv2.destroyAllWindows()
 # * Hist. stretch -> Blur (rad. = (3,3), SigmaX = 7) -> ...
 # * Unsharp mask (Size (3,3), amount 1, thresh. .131) -> ...
 # * Laplacian edge (delta = 5) -> Cvt. to UByte -> ...
-# * Threshold @ 30
+# * Threshold @ 32
 start_time = time.time()
 
-img = cv2.imread('opencv_frame_1.png')
+img = cv2.imread('opencv_frame_3.png')
 template = cv2.imread('vialTop.png', 0) # * Load template
 
 img_cropped = img[60:60+505, 325:325+740]
@@ -158,7 +159,7 @@ img_binary = cv2.threshold(img_edges, 32, maxval = 255, type = cv2.THRESH_BINARY
 img_binary = img_binary[1]
 #upscaled = prep.ResizeToFit(img_binary, H = 720, W = 1080)
 cv2.imshow('Preprocessing', img_binary)
-cv2.waitKey(0)
+#cv2.waitKey(0)
 edges_hough = ls.HoughLinesSearch(img_binary)
 #print("--- %s seconds ---" % (time.time()-start_time))
 
