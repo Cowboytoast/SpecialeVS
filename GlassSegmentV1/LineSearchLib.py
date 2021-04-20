@@ -1,6 +1,8 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import math
+import imutils
 from scipy.stats import linregress
 
 #*********** GLOBAL PARAMETERS **************
@@ -293,11 +295,115 @@ def LineExtend(glassSides,lineLength=100):
            
     return glassSides
 
-def grapperPoint(glassSides):
-    grapPoint=[]
+def grabberPoint(glassSides):
+    # ! Format of sides:
+    # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
+    grabPoint=np.empty([4])
     
-    grapPoint[0,0],grapPoint[0,1] = abs(glassSides[0,1]-glassSides[0,3]), abs(glassSides[0,2]-glassSides[0,4])
-    grapPoint[1,0],grapPoint[1,1] = abs(glassSides[1,1]-glassSides[1,3]), abs(glassSides[1,2]-glassSides[1,4])
-    grapPointAngle = glassSides[0,0]
+    # ! Format of returned grabbing-points:
+    # * grabPoint = | l1x | l1y | l2x | l2y
+    grabPoint[0] = (glassSides[1] + glassSides[3]) / 2
+    grabPoint[1] = (glassSides[2] + glassSides[4]) / 2
+    grabPoint[2] = (glassSides[7] + glassSides[9]) / 2
+    grabPoint[3] = (glassSides[8] + glassSides[10]) / 2
+    #grabPoint[0,0],grabPoint[0,1] = abs(glassSides[0,1]-glassSides[0,3]), abs(glassSides[0,2]-glassSides[0,4])
+    #grabPoint[1,0],grabPoint[1,1] = abs(glassSides[1,1]-glassSides[1,3]), abs(glassSides[1,2]-glassSides[1,4])
+    grabPointAngle = glassSides[0]
     
-    return grapPoint,grapPointAngle
+    return grabPoint,grabPointAngle
+
+
+def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
+    # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
+    if houghLocation.size== 0:
+        print("No lines found!")
+        exit()
+        
+    pointsx = np.array([houghLocation[1], houghLocation[3], houghLocation[7], houghLocation[9]])
+    pointsy = np.array([houghLocation[2], houghLocation[4], houghLocation[8], houghLocation[10]])
+    slopes = np.array([houghLocation[0], houghLocation[6]])
+    
+    slope_offset = math.degrees(math.atan(np.average(slopes)))
+    slope_offset = 90 - abs(slope_offset)
+    if slope_offset < 0:
+        slope_offset += 45
+    
+    if np.average(slopes) > 0:
+        slope_offset = -slope_offset
+    
+    template_rot = imutils.rotate_bound(template, slope_offset)
+    startPoint = np.argmin(pointsx + pointsy)
+    
+    Yshifted = pointsy - int(template_rot.shape[0]/2)
+    Xshifted = pointsx - int(template_rot.shape[1]/4)
+    
+    # Do & operation in increments, that is moving the template image a few pixels right/down
+    # for each iteration and store most pixel hits
+    maxval = 0
+    UpDown = 1 # 1 for up, 0 for down
+    max_idx = np.zeros((2,1))
+    for h in np.arange(int(Yshifted[startPoint]) - int(h_steps/2), int(Yshifted[startPoint]) + int(h_steps/2), 1):
+        for w in np.arange(int(Xshifted[startPoint]) - int(w_steps/2), int(Xshifted[startPoint]) + int(w_steps/2), 1):
+            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+            matches = np.count_nonzero(matches)
+            if matches >= maxval:
+                maxval = matches
+                max_idx = np.array([h, w])
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(20)
+
+    startPoint = np.argmax(pointsx + pointsy)
+        
+    #Yshifted = pointsy - int(template_rot.shape[0]/2)
+    Xshifted = pointsx - int(template_rot.shape[1])
+    template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
+    
+    #pointsy -= int(template_rot.shape[0]/4)
+    for h in np.arange(int(Yshifted[startPoint]) + int(h_steps/2), int(Yshifted[startPoint]) - int(h_steps/2), -1):
+        for w in np.arange(int(Xshifted[startPoint]) + int(w_steps/2), int(Xshifted[startPoint]) - int(w_steps/2), -1):
+            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+            matches = np.count_nonzero(matches)
+            if matches >= maxval:
+                UpDown = 0 # 1 for up, 0 for down
+                maxval = matches
+                max_idx = np.array([h, w])
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(20)
+
+    max_h = int(max_idx[0])
+    max_w = int(max_idx[1])
+
+
+    # * OVERLAY STUFF***************************************
+    #overlay = cv2.imread('VialOutline.png', 0)
+    final = np.copy(img)
+    final = cv2.cvtColor(final,cv2.COLOR_GRAY2RGB)
+    #templateStartH, templateStartW = shiftIdx(template_rot)
+    
+    TipOutline = cv2.imread('VialTopGreen.png')
+    # * To overlay template use code below
+    if UpDown == 1:
+        Overlay = imutils.rotate_bound(TipOutline, slope_offset)
+        final[max_h : max_h + Overlay.shape[0],
+        max_w : max_w + Overlay.shape[1]] = Overlay
+        cv2.putText(final, 'Orientation: Up', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
+    else:
+        Overlay = imutils.rotate_bound(TipOutline, slope_offset + 180)
+        final[max_h : max_h + Overlay.shape[0],
+        max_w : max_w + Overlay.shape[1]] = Overlay
+        cv2.putText(final, 'Orientation: Down', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
+
+
+    return final
+
+
+def shiftIdx(array):
+    # * Finds first non-zero value in a 2D array or 2D array of arrays
+    for H in range(array.shape[0]):
+        for W in range(array.shape[1]):
+            if array[H, W] > 0:
+                return H, W
