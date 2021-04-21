@@ -142,7 +142,7 @@ def LineMerge(glassLines):
             if c1 > c2:
                 lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope12,x1Start,y1Start,x2End,y2End,c1
             else:
-                lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope12,x1Start,y1Start,x1End,y1End,c2
+                lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope12,x2Start,y2Start,x1End,y1End,c2
             
             a = abs(glassLines[0,1]-glassLines[0,3])
             b = abs(glassLines[0,2]-glassLines[0,4])
