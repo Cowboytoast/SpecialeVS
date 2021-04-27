@@ -61,7 +61,7 @@ def LinesGrouping(sortedLines):
 
 def LineMerge(glassLines):
     # * function that merge the lines of a side to only one line
-    lineMerged = np.zeros([1800,6])
+    lineMerged = np.zeros([1000,6])
     k = 0
     if len(glassLines) == 2: # check if there exist only 2 lines
         #a = np.array(abs(glassLines[0:2,1] - glassLines[0:2, 3]))
@@ -110,7 +110,6 @@ def LineMerge(glassLines):
             b = abs(glassLines[2,2]-glassLines[2,4])
             c = np.hypot(a,b)
             lineMerged[1,0],lineMerged[1,1],lineMerged[1,2],lineMerged[1,3],lineMerged[1,4],lineMerged[1,5] = glassLines[2,0],x2Start,y2Start,x2End,y2End,c
-
             
         elif (slope02 > angleRangeLower and slope02 < angleRangeUpper):
             a1 = abs(glassLines[0,1]-glassLines[2,3])
@@ -171,6 +170,27 @@ def LineMerge(glassLines):
                     lineMerged[k,1:5] = coordinates
                     lineMerged[k,5] = c
                     k+=1
+                    
+        for i in range(0,len(glassLines)):
+            for j in range(1,len(glassLines)):
+                check = False
+                if i==j:
+                    continue
+                elif (lineMerged[i,1] >= (lineMerged[j,1]-3) and lineMerged[i,1] <= lineMerged[j,1]+3) and (lineMerged[i,2] >= (lineMerged[j,2]-3) and lineMerged[i,2] <= (lineMerged[j,2]+3)) and (lineMerged[i,3] >= (lineMerged[j,3]-3) and lineMerged[i,3] <= (lineMerged[j,3]+3)) and (lineMerged[i,4] >= (lineMerged[j,4]-3) and lineMerged[i,4] <= (lineMerged[j,4]+3)):
+                        lineMerged = np.delete(lineMerged,(j),axis=0)
+                        check = True
+                if check == False:
+                    for m in range(0,len(glassLines)):
+                        for n in range(1,len(glassLines)):
+                            if m == n:
+                                continue
+                            elif ((lineMerged[m,1] >= (lineMerged[n,1]-3) and lineMerged[m,1] <= (lineMerged[n,1]+3) and lineMerged[m,2] >= (lineMerged[n,2]-3) and lineMerged[m,2] <= (lineMerged[n,2]+3)) or (lineMerged[m,3] >= (lineMerged[n,3]-3) and lineMerged[m,3] <= (lineMerged[n,3]+3) and lineMerged[m,4] >= (lineMerged[n,4]-3) and lineMerged[m,4] <= (lineMerged[n,4]+3))):
+                                if lineMerged[m,5] > lineMerged[n,5]:
+                                    lineDelete = n
+                                else:
+                                    lineDelete = m
+                                lineMerged = np.delete(lineMerged,(lineDelete),axis=0)
+
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
 def HoughLinesSearch(img, houghLength=40, houghDist=10):
@@ -184,6 +204,8 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
         sortedLines = SortLines(linesP)
         LineGrouping = LinesGrouping(sortedLines)
         glassSides = LineMerge(LineGrouping) 
+        print(" lines after merge")
+        print(glassSides)
         b = 255
         g = 0
         r = 0
