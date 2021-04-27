@@ -3,13 +3,13 @@ import time
 import numpy as np
 import sys
 sys.path.append('../config')
-sys.path.append('/shome/31383/k383teach/modules')
-import robot
-import robotconfig as rcfg
+#sys.path.append('/shome/31383/k383teach/modules') ikke sikker på denne linje er nødvendig mere
+from modules import robot
+from modules import robotconfig as rcfg
 
 
-from src.gripper.class_gripper import Gripper
-from src.ur.class_ur import UR
+from modules.src.gripper.class_gripper import Gripper
+from modules.src.ur.class_ur import UR
 
 try:
     HOST1 = rcfg.HOST_IP
