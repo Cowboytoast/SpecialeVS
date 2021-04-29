@@ -5,7 +5,7 @@ import sys
 sys.path.append('../config')
 #sys.path.append('/shome/31383/k383teach/modules') ikke sikker på denne linje er nødvendig mere
 from modules import robot
-from modules import robotconfig as rcfg
+from config import robotconfig as rcfg
 
 
 from modules.src.gripper.class_gripper import Gripper
