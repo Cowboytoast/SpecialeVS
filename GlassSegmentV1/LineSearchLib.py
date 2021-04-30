@@ -265,6 +265,8 @@ def HoughLinesSearchSkimage(img):
     return houghImage
 
 def LineExtend(glassSides,lineLength=100):
+    #! FIX NEEDED
+    # TODO: Jeg mener at vi skal huske at ændre fra hældning til vinkel!
     line0,line1 = False, False
     if glassSides[0,5]<lineLength:
         xDist0,yDist0,line0 = np.sin(glassSides[0,0])*lineLength, np.cos(glassSides[0,0])*lineLength,True
@@ -317,20 +319,34 @@ def LineExtend(glassSides,lineLength=100):
            
     return glassSides
 
-def grabberPoint(glassSides):
+def grabberPoint(glassSides,lineLength=40):
     # ! Format of sides:
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
     grabPoint=np.empty([4])
     
     # ! Format of returned grabbing-points:
     # * grabPoint = | l1x | l1y | l2x | l2y
-    grabPoint[0] = (glassSides[1] + glassSides[3]) / 2
-    grabPoint[1] = (glassSides[2] + glassSides[4]) / 2
-    grabPoint[2] = (glassSides[7] + glassSides[9]) / 2
-    grabPoint[3] = (glassSides[8] + glassSides[10]) / 2
+    #grabPoint[0] = (glassSides[1] + glassSides[3]) / 2
+    #grabPoint[1] = (glassSides[2] + glassSides[4]) / 2
+    #grabPoint[2] = (glassSides[7] + glassSides[9]) / 2
+    #grabPoint[3] = (glassSides[8] + glassSides[10]) / 2
     #grabPoint[0,0],grabPoint[0,1] = abs(glassSides[0,1]-glassSides[0,3]), abs(glassSides[0,2]-glassSides[0,4])
     #grabPoint[1,0],grabPoint[1,1] = abs(glassSides[1,1]-glassSides[1,3]), abs(glassSides[1,2]-glassSides[1,4])
-    grabPointAngle = glassSides[0]
+    
+    if glassSides[0,5] > glassSides[1,5]:
+        grabPoint[0] = (glassSides[0,1] + glassSides[0,3]) / 2
+        grabPoint[1] = (glassSides[0,2] + glassSides[0,4]) / 2
+        # TODO: Jeg mener at vi skal huske at ændre fra hældning til vinkel! Det samme gælder i LineExtend funktionen
+        xDist1,yDist1 = np.cos(glassSides[1,0])*lineLength, np.sin(glassSides[1,0])*lineLength
+        grabPoint[2],grabPoint[3] = glassSides[1,1]+np.round(xDist1), glassSides[1,2]+np.round(yDist1)
+    else:
+        # TODO: Jeg mener at vi skal huske at ændre fra hældning til vinkel! Det samme gælder i LineExtend funktionen
+        xDist0,yDist0 = np.sin(glassSides[0,0])*lineLength, np.cos(glassSides[0,0])*lineLength
+        grabPoint[0],grabPoint[1] = glassSides[0,1]+np.round(xDist0), glassSides[0,2]+np.round(yDist0)
+        grabPoint[2] = (glassSides[1,1] + glassSides[1,3]) / 2
+        grabPoint[3] = (glassSides[1,2] + glassSides[1,4]) / 2
+    
+    grabPointAngle = glassSides[0] #? Dette er vel ikke en "angle" men slope?
     
     return grabPoint,grabPointAngle
 
