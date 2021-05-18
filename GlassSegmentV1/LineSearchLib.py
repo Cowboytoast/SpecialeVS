@@ -358,11 +358,9 @@ def grabberPoint(glassSides,lineLength=40):
     if glassSides[0,5] > glassSides[1,5]:
         grabPoint[0] = (glassSides[0,1] + glassSides[0,3]) / 2
         grabPoint[1] = (glassSides[0,2] + glassSides[0,4]) / 2
-        # TODO: Jeg mener at vi skal huske at ændre fra hældning til vinkel! Det samme gælder i LineExtend funktionen
         xDist1,yDist1 = np.cos(math.degrees(math.atan(glassSides[1,0])))*lineLength, np.sin(math.degrees(math.atan(glassSides[1,0])))*lineLength
         grabPoint[2],grabPoint[3] = glassSides[1,1]+np.round(xDist1), glassSides[1,2]+np.round(yDist1)
     else:
-        # TODO: Jeg mener at vi skal huske at ændre fra hældning til vinkel! Det samme gælder i LineExtend funktionen
         xDist0,yDist0 = np.sin(math.degrees(math.atan(glassSides[0,0])))*lineLength, np.cos(math.degrees(math.atan(glassSides[0,0])))*lineLength
         grabPoint[0],grabPoint[1] = glassSides[0,1]+np.round(xDist0), glassSides[0,2]+np.round(yDist0)
         grabPoint[2] = (glassSides[1,1] + glassSides[1,3]) / 2
