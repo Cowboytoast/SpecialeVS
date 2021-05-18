@@ -41,7 +41,7 @@ cv2.destroyAllWindows()
 # * Threshold @ 32
 start_time = time.time()
 
-img = cv2.imread('opencv_frame_2.png')
+img = cv2.imread('opencv_frame_6.png')
 template = cv2.imread('vialTop.png', 0) # * Load template
 
 img_cropped = img[60:60+505, 325:325+740]
@@ -65,14 +65,17 @@ edges_hough = ls.HoughLinesSearch(img_binary)
 
 houghLocation = np.ndarray.flatten(edges_hough)
 final = ls.templatematch(img_binary, template, houghLocation)
-# TODO Rename grabbaroo to something nicer
-grabbaroo, grabangle = ls.grabberPoint(edges_hough)
-grabbaroo = np.around(grabbaroo)
-grabbaroo = grabbaroo.astype(int)
-cv2.circle(final, (grabbaroo[0], grabbaroo[1]), 3, color = (0,255,0), thickness=2)
-cv2.circle(final, (grabbaroo[2], grabbaroo[3]), 3, color = (0,0,255), thickness=2)
-cv2.imwrite('Test.png', final)
+cv2.imwrite('Bla.png',final)
+# TODO Rename grabPoints to something nicer
+grabPoints, grabAngle = ls.grabberPoint(houghLocation)
+grabPoints = np.around(grabPoints)
+grabPoints = grabPoints.astype(int)
+cv2.circle(final, (grabPoints[0], grabPoints[1]), 3, color = (0,255,0), thickness=2)
+cv2.circle(final, (grabPoints[2], grabPoints[3]), 3, color = (0,0,255), thickness=2)
+cv2.circle(final, (grabPoints[4], grabPoints[5]), 3, color = (255,0,0), thickness=2)
 print("--- %s seconds ---" % (time.time() - start_time))
+
+cv2.imwrite('Test.png', final)
 
 cv2.imshow('Detection', final)
 cv2.waitKey(0)

@@ -319,11 +319,13 @@ def LineExtend(glassSides,lineLength=100):
            
     return glassSides
 
-def grabberPoint(glassSides,lineLength=40):
+def grabberPoint(glassSides,lineLength=23):
     # ! Format of sides:
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
-    grabPoint=np.empty([4])
+    grabPoint=np.empty([6])
     line_perp = np.empty([2])
+    x1 = np.empty([2])
+    y1 = np.empty([2])
     grabPoint[0] = (glassSides[1] + glassSides[3]) / 2 # l1x
     grabPoint[1] = (glassSides[2] + glassSides[4]) / 2 # l1y
     line = np.polyfit([glassSides[1], glassSides[3]],[glassSides[2], glassSides[4]], 1)
@@ -331,16 +333,29 @@ def grabberPoint(glassSides,lineLength=40):
     line_perp[1] = grabPoint[1] - 1 * line_perp[0] * grabPoint[0]
     #grabPoint[2] = (glassSides[7] + glassSides[9]) / 2 # l2x
     #grabPoint[3] = (glassSides[8] + glassSides[10]) / 2# l2y
-    
+    m = line_perp[0]
+    b = line_perp[1]
+    x0 = grabPoint[0]
+    y0 = grabPoint[1]
+    d = lineLength
+    x1[0] = 1/(m**2+1)*(-b*m+m*y0+math.sqrt(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)+x0)
+    x1[1] = -(b*m-m*y0+(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)**(1/2)-x0)/(m**2+1)
+    y1 = m * x1 + b
+    grabPoint[2] = x1[0]
+    grabPoint[3] = y1[0]
+    grabPoint[4] = (grabPoint[0] + grabPoint[2]) / 2
+    grabPoint[5] = (grabPoint[1] + grabPoint[3]) / 2
+    grabPointAngle = math.degrees(math.atan(m))
+    return grabPoint, grabPointAngle
     # Create orthogonal point to grabber point
-    slopes = np.array([glassSides[0], glassSides[6]])
-    slope_offset = math.degrees(math.atan(np.average(slopes)))
-    slope_offset = 180 - abs(slope_offset)
-    if slope_offset < 0:
-        slope_offset += 45
+#    slopes = np.array([glassSides[0], glassSides[6]])
+    #slope_offset = math.degrees(math.atan(np.average(slopes)))
+    #slope_offset = 180 - abs(slope_offset)
+    #if slope_offset < 0:
+    #    slope_offset += 45
     
-    if np.average(slopes) > 0:
-        slope_offset = -slope_offset
+    #if np.average(slopes) > 0:
+    #    slope_offset = -slope_offset
     
     
     '''
