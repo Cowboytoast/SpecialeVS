@@ -1,5 +1,6 @@
 import cv2
 import time
+from cv2 import aruco
 import LineSearchLib as ls
 import PreprocessingLib as prep
 from skimage.util import img_as_ubyte
