@@ -323,7 +323,27 @@ def grabberPoint(glassSides,lineLength=40):
     # ! Format of sides:
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
     grabPoint=np.empty([4])
+    line_perp = np.empty([2])
+    grabPoint[0] = (glassSides[1] + glassSides[3]) / 2 # l1x
+    grabPoint[1] = (glassSides[2] + glassSides[4]) / 2 # l1y
+    line = np.polyfit([glassSides[1], glassSides[3]],[glassSides[2], glassSides[4]], 1)
+    line_perp[0] = -1/line[0] # Slope of perpendicular line
+    line_perp[1] = grabPoint[1] - 1 * line_perp[0] * grabPoint[0]
+    #grabPoint[2] = (glassSides[7] + glassSides[9]) / 2 # l2x
+    #grabPoint[3] = (glassSides[8] + glassSides[10]) / 2# l2y
     
+    # Create orthogonal point to grabber point
+    slopes = np.array([glassSides[0], glassSides[6]])
+    slope_offset = math.degrees(math.atan(np.average(slopes)))
+    slope_offset = 180 - abs(slope_offset)
+    if slope_offset < 0:
+        slope_offset += 45
+    
+    if np.average(slopes) > 0:
+        slope_offset = -slope_offset
+    
+    
+    '''
     # ! Format of returned grabbing-points:
     # * grabPoint = | l1x | l1y | l2x | l2y
     #grabPoint[0] = (glassSides[1] + glassSides[3]) / 2
@@ -333,6 +353,8 @@ def grabberPoint(glassSides,lineLength=40):
     #grabPoint[0,0],grabPoint[0,1] = abs(glassSides[0,1]-glassSides[0,3]), abs(glassSides[0,2]-glassSides[0,4])
     #grabPoint[1,0],grabPoint[1,1] = abs(glassSides[1,1]-glassSides[1,3]), abs(glassSides[1,2]-glassSides[1,4])
     
+    
+    # Mathias' version
     if glassSides[0,5] > glassSides[1,5]:
         grabPoint[0] = (glassSides[0,1] + glassSides[0,3]) / 2
         grabPoint[1] = (glassSides[0,2] + glassSides[0,4]) / 2
@@ -349,7 +371,7 @@ def grabberPoint(glassSides,lineLength=40):
     grabPointAngle = math.degrees(math.atan(glassSides[0,0])) #? Dette er vel ikke en "angle" men slope?
     
     return grabPoint,grabPointAngle
-
+'''
 
 def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
