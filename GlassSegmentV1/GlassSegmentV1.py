@@ -12,6 +12,7 @@ from scipy import ndimage
 # TODO: Lav movement filer om således at vi har et 'init' call og kan kalde de andre filer med argumenter for position.
 #*********** GLOBAL PARAMETERS **************
 angleTolerance = 0.3
+extractCounter = 0
 
 #********************************************
 
