@@ -1,6 +1,7 @@
 import socket
 import time
 import numpy as np
+import cv2
 import robot
 import robotconfig as rcfg
 from robot_class import Robot
@@ -14,7 +15,7 @@ gripperfunc = Gripper()
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # TODO: lav init korrekt
-# TODO: Lav funktion der kører alle de forskellige funktioner i forbindelse med bevægelse af robot, denne skal så kaldes i main
+# TODO: Lav funktion der kører alle de forskellige funktioner i forbindelse med bevægelse af robot, denne skal så kaldes i main - ingang!
 
 
 def robotInit():
@@ -25,7 +26,31 @@ def robotInit():
     ur = UR(HOST1, PORT1)
     gripperfunc = Gripper(rcfg.USB_PORT)
     s.connect((HOST1, PORT1))
-    return 1
+    
+    #! Udfør disse efter alle forbindelser er oprettet osv.
+    global handOffPos
+    handOffPos = handOffPosLOT()
+    waitPos()
+    
+    return
+
+def robotRun(x,y,z,rx,ry,rz,linesFound):
+    
+    if linesFound == True:
+        moveComplete = moveCommand(x,y,z,rx,ry,rz)
+        if moveComplete == True:
+            handOffComplete = handoffCommand()
+        else:
+            cv2.waitKey(0) #! lav dette om til et tidsinterval, så som 0.1 sec.
+    else:
+        cv2.waitKey(0) #! Samme her.
+        
+    if handOffComplete ==True:
+        takeNewPicture = True
+    else:
+        takeNewPicture = False
+    
+    return takeNewPicture
 
 
 #* Function to move the robot arm from 'waiting' position, to a vial and pick it up. This does not lift it as such, just takes it into the grabber.
@@ -50,13 +75,18 @@ def handoffCommand():
     global extractCounter
     extractCounter += 1
     
+    handOffComplete = False
+    
     handOffPos = handOffPosLOT()
     
     s.send('movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(handOffPos[3])+','+str(handOffPos[4,extractCounter])+','+str(handOffPos[5,extractCounter])+'],1,0.1)\n')
     robotfunc.wait()
-    handOffComplete = True
     gripper.open(wait=True)
-    waitPos()
+    waitPosComplete = waitPos()
+    if waitPosComplete == True:
+        handOffComplete == True
+    else:
+        handOffComplete == False
     
     return handOffComplete
 
@@ -64,10 +94,12 @@ def handoffCommand():
 #* Function to generate and move the robot to its waiting position / start-end position
 #! Vi kan måske slette denne ved brug af Trajectory Planning (se evt. robot projekt rapport)
 def waitPos(x=0,y=0,z=0,rx=0,ry=0,rz=3.14):
+    waitPosComplete = False
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
     s.send('movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1,0.1)\n')
     robotfunc.wait()
-    return 1
+    waitPosComplete = True
+    return waitPosComplete
 
 #* The function creates a Look-up Table since we have a finite number of specific places. This is utilized to speed up the program such that the positions only have to be calculated
 #* at the beginning of the program, thus adding the least amount of time once the recognition and movement of the vials are begun. This function should only be called once

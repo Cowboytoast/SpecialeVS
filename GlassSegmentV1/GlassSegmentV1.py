@@ -13,6 +13,7 @@ from scipy import ndimage
 #*********** GLOBAL PARAMETERS **************
 angleTolerance = 0.3
 extractCounter = 0
+handOffPos = []
 
 #********************************************
 
