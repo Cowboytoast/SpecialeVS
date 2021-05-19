@@ -2,6 +2,7 @@ import cv2
 import time
 import LineSearchLib as ls
 import PreprocessingLib as prep
+import RobotLib as rl
 from skimage.util import img_as_ubyte
 import numpy as np
 
