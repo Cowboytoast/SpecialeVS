@@ -34,6 +34,8 @@ def robotInit():
     
     return
 
+#* Function that works as a "main" function for the robot commands. 
+#* Runs a complete cycle with the robot. From getting coordinates to placing the vial and back to start position.
 def robotRun(x,y,z,rx,ry,rz,linesFound):
     
     if linesFound == True:
@@ -43,7 +45,7 @@ def robotRun(x,y,z,rx,ry,rz,linesFound):
         else:
             cv2.waitKey(0) #! lav dette om til et tidsinterval, så som 0.1 sec.
     else:
-        cv2.waitKey(0) #! Samme her.
+        cv2.waitKey(0) #! Samme her. Lav noget hvor hvis vi timer-ud så gå tilbage og prøv igen måske.
         
     if handOffComplete ==True:
         takeNewPicture = True
