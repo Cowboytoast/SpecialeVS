@@ -3,14 +3,18 @@ import time
 from cv2 import aruco
 import LineSearchLib as ls
 import PreprocessingLib as prep
+import RobotLib as rl
 from skimage.util import img_as_ubyte
 import numpy as np
 
 
 from scipy import ndimage
 # TODO: Fix line merge. Der sker en fejl ved billede opencv_frame_1
+# TODO: Lav movement filer om således at vi har et 'init' call og kan kalde de andre filer med argumenter for position.
 #*********** GLOBAL PARAMETERS **************
 angleTolerance = 0.3
+extractCounter = 0
+handOffPos = []
 
 #********************************************
 
