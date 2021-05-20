@@ -1,11 +1,16 @@
+import sys
 import socket
 import time
 import numpy as np
 import cv2
-import robot
-import robotconfig as rcfg
-from robot_class import Robot
-from gripper import Gripper
+sys.path.append('../modules')
+sys.path.append('../modules/src/ur')
+sys.path.append('../modules/src/gripper')
+sys.path.append('../config')
+from modules import robot
+from config import robotconfig as rcfg
+from modules.src.gripper import Gripper
+from modules.src.ur import UR as Robot
 if  rcfg.grippername=='robotiq': 
   import robotiq as gripper
 if  rcfg.grippername=='rg2': 
