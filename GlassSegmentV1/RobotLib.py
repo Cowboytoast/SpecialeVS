@@ -2,8 +2,10 @@ import socket
 import time
 import numpy as np
 import cv2
-import robot
-import robotconfig as rcfg
+import sys
+sys.path.append('../')
+from modules import robot
+from config import robotconfig as rcfg
 from robot_class import Robot
 from gripper import Gripper
 if  rcfg.grippername=='robotiq': 

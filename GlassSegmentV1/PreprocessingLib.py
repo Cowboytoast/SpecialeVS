@@ -1,5 +1,27 @@
 import cv2
 import numpy as np
+from scipy import ndimage
+from skimage.util import img_as_ubyte
+
+def PrepImg(img):
+    # * Chain should be:
+    # * Crop -> Resize to (H,W = 403, 550) -> Cvt to gray -> ...
+    # * Hist. stretch -> Blur (rad. = (3,3), SigmaX = 7) -> ...
+    # * Unsharp mask (Size (3,3), amount 1, thresh. .131) -> ...
+    # * Laplacian edge (delta = 5) -> Cvt. to UByte -> ...
+    # * Threshold @ 32
+    img_cropped = img[60:60+505, 325:325+740]
+    img_screensized = ResizeToFit(img_cropped, H= 403, W = 550)
+    img_gray = cv2.cvtColor(img_screensized, cv2.COLOR_BGR2GRAY)
+    img_stretched = cv2.equalizeHist(img_gray)
+    img_blur = cv2.GaussianBlur(img_stretched, (3,3), 7)
+    img_sharpen = unsharp_mask(img_blur, kernel_size = (3,3), amount = 1, threshold = 0.131)
+    img_edges = cv2.Laplacian(img_sharpen, ddepth = cv2.CV_16S, delta = 5)
+    img_edges = img_as_ubyte(img_edges)
+    img_binary = cv2.threshold(img_edges, 32, maxval = 255, type = cv2.THRESH_BINARY)
+    img_binary = img_binary[1]
+    
+    return img_binary
 
 # * Histogram stretching function
 def HistStretch(img):

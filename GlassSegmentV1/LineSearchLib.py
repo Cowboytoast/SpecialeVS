@@ -457,7 +457,7 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     final = cv2.cvtColor(final,cv2.COLOR_GRAY2RGB)
     #templateStartH, templateStartW = shiftIdx(template_rot)
     
-    TipOutline = cv2.imread('VialTopGreen.png')
+    TipOutline = cv2.imread('./images/VialTopGreen.png')
     # * To overlay template use code below
     if UpDown == 1:
         Overlay = imutils.rotate_bound(TipOutline, slope_offset)
