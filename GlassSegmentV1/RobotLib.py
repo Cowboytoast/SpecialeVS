@@ -1,13 +1,16 @@
+import sys
 import socket
 import time
 import numpy as np
 import cv2
-import sys
-sys.path.append('../')
+sys.path.append('../modules')
+sys.path.append('../modules/src/ur')
+sys.path.append('../modules/src/gripper')
+sys.path.append('../config')
 from modules import robot
 from config import robotconfig as rcfg
-from robot_class import Robot
-from gripper import Gripper
+from modules.src.gripper import Gripper
+from modules.src.ur import UR as Robot
 if  rcfg.grippername=='robotiq': 
   import robotiq as gripper
 if  rcfg.grippername=='rg2': 
@@ -22,14 +25,16 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 def robotInit():
     #! NEEDS LOT OF FIXING!!!!!!
-    robot.transform_init([-390.3,350.6, 31.0],[-394, 166.4,31.0],[-245,347,27.6])
     HOST1 = rcfg.HOST_IP
     PORT1 = 30003              # The same port as used by the server
-    ur = UR(HOST1, PORT1)
-    gripperfunc = Gripper(rcfg.USB_PORT)
     s.connect((HOST1, PORT1))
     
+    time.sleep(1)
+    
     #! Udfør disse efter alle forbindelser er oprettet osv.
+    gripperfunc.open()
+    gripperfunc.wait() 
+    robot.transform_init([-390.3,350.6, 31.0],[-394, 166.4,31.0],[-245,347,27.6])
     global handOffPos
     handOffPos = handOffPosLOT()
     waitPos()
