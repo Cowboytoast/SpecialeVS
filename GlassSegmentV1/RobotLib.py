@@ -16,9 +16,21 @@ if  rcfg.grippername=='robotiq':
   import modules.robotiq as gripper
 if  rcfg.grippername=='rg2': 
   import modules.rg2 as gripper
-
-robotfunc = Robot()
-gripperfunc = Gripper()
+try:
+    robotfunc = Robot()
+except TimeoutError:
+    robotfunc = None
+try:
+    gripperfunc = Gripper()
+except IndexError:
+    gripperfunc = None
+if robotfunc == None and gripperfunc == None:
+    print('Robot and gripper not connected!')
+elif robotfunc == None:
+    print('Robot not connected!')
+elif gripperfunc == None:
+    print('Gripper not connected!')
+      
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # TODO: lav init korrekt
@@ -26,14 +38,12 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 def robotInit():
-    #! NEEDS LOT OF FIXING!!!!!!
     HOST1 = rcfg.HOST_IP
     PORT1 = 30003              # The same port as used by the server
     s.connect((HOST1, PORT1))
     
     time.sleep(1)
     
-    #! Udfør disse efter alle forbindelser er oprettet osv.
     gripperfunc.open()
     gripperfunc.wait() 
     robot.transform_init([-390.3,350.6, 31.0],[-394, 166.4,31.0],[-245,347,27.6])
