@@ -3,18 +3,20 @@ import socket
 import time
 import numpy as np
 import cv2
-sys.path.append('../modules')
-sys.path.append('../modules/src/ur')
-sys.path.append('../modules/src/gripper')
-sys.path.append('../config')
+sys.path.append('./modules')
+sys.path.append('./modules/src/ur')
+sys.path.append('./modules/src/gripper')
+sys.path.append('./config')
 from modules import robot
 from config import robotconfig as rcfg
-from modules.src.gripper import Gripper
-from modules.src.ur import UR as Robot
+from modules.src.gripper.class_gripper import Gripper
+from modules.src.ur.class_ur import UR as Robot
+
 if  rcfg.grippername=='robotiq': 
-  import robotiq as gripper
+  import modules.robotiq as gripper
 if  rcfg.grippername=='rg2': 
-  import rg2 as gripper
+  import modules.rg2 as gripper
+
 robotfunc = Robot()
 gripperfunc = Gripper()
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
