@@ -15,7 +15,7 @@ from scipy import ndimage
 angleTolerance = 0.3
 extractCounter = 0
 handOffPos = []
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(1)
 
 #********************************************
 
@@ -34,7 +34,7 @@ while True:
         print("Escape hit, closing...")
         cam.release()
         cv2.destroyAllWindows()
-    if not ret or img.shape == (576, 1024, 3):
+    if not ret or img.shape != (720, 1280, 3):
         img = cv2.imread('./images/opencv_frame_6.png')
         offlineFlag = True
     else:
