@@ -56,20 +56,31 @@ def robotInit():
 #* Function that works as a "main" function for the robot commands. 
 #* Runs a complete cycle with the robot. From getting coordinates to placing the vial and back to start position.
 def robotRun(x,y,z,rx,ry,rz,linesFound):
-    
-    if linesFound == True:
-        moveComplete = moveCommand(x,y,z,rx,ry,rz)
-        if moveComplete == True:
-            handOffComplete = handoffCommand()
+    global extractCounter
+    contEmpty = True
+    if extractCounter == 15:
+        contEmpty = False
+        print('Container full, please empty container\n')
+        print('Press r when container is emptied, to restart pick-up')
+        l = cv2.waitKey(1)
+        if l%256 == 114:
+            # press 'r'
+            extractCounter = 0
+            contEmpty = True
+    if contEmpty == True:    
+        if linesFound == True:
+            moveComplete = moveCommand(x,y,z,rx,ry,rz)
+            if moveComplete == True:
+                handOffComplete = handoffCommand()
+            else:
+                cv2.waitKey(0) #! lav dette om til et tidsinterval, så som 0.1 sec.
         else:
-            cv2.waitKey(0) #! lav dette om til et tidsinterval, så som 0.1 sec.
-    else:
-        cv2.waitKey(0) #! Samme her. Lav noget hvor hvis vi timer-ud så gå tilbage og prøv igen måske.
+            cv2.waitKey(0) #! Samme her. Lav noget hvor hvis vi timer-ud så gå tilbage og prøv igen måske.
         
-    if handOffComplete ==True:
-        takeNewPicture = True
-    else:
-        takeNewPicture = False
+        if handOffComplete ==True:
+            takeNewPicture = True
+        else:
+            takeNewPicture = False
     
     return takeNewPicture
 
