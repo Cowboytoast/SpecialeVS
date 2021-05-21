@@ -63,6 +63,9 @@ def LineMerge(glassLines):
     # * function that merge the lines of a side to only one line
     lineMerged = np.zeros([1000,6])
     k = 0
+    if glassLines.size < 2:
+        print("One or no lines found, aborting")
+        return None
     if len(glassLines) == 2: # check if there exist only 2 lines
         #a = np.array(abs(glassLines[0:2,1] - glassLines[0:2, 3]))
         a0 = abs(glassLines[0,1]-glassLines[0,3])
@@ -203,7 +206,9 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
     if linesP is not None:
         sortedLines = SortLines(linesP)
         LineGrouping = LinesGrouping(sortedLines)
-        glassSides = LineMerge(LineGrouping) 
+        glassSides = LineMerge(LineGrouping)
+        if glassSides.all() == None:
+            return None
         print(" lines after merge")
         print(glassSides)
         b = 255
@@ -227,7 +232,7 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
         
         print(len(glassSides),"lines found")
     else:
-        print("No lines found")
+        glassSides = None
     #return houghImage
     cv2.imshow('Lines', houghImage)
     cv2.waitKey(10)
@@ -388,9 +393,9 @@ def grabberPoint(glassSides,lineLength=23):
 
 def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
-    if houghLocation.size== 0:
-        print("No lines found!")
-        exit()
+    if houghLocation.size < 7:
+        print("One or no lines found!")
+        return None
         
     pointsx = np.array([houghLocation[1], houghLocation[3], houghLocation[7], houghLocation[9]])
     pointsy = np.array([houghLocation[2], houghLocation[4], houghLocation[8], houghLocation[10]])
@@ -417,6 +422,8 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     max_idx = np.zeros((2,1))
     for h in np.arange(int(Yshifted[startPoint]) - int(h_steps/2), int(Yshifted[startPoint]) + int(h_steps/2), 1):
         for w in np.arange(int(Xshifted[startPoint]) - int(w_steps/2), int(Xshifted[startPoint]) + int(w_steps/2), 1):
+            if h < 0 or w < 0:
+                return None
             matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
             matches = np.count_nonzero(matches)
             if matches >= maxval:
@@ -436,6 +443,8 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     #pointsy -= int(template_rot.shape[0]/4)
     for h in np.arange(int(Yshifted[startPoint]) + int(h_steps/2), int(Yshifted[startPoint]) - int(h_steps/2), -1):
         for w in np.arange(int(Xshifted[startPoint]) + int(w_steps/2), int(Xshifted[startPoint]) - int(w_steps/2), -1):
+            if h > (img.shape[0] - template_rot.shape[0]) or w > (img.shape[1] - template_rot.shape[1]):
+                return None
             matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
             matches = np.count_nonzero(matches)
             if matches >= maxval:
