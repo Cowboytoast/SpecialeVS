@@ -6,7 +6,7 @@ from cv2 import aruco
 
 import LineSearchLib as ls
 import PreprocessingLib as prep
-#import RobotLib as rl
+import RobotLib as rl
 import numpy as np
 from scipy import ndimage
 # TODO: Fix line merge. Der sker en fejl ved billede opencv_frame_1
@@ -21,6 +21,7 @@ cam = cv2.VideoCapture(1)
 
 
 #**********************Main loop********************************
+rl.robotInit()
 start_time = time.time()
 template = cv2.imread('./images/vialTop.png', 0) # * Load template
 #***************************************************************
