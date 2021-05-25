@@ -139,8 +139,7 @@ def waitPos(x=0,y=0,z=0,rx=0,ry=0,rz=3.14):
 #* after init.
 def handOffPosLOT():
     
-    handOffPos = np.empty(np.shape(6,16),dtype='object')
-
+    handOffPos = np.empty((16,6),dtype=float)
     
     for i in range(0,15):
         for j in range(0,2):
