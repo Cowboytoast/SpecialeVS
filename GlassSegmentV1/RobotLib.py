@@ -128,7 +128,8 @@ def handoffCommand():
 def waitPos(x=0,y=0,z=0,rx=0,ry=0,rz=3.14):
     waitPosComplete = False
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
-    s.send('movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1,0.1)\n')
+    #s.send('movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1,0.1)\n')
+    s.send ('movel([t[0],t[1],t[2],rx,ry,rz],a=1,v=0.1)' + '\n') #! NYT FORMAT SOM VI SKAL TESTE!!!!!!!!!
     robotfunc.wait()
     waitPosComplete = True
     return waitPosComplete
