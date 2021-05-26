@@ -41,14 +41,13 @@ def robotInit():
     HOST1 = rcfg.HOST_IP
     PORT1 = 30003              # The same port as used by the server
     s.connect((HOST1, PORT1))
-    
     time.sleep(1)
     
     gripperfunc.open()
     gripperfunc.wait() 
-    robot.transform_init([-390.3,350.6, 31.0],[-394, 166.4,31.0],[-245,347,27.6])
     global handOffPos
-    handOffPos = handOffPosLOT()
+    robot.transform_init([-70.73,-300.5,1002.39],[-325.82,-280.86,1002.65],[-60.36,-119.87,1005.88])
+    #handOffPos = handOffPosLOT()
     waitPos()
     
     return
@@ -125,11 +124,14 @@ def handoffCommand():
 
 #* Function to generate and move the robot to its waiting position / start-end position
 #! Vi kan måske slette denne ved brug af Trajectory Planning (se evt. robot projekt rapport)
-def waitPos(x=0,y=0,z=0,rx=0,ry=0,rz=3.14):
+def waitPos(x=0.1,y=0.1,z=0.08,rx=0,ry=0,rz=0):
     waitPosComplete = False
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
-    #s.send('movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1,0.1)\n')
-    s.send ('movel([t[0],t[1],t[2],rx,ry,rz],a=1,v=0.1)' + '\n') #! NYT FORMAT SOM VI SKAL TESTE!!!!!!!!!
+    cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.5,0.1,0,0.1)' + '\n'
+    s.send(cmdstring.encode())
+    time.sleep(1)
+    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.5,0.1)' + '\n'
+    s.send(cmdstring.encode())
     robotfunc.wait()
     waitPosComplete = True
     return waitPosComplete
