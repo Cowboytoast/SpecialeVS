@@ -3,6 +3,7 @@ import socket
 import time
 import numpy as np
 import cv2
+import argparse
 sys.path.append('./modules')
 sys.path.append('./modules/src/ur')
 sys.path.append('./modules/src/gripper')
@@ -11,6 +12,7 @@ from modules import robot
 from config import robotconfig as rcfg
 from modules.src.gripper.class_gripper import Gripper
 from modules.src.ur.class_ur import UR as Robot
+from modules.src.ur.communication_ur import communication_thread as comm
 
 if  rcfg.grippername=='robotiq': 
   import modules.robotiq as gripper
@@ -42,14 +44,20 @@ def robotInit():
     PORT1 = 30003              # The same port as used by the server
     s.connect((HOST1, PORT1))
     time.sleep(1)
-    
+    global thread
+    thread = comm(ip = HOST1, port = PORT1)
     gripperfunc.open()
     gripperfunc.wait() 
     global handOffPos
+    global extractCounter
+    extractCounter = 0
+    robotfunc.transform_init(p0i = [-70.73,-300.5,1002.39],pxi = [-325.82,-280.86,1002.65], pyi = [-60.36,-119.87,1005.88])
     robot.transform_init([-70.73,-300.5,1002.39],[-325.82,-280.86,1002.65],[-60.36,-119.87,1005.88])
     #handOffPos = handOffPosLOT()
+    s.close()
     waitPos()
-    
+    pickupCommand()
+    handoffCommand()
     return
 
 #* Function that works as a "main" function for the robot commands. 
@@ -68,7 +76,7 @@ def robotRun(x,y,z,rx,ry,rz,linesFound):
             contEmpty = True
     if contEmpty == True:    
         if linesFound == True:
-            moveComplete = moveCommand(x,y,z,rx,ry,rz)
+            moveComplete = pickupCommand(x,y,z,rx,ry,rz)
             if moveComplete == True:
                 handOffComplete = handoffCommand()
             else:
@@ -85,13 +93,48 @@ def robotRun(x,y,z,rx,ry,rz,linesFound):
 
 
 #* Function to move the robot arm from 'waiting' position, to a vial and pick it up. This does not lift it as such, just takes it into the grabber.
-def moveCommand(x,y,z,rx,ry,rz):
+def pickupCommand(x = 0.1,y = 0.1,z = 0.02,rx = 0,ry = 0,rz = 0):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((rcfg.HOST_IP,30003))
+    x = 0.1
+    y = 0.1
+    z = 0.02
+    rx = 0
+    ry = 0
+    rz = 0
     moveComplete = False
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
-    s.send('movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1,0.1)\n')
-    robotfunc.wait()
-    gripper.close(wait=True)
+    #s.send('movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1,0.1)\n')
+    cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.5,0.1)' + '\n'
+    s.send(cmdstring.encode())
+    time.sleep(1)
+    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.3,0.06)' + '\n'
+    s.send(cmdstring.encode())
+    print("Pickup command sent")
+
     moveComplete = True
+    time.sleep(1)
+    data = s.recv(1024)
+    x_robot = thread.transform_data_point(data = data, data_name = 'x')
+    y_robot = thread.transform_data_point(data = data, data_name = 'y')
+    z_robot = thread.transform_data_point(data = data, data_name = 'z')
+    [x_robot, y_robot, z_robot] = robotfunc.inverse_transform(x = x_robot, y = y_robot, z = z_robot)
+    s.close()
+    time.sleep(0.2)
+    while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01)):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((rcfg.HOST_IP, 30003))
+        time.sleep(0.2)
+        data = s.recv(1024)
+        x_robot = thread.transform_data_point(data = data, data_name = 'x')
+        y_robot = thread.transform_data_point(data = data, data_name = 'y')
+        z_robot = thread.transform_data_point(data = data, data_name = 'z')
+        [x_robot, y_robot, z_robot] = robotfunc.inverse_transform(x = x_robot, y = y_robot, z = z_robot)
+        s.close()
+        time.sleep(0.2)
+    
+    gripperfunc.close()
+    gripperfunc.wait() 
     waitPos()
     
     return moveComplete
@@ -103,37 +146,92 @@ def handoffCommand():
     
     #! handoffpos needs to be adjudsted with 16mm per turn, with a max of 16. If we are smart, lay it out so we only have to adjust in one direction.
     #? Should we make a global counter, or should we make an internal counter that is passed to maintain its value?
-    global extractCounter
-    extractCounter += 1
-    
+    #extractCounter += 1
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((rcfg.HOST_IP,30003))
     handOffComplete = False
+    x = -0.27
+    y = 0.07
+    z = 0.02
+    rx = 0
+    ry = 0
+    rz = 1.6
+    t = robot.transform(x,y,z)
+    #handOffPos = handOffPosLOT()
     
-    handOffPos = handOffPosLOT()
+    #s.send('movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(handOffPos[3])+','+str(handOffPos[4,extractCounter])+','+str(handOffPos[5,extractCounter])+'],1,0.1)\n')
+    cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.5,0.1)' + '\n'
+    s.send(cmdstring.encode())
+    time.sleep(1)
+    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.3,0.06)' + '\n'
+    s.send(cmdstring.encode())
+    time.sleep(1)
+    data = s.recv(1024)
+    x_robot = thread.transform_data_point(data = data, data_name = 'x')
+    y_robot = thread.transform_data_point(data = data, data_name = 'y')
+    z_robot = thread.transform_data_point(data = data, data_name = 'z')
+    [x_robot, y_robot, z_robot] = robotfunc.inverse_transform(x = x_robot, y = y_robot, z = z_robot)
+    s.close()
+    time.sleep(0.2)
+    while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01)):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((rcfg.HOST_IP, 30003))
+        time.sleep(0.2)
+        data = s.recv(1024)
+        x_robot = thread.transform_data_point(data = data, data_name = 'x')
+        y_robot = thread.transform_data_point(data = data, data_name = 'y')
+        z_robot = thread.transform_data_point(data = data, data_name = 'z')
+        [x_robot, y_robot, z_robot] = robotfunc.inverse_transform(x = x_robot, y = y_robot, z = z_robot)
+        s.close()
+        time.sleep(0.2)
     
-    s.send('movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(handOffPos[3])+','+str(handOffPos[4,extractCounter])+','+str(handOffPos[5,extractCounter])+'],1,0.1)\n')
-    robotfunc.wait()
-    gripper.open(wait=True)
+    gripperfunc.open()
+    gripperfunc.wait() 
     waitPosComplete = waitPos()
     if waitPosComplete == True:
         handOffComplete == True
     else:
         handOffComplete == False
-    
+    print("Handoff command sent")
     return handOffComplete
 
 
 #* Function to generate and move the robot to its waiting position / start-end position
 #! Vi kan måske slette denne ved brug af Trajectory Planning (se evt. robot projekt rapport)
-def waitPos(x=0.1,y=0.1,z=0.08,rx=0,ry=0,rz=0):
+def waitPos(x=-0.05,y=0.15,z=0.3,rx=0,ry=0,rz=0):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((rcfg.HOST_IP,30003))
     waitPosComplete = False
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
-    cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.5,0.1,0,0.1)' + '\n'
+    cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.5,0.1)' + '\n'
     s.send(cmdstring.encode())
     time.sleep(1)
-    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.5,0.1)' + '\n'
+    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.3,0.06)' + '\n'
     s.send(cmdstring.encode())
-    robotfunc.wait()
+    #robotfunc.wait()
+    time.sleep(1)
     waitPosComplete = True
+    print("WaitPos command sent")
+    #[x_robot, y_robot, z_robot] = robotfunc.get_position(world = True)
+    data = s.recv(1024)
+    x_robot = thread.transform_data_point(data = data, data_name = 'x')
+    y_robot = thread.transform_data_point(data = data, data_name = 'y')
+    z_robot = thread.transform_data_point(data = data, data_name = 'z')
+    [x_robot, y_robot, z_robot] = robotfunc.inverse_transform(x = x_robot, y = y_robot, z = z_robot)
+    s.close()
+    time.sleep(0.2)
+    while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01)):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((rcfg.HOST_IP, 30003))
+        time.sleep(0.2)
+        data = s.recv(1024)
+        x_robot = thread.transform_data_point(data = data, data_name = 'x')
+        y_robot = thread.transform_data_point(data = data, data_name = 'y')
+        z_robot = thread.transform_data_point(data = data, data_name = 'z')
+        [x_robot, y_robot, z_robot] = robotfunc.inverse_transform(x = x_robot, y = y_robot, z = z_robot)
+        s.close()
+        time.sleep(0.2)
+    
     return waitPosComplete
 
 #* The function creates a Look-up Table since we have a finite number of specific places. This is utilized to speed up the program such that the positions only have to be calculated
