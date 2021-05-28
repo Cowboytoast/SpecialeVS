@@ -27,6 +27,13 @@ template = cv2.imread('./images/vialTop.png', 0) # * Load template
 #***************************************************************
 cv2.namedWindow("Image")
 print("Press key to start, ESC to exit")
+
+while True:
+    rl.robotRun()
+    k = cv2.waitKey(1)
+    if k%256 == 27:
+        break
+    
 while True:
     ret, img = cam.read()
     k = cv2.waitKey(1)
