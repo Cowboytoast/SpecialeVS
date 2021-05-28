@@ -13,11 +13,12 @@ from config import robotconfig as rcfg
 from modules.src.gripper.class_gripper import Gripper
 from modules.src.ur.class_ur import UR as Robot
 from modules.src.ur.communication_ur import communication_thread as comm
-
+'''
 if  rcfg.grippername=='robotiq': 
   import modules.robotiq as gripper
 if  rcfg.grippername=='rg2': 
   import modules.rg2 as gripper
+  '''
 try:
     robotfunc = Robot()
 except TimeoutError:
@@ -34,9 +35,6 @@ elif gripperfunc == None:
     print('Gripper not connected!')
       
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-# TODO: lav init korrekt
-# TODO: Lav funktion der kører alle de forskellige funktioner i forbindelse med bevægelse af robot, denne skal så kaldes i main - ingang!
 
 
 def robotInit():
@@ -76,7 +74,8 @@ def robotRun(x,y,z,rx,ry,rz,linesFound):
             contEmpty = True
     if contEmpty == True:    
         if linesFound == True:
-            moveComplete = pickupCommand(x,y,z,rx,ry,rz)
+            pickupCommand(x,y,z,rx,ry,rz)
+            '''
             if moveComplete == True:
                 handOffComplete = handoffCommand()
             else:
@@ -88,8 +87,8 @@ def robotRun(x,y,z,rx,ry,rz,linesFound):
             takeNewPicture = True
         else:
             takeNewPicture = False
-    
-    return takeNewPicture
+    '''
+    return 
 
 
 #* Function to move the robot arm from 'waiting' position, to a vial and pick it up. This does not lift it as such, just takes it into the grabber.
@@ -102,7 +101,6 @@ def pickupCommand(x = 0.1,y = 0.1,z = 0.02,rx = 0,ry = 0,rz = 0):
     rx = 0
     ry = 0
     rz = 0
-    moveComplete = False
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
     #s.send('movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1,0.1)\n')
     cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.5,0.1)' + '\n'
@@ -112,7 +110,6 @@ def pickupCommand(x = 0.1,y = 0.1,z = 0.02,rx = 0,ry = 0,rz = 0):
     s.send(cmdstring.encode())
     print("Pickup command sent")
 
-    moveComplete = True
     time.sleep(1)
     data = s.recv(1024)
     x_robot = thread.transform_data_point(data = data, data_name = 'x')
@@ -137,7 +134,7 @@ def pickupCommand(x = 0.1,y = 0.1,z = 0.02,rx = 0,ry = 0,rz = 0):
     gripperfunc.wait() 
     waitPos()
     
-    return moveComplete
+    #return moveComplete
 
 
 #* Function that generates and sends a command to move to handoff placement of vials. Uses an array with x,y,z (for the transform) and rx,ry,rz with the angles.
@@ -146,10 +143,10 @@ def handoffCommand():
     
     #! handoffpos needs to be adjudsted with 16mm per turn, with a max of 16. If we are smart, lay it out so we only have to adjust in one direction.
     #? Should we make a global counter, or should we make an internal counter that is passed to maintain its value?
-    #extractCounter += 1
+    global extractCounter
+    extractCounter += 1
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP,30003))
-    handOffComplete = False
     x = -0.27
     y = 0.07
     z = 0.02
@@ -159,7 +156,6 @@ def handoffCommand():
     t = robot.transform(x,y,z)
     #handOffPos = handOffPosLOT()
     
-    #s.send('movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(handOffPos[3])+','+str(handOffPos[4,extractCounter])+','+str(handOffPos[5,extractCounter])+'],1,0.1)\n')
     cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.5,0.1)' + '\n'
     s.send(cmdstring.encode())
     time.sleep(1)
@@ -187,13 +183,8 @@ def handoffCommand():
     
     gripperfunc.open()
     gripperfunc.wait() 
-    waitPosComplete = waitPos()
-    if waitPosComplete == True:
-        handOffComplete == True
-    else:
-        handOffComplete == False
-    print("Handoff command sent")
-    return handOffComplete
+    waitPos()
+    #return handOffComplete
 
 
 #* Function to generate and move the robot to its waiting position / start-end position
@@ -201,7 +192,6 @@ def handoffCommand():
 def waitPos(x=-0.05,y=0.15,z=0.3,rx=0,ry=0,rz=0):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP,30003))
-    waitPosComplete = False
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
     cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.5,0.1)' + '\n'
     s.send(cmdstring.encode())
@@ -210,7 +200,6 @@ def waitPos(x=-0.05,y=0.15,z=0.3,rx=0,ry=0,rz=0):
     s.send(cmdstring.encode())
     #robotfunc.wait()
     time.sleep(1)
-    waitPosComplete = True
     print("WaitPos command sent")
     #[x_robot, y_robot, z_robot] = robotfunc.get_position(world = True)
     data = s.recv(1024)
@@ -232,7 +221,7 @@ def waitPos(x=-0.05,y=0.15,z=0.3,rx=0,ry=0,rz=0):
         s.close()
         time.sleep(0.2)
     
-    return waitPosComplete
+    #return waitPosComplete
 
 #* The function creates a Look-up Table since we have a finite number of specific places. This is utilized to speed up the program such that the positions only have to be calculated
 #* at the beginning of the program, thus adding the least amount of time once the recognition and movement of the vials are begun. This function should only be called once
