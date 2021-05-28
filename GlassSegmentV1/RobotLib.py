@@ -88,7 +88,6 @@ def pickupCommand(x = 0.1,y = 0.1,z = 0.02,rx = 0,ry = 0,rz = 0):
     cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.2)' + '\n'
     s.send(cmdstring.encode())
     s.close()
-    time.sleep(2)
     [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
     while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and rz_robot >= rz - 0.09 and rz_robot <= rz + 0.09)):
         [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
@@ -148,9 +147,9 @@ def waitPos(x=-0.05,y=0.15,z=0.3,rx=0,ry=0,rz=0):
     cmdstring = 'movej(['+str(q[0])+','+str(q[1])+','+str(q[2])+','+str(q[3])+','+str(q[4])+','+str(0)+'],1.1,0.8)' + '\n'
     s.send(cmdstring.encode())
     s.close()
-    time.sleep(2)
     [x_robot, y_robot, z_robot, _] = get_URdata()
-    while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01)):
+    q = get_URdata(True)
+    while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and q[5] >= -0.1 and q[5] <= 0.1)):
         [x_robot, y_robot, z_robot, _] = get_URdata()
 
 #* The function creates a Look-up Table since we have a finite number of specific places. This is utilized to speed up the program such that the positions only have to be calculated
@@ -195,7 +194,8 @@ def get_URdata(joint_data = False):
     q_e = thread.transform_data_point(data = data, data_name = 'q_e')
     q_w1 = thread.transform_data_point(data = data, data_name = 'q_w1')
     q_w2 = thread.transform_data_point(data = data, data_name = 'q_w2')
-    q = np.array([q_b, q_s, q_e, q_w1, q_w2])
+    q_w3 = thread.transform_data_point(data = data, data_name = 'q_w3')
+    q = np.array([q_b, q_s, q_e, q_w1, q_w2, q_w3])
     s.close()
     time.sleep(0.1)
     [x_robot, y_robot, z_robot] = robotfunc.inverse_transform(x = x_robot, y = y_robot, z = z_robot)
