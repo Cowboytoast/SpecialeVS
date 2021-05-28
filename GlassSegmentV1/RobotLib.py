@@ -39,8 +39,7 @@ def robotInit():
     time.sleep(1)
     global thread
     thread = comm(ip = HOST1, port = PORT1)
-    gripperfunc.open()
-    gripperfunc.wait() 
+    gripperOpen() 
     global handOffPos
     global extractCounter
     extractCounter = 0
@@ -111,8 +110,7 @@ def pickupCommand(x = 0.1,y = 0.1,z = 0.02,rx = 0,ry = 0,rz = 0):
         s.close()
         time.sleep(0.2)
     
-    gripperfunc.close()
-    gripperfunc.wait() 
+    gripperClose() 
     waitPos()
 
 
@@ -162,8 +160,7 @@ def handoffCommand():
         s.close()
         time.sleep(0.2)
     
-    gripperfunc.open()
-    gripperfunc.wait() 
+    gripperOpen() 
     waitPos()
 
 
@@ -238,3 +235,19 @@ def handOffPosLOT():
         #! All numbers above are only as templates as no position are defined yet.
     
     return handOffPos
+
+def gripperOpen(pos=100,speed=255,force=10):
+    
+    gripperfunc.set(pos,speed,force)
+    gripperfunc.open()
+    gripperfunc.wait()
+    
+    return
+
+def gripperClose(pos=20,speed=255,force=10):
+    
+    gripperfunc.set(pos,speed,force)
+    gripperfunc.close()
+    gripperfunc.wait()
+    
+    return
