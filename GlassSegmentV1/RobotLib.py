@@ -92,8 +92,7 @@ def pickupCommand(x = 0.1,y = 0.1,z = 0.02,rx = 0,ry = 0,rz = 0):
     while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and rz_robot >= rz - 0.09 and rz_robot <= rz + 0.09)):
         [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
 
-    gripperfunc.close()
-    gripperfunc.wait()
+    gripperClose()
     waitPos()
 
 
@@ -126,8 +125,7 @@ def handoffCommand():
     while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and rz_robot >= rz - 0.09 and rz_robot <= rz + 0.09)):
         [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
 
-    gripperfunc.open()
-    gripperfunc.wait()
+    gripperOpen()
     waitPos()
 
 
