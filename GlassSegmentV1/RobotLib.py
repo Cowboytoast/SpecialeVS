@@ -39,8 +39,7 @@ def robotInit():
     time.sleep(1)
     global thread
     thread = comm(ip = HOST1, port = PORT1)
-    gripperfunc.open()
-    gripperfunc.wait() 
+    gripperOpen() 
     global handOffPos
     global extractCounter
     extractCounter = 0
@@ -92,8 +91,7 @@ def pickupCommand(x = 0.1,y = 0.1,z = 0.02,rx = 0,ry = 0,rz = 0):
     while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and rz_robot >= rz - 0.09 and rz_robot <= rz + 0.09)):
         [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
 
-    gripperfunc.close()
-    gripperfunc.wait()
+    gripperClose()
     waitPos()
 
 
@@ -126,8 +124,7 @@ def handoffCommand():
     while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and rz_robot >= rz - 0.09 and rz_robot <= rz + 0.09)):
         [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
 
-    gripperfunc.open()
-    gripperfunc.wait()
+    gripperOpen()
     waitPos()
 
 
@@ -180,6 +177,21 @@ def handOffPosLOT():
     
     return handOffPos
 
+def gripperOpen(pos=100,speed=255,force=10):
+    
+    gripperfunc.set(pos,speed,force)
+    gripperfunc.open()
+    gripperfunc.wait()
+    
+    return
+
+def gripperClose(pos=20,speed=255,force=10):
+    
+    gripperfunc.set(pos,speed,force)
+    gripperfunc.close()
+    gripperfunc.wait()
+    
+    return
 def get_URdata(joint_data = False):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP, 30003))
