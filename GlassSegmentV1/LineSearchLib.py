@@ -422,7 +422,7 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     max_idx = np.zeros((2,1))
     for h in np.arange(int(Yshifted[startPoint]) - int(h_steps/2), int(Yshifted[startPoint]) + int(h_steps/2), 1):
         for w in np.arange(int(Xshifted[startPoint]) - int(w_steps/2), int(Xshifted[startPoint]) + int(w_steps/2), 1):
-            if h < 0 or w < 0:
+            if h < 0 or w < 0 or h > (img.shape[0] - template_rot.shape[0]) or w > (img.shape[1] - template_rot.shape[1]):
                 return None
             matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
             matches = np.count_nonzero(matches)
@@ -443,7 +443,7 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     #pointsy -= int(template_rot.shape[0]/4)
     for h in np.arange(int(Yshifted[startPoint]) + int(h_steps/2), int(Yshifted[startPoint]) - int(h_steps/2), -1):
         for w in np.arange(int(Xshifted[startPoint]) + int(w_steps/2), int(Xshifted[startPoint]) - int(w_steps/2), -1):
-            if h > (img.shape[0] - template_rot.shape[0]) or w > (img.shape[1] - template_rot.shape[1]):
+            if h < 0 or w < 0 or h > (img.shape[0] - template_rot.shape[0]) or w > (img.shape[1] - template_rot.shape[1]):
                 return None
             matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
             matches = np.count_nonzero(matches)
