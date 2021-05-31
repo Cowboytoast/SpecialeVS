@@ -174,15 +174,17 @@ def handOffPosLOT():
     handOffPos = np.empty((16,6),dtype=float)
     for i in range(0,15):
         for j in range(0,2):
-            if j == 0 and i == 0: #first iteration of x axis
+            if j == 1 and i == 0: #first iteration of x axis
                 handOffPos[i,j] = 1
-            elif j == 0:
-                handOffPos[i,j] = i * 16 + 1 #every other iteration of x has to be incremented with 16mm, the distance from center of each vial to the next in the handoff tray.
+            elif j == 1:
+                handOffPos[i,j] = i * 0.016 + 0.45 #every other iteration of y has to be incremented with 16mm, the distance from center of each vial to the next in the handoff tray.
+            elif j == 2:
+                handOffPos[i,j] = 0.03 #z axis does not change since we only move the handoff position in one direction
             else:
-                handOffPos[i,j] = 0 #y and z axis does not change since we only move the handoff position in one direction
+                handOffPos[i,j] = 33.25 #x axis does not change since we only move the handoff position in one direction
         handOffPos[i,3] = 0 #* rx
         handOffPos[i,4] = 0 #* ry
-        handOffPos[i,5] = 0 #* rz
+        handOffPos[i,5] = 1.58 #* rz
         # handoff angles does not change, thus assigned with constants.
     # moves the coordinates from world frame to robot/base frame. 
     for m in range(0,15):
@@ -190,8 +192,6 @@ def handOffPosLOT():
         handOffPos[0,m] = t[0]
         handOffPos[1,m] = t[1]
         handOffPos[2,m] = t[2]
-
-        #! All numbers above are only as templates as no position are defined yet.
     
     return handOffPos
 
@@ -208,6 +208,7 @@ def gripperClose(pos=210,speed=255,force=10):
     gripperfunc.wait()
     
     return
+
 def get_URdata(joint_data = False):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP, 30003))
