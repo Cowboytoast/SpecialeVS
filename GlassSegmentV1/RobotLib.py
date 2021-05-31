@@ -14,32 +14,44 @@ from modules.src.gripper.class_gripper import Gripper
 from modules.src.ur.class_ur import UR as Robot
 from modules.src.ur.communication_ur import communication_thread as comm
 
-try:
-    robotfunc = Robot()
-except TimeoutError:
-    robotfunc = None
-try:
-    gripperfunc = Gripper()
-except IndexError:
-    gripperfunc = None
+global robotfunc
+global gripperfunc
+global s
+'''
 if robotfunc == None and gripperfunc == None:
     print('Robot and gripper not connected!')
 elif robotfunc == None:
     print('Robot not connected!')
 elif gripperfunc == None:
     print('Gripper not connected!')
-      
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+'''
 
 
 def robotInit():
+    global robotfunc
+    global gripperfunc
+    global s
+    try:
+        robotfunc = Robot()
+    except TimeoutError:
+        robotfunc = None
+    try:
+        gripperfunc = Gripper()
+    except IndexError:
+        gripperfunc = None
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     HOST1 = rcfg.HOST_IP
     PORT1 = 30003              # The same port as used by the server
-    s.connect((HOST1, PORT1))
+    try:
+        s.connect((HOST1, PORT1))
+    except TimeoutError:
+        print("Could not connect to robot, timeout error")
+        return
     time.sleep(1)
     global thread
     thread = comm(ip = HOST1, port = PORT1)
-    gripperOpen() 
+    gripperfunc.activate()
+    gripperOpen()
     global handOffPos
     global extractCounter
     global printflag
@@ -50,7 +62,6 @@ def robotInit():
     #handOffPos = handOffPosLOT()
     s.close()
     waitPos()
-    return
 
 #* Function that works as a "main" function for the robot commands. 
 #* Runs a complete cycle with the robot. From getting coordinates to placing the vial and back to start position.

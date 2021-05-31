@@ -28,21 +28,28 @@ class GripperSerial():
         print('    Equipment found on port ' + port)
 
         # Setting up serial connection for communication
-        self.serial = serial.Serial(port=port, baudrate=115200, timeout=1,
+        try:
+            self.serial = serial.Serial(port=port, baudrate=115200, timeout=1,
                                     parity=serial.PARITY_NONE,
                                     stopbits=serial.STOPBITS_ONE,
                                     bytesize=serial.EIGHTBITS)
+        except serial.SerialException:
+            print("No gripper found")
+            pass
 
     def shutdown(self):
         self.serial.close()
 
     def activate(self):
         # Sending activation codes and checking received bytes
-        self.serial.write(b'\x09\x10\x03\xE8\x00\x03\x06\x00\x00\x00\x00\x00\x00\x73\x30')
-        response = self.read_bytes(8)
-        self.serial.write(b'\x09\x10\x03\xE8\x00\x03\x06\x01\x00\x00\x00\x00\x00\x72\xE1')
-        response = self.read_bytes(8)
-
+        try:
+            self.serial.write(b'\x09\x10\x03\xE8\x00\x03\x06\x00\x00\x00\x00\x00\x00\x73\x30')
+            response = self.read_bytes(8)
+            self.serial.write(b'\x09\x10\x03\xE8\x00\x03\x06\x01\x00\x00\x00\x00\x00\x72\xE1')
+            response = self.read_bytes(8)
+        except AttributeError:
+            print("Could not activate gripper")
+            return False
         start_time = time.time()
         success = False
         while True:
