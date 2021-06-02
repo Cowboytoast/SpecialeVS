@@ -57,10 +57,16 @@ def robotInit():
     global printflag
     printflag = False
     extractCounter = 0
-    robotfunc.transform_init(p0i = [-70.73,-300.5,1002.39],pxi = [-325.82,-280.86,1002.65], pyi = [-60.36,-119.87,1005.88])
-    robot.transform_init([-70.73,-300.5,1002.39],[-325.82,-280.86,1002.65],[-60.36,-119.87,1005.88])
-    #handOffPos = handOffPosLOT()
-    s.close()
+    #! Lumie box points
+    robotfunc.transform_init(p0i = [-436, 172.46, 906.56],pxi = [-457.53, -82.02, 906.27], pyi = [-268.78, 160.50, 907.45])
+    robot.transform_init([-436, 172.46, 906.56], [-457.53, -82.02, 906.27], [-268.78, 160.50, 907.45])
+    
+    #! Calibration paper points
+    #robotfunc.transform_init(p0i = [-70.73,-300.5,1002.39],pxi = [-325.82,-280.86,1002.65], pyi = [-60.36,-119.87,1005.88])
+    #robot.transform_init([-70.73,-300.5,1002.39],[-325.82,-280.86,1002.65],[-60.36,-119.87,1005.88])
+    handOffPos = handOffPosLOT()
+    #s.close()
+    print("Going to wait position")
     waitPos()
 
 #* Function that works as a "main" function for the robot commands. 
@@ -68,14 +74,15 @@ def robotInit():
 def robotRun(x = 0,y = 0,z = 0,rx = 0,ry = 0,rz = 0):
     global extractCounter
     global printflag
+    global handOffPos
     contEmpty = True
-    if extractCounter == 5:
+    if extractCounter == 2:
         contEmpty = False
         if printflag == False:
             print('Container full, please empty container\n')
             print('Press r when container is emptied, to restart pick-up')
             printflag = True
-        l = cv2.waitKey(1)
+        l = cv2.waitKey(0)
         if l%256 == 114:
             # press 'r'
             extractCounter = 0
@@ -83,38 +90,33 @@ def robotRun(x = 0,y = 0,z = 0,rx = 0,ry = 0,rz = 0):
             printflag = False
     if contEmpty == True:
         pickupCommand()
-        handoffCommand()
+        handoffCommand(handOffPos)
     return 
 
 
 #* Function to move the robot arm from 'waiting' position, to a vial and pick it up. This does not lift it as such, just takes it into the grabber.
-def pickupCommand(x = 0.1,y = 0.1,z = 0.02,rx = 0,ry = 0,rz = 0):
+def pickupCommand(x = 0.1,y = 0.1,z = -0.02,rx = 0,ry = 0,rz = 0):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP,30003))
-    x = 0.1
-    y = 0.1
-    z = 0.02
-    rx = 0
-    ry = 0
-    rz = 0
+
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
     cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1.1,0.9)' + '\n'
     s.send(cmdstring.encode())
     time.sleep(4)
     cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.2)' + '\n'
     s.send(cmdstring.encode())
-    s.close()
+    #s.close()
     [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
     while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and rz_robot >= rz - 0.09 and rz_robot <= rz + 0.09)):
         [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP,30003))
-    z = 0.01
+    z = -0.01
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
-    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.2)' + '\n'
+    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.4,0.05)' + '\n'
     s.send(cmdstring.encode())
-    s.close()
+    #s.close()
     [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
     while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and rz_robot >= rz - 0.09 and rz_robot <= rz + 0.09)):
         [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
@@ -125,31 +127,30 @@ def pickupCommand(x = 0.1,y = 0.1,z = 0.02,rx = 0,ry = 0,rz = 0):
 
 #* Function that generates and sends a command to move to handoff placement of vials. Uses an array with x,y,z (for the transform) and rx,ry,rz with the angles.
 #* The array are generated in the function 'handOffPosLOT'.
-def handoffCommand():
+def handoffCommand(handoffPos):
     
     #! handoffpos needs to be adjudsted with 16mm per turn, with a max of 16. If we are smart, lay it out so we only have to adjust in one direction.
     #? Should we make a global counter, or should we make an internal counter that is passed to maintain its value?
     global extractCounter
-    extractCounter += 1
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP,30003))
-    x = -0.27
-    y = 0.07
-    z = 0.02
-    rx = 0
-    ry = 0
-    rz = 0
+    x = handoffPos[0, extractCounter]
+    y = handoffPos[1, extractCounter]
+    z = handoffPos[2, extractCounter]
+    rx = handoffPos[3, extractCounter]
+    ry = handoffPos[4, extractCounter]
+    rz = handoffPos[5, extractCounter]
+    extractCounter += 1
     t = robot.transform(x,y,z)
-    #handOffPos = handOffPosLOT()
 
     cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1.1,0.9)' + '\n'
     s.send(cmdstring.encode())
     time.sleep(4)
     cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.2)' + '\n'
     s.send(cmdstring.encode())
-    s.close()
+    #s.close()
     [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
-    while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and rz_robot >= rz - 0.09 and rz_robot <= rz + 0.09)):
+    while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.005 and y_robot <= y + 0.005 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and rz_robot >= rz - 0.09 and rz_robot <= rz + 0.09)):
         [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
 
     gripperOpen()
@@ -158,20 +159,21 @@ def handoffCommand():
 
 #* Function to generate and move the robot to its waiting position / start-end position
 #! Vi kan måske slette denne ved brug af Trajectory Planning (se evt. robot projekt rapport)
-def waitPos(x=-0.05,y=0.15,z=0.3,rx=0,ry=0,rz=0):
+def waitPos(x=0.1,y=0.1,z=-0.2,rx=0,ry=0,rz=0):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP,30003))
-    t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
+    t=robot.transform(x,y,z)
     time.sleep(0.2)
-    cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1.1,0.9)' + '\n'
+    cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1.1,0.5)' + '\n'
     s.send(cmdstring.encode())
-    time.sleep(4)
+    time.sleep(6)
+    #s.close()
     q = get_URdata(True)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP,30003))
-    cmdstring = 'movej(['+str(q[0])+','+str(q[1])+','+str(q[2])+','+str(q[3])+','+str(q[4])+','+str(0)+'],1.1,0.8)' + '\n'
+    cmdstring = 'movej(['+str(q[0])+','+str(q[1])+','+str(q[2])+','+str(q[3])+','+str(q[4])+','+str(0)+'],1.1,0.5)' + '\n'
     s.send(cmdstring.encode())
-    s.close()
+    #s.close()
     [x_robot, y_robot, z_robot, _] = get_URdata()
     #q = get_URdata(True)
     while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01)):
@@ -182,35 +184,28 @@ def waitPos(x=-0.05,y=0.15,z=0.3,rx=0,ry=0,rz=0):
 #* at the beginning of the program, thus adding the least amount of time once the recognition and movement of the vials are begun. This function should only be called once
 #* after init.
 def handOffPosLOT():
-    handOffPos = np.empty((16,6),dtype=float)
-    for i in range(0,15):
-        for j in range(0,2):
-            if j == 1 and i == 0: #first iteration of x axis
-                handOffPos[i,j] = 1
-            elif j == 1:
-                handOffPos[i,j] = i * 0.016 + 0.45 #every other iteration of y has to be incremented with 16mm, the distance from center of each vial to the next in the handoff tray.
-            elif j == 2:
-                handOffPos[i,j] = 0.03 #z axis does not change since we only move the handoff position in one direction
-            else:
-                handOffPos[i,j] = 33.25 #x axis does not change since we only move the handoff position in one direction
-        handOffPos[i,3] = 0 #* rx
-        handOffPos[i,4] = 0 #* ry
-        handOffPos[i,5] = 1.58 #* rz
+    handOffPos = np.empty((6, 16),dtype=float)
+    for j in range(0,16):
+        handOffPos[0,j] = 0.3325
+        handOffPos[1,j] = j * 0.016 + 0.407 #every other iteration of y has to be incremented with 16mm, the distance from center of each vial to the next in the handoff tray.
+        handOffPos[2,j] = 0.07 #z axis does not change since we only move the handoff position in one direction
+        handOffPos[3,j] = 0 #* rx
+        handOffPos[4,j] = 0 #* ry
+        handOffPos[5,j] = -0.15 #* rz
         # handoff angles does not change, thus assigned with constants.
     # moves the coordinates from world frame to robot/base frame. 
-    for m in range(0,15):
-        t=robot.transform(handOffPos[0,m],handOffPos[1,m],handOffPos[2,m]) #* Generate placement of the glass in robot frame
-        handOffPos[0,m] = t[0]
-        handOffPos[1,m] = t[1]
-        handOffPos[2,m] = t[2]
-    
+    #for m in range(0,15):
+        #t=robot.transform(handOffPos[0,m],handOffPos[1,m],handOffPos[2,m]) #* Generate placement of the glass in robot frame
+        #handOffPos[0,m] = t[0]
+        #handOffPos[1,m] = t[1]
+        #handOffPos[2,m] = t[2]
+
     return handOffPos
 
 def gripperOpen(pos=180,speed=255,force=10):
-    
     gripperfunc.set(pos,speed,force)
     gripperfunc.wait()
-    
+
     return
 
 def gripperClose(pos=210,speed=255,force=10):
@@ -221,6 +216,10 @@ def gripperClose(pos=210,speed=255,force=10):
     return
 
 def get_URdata(joint_data = False):
+    global s
+    if s in globals():
+        s.close()
+        time.sleep(0.1)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP, 30003))
     time.sleep(0.1)

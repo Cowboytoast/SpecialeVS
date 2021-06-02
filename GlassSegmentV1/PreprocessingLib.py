@@ -10,7 +10,7 @@ def PrepImg(img):
     # * Unsharp mask (Size (3,3), amount 1, thresh. .131) -> ...
     # * Laplacian edge (delta = 5) -> Cvt. to UByte -> ...
     # * Threshold @ 32
-    img_cropped = img[60:60+505, 325:325+740]
+    img_cropped = img[28:28+336,327:327+528]
     img_screensized = ResizeToFit(img_cropped, H= 403, W = 550)
     img_gray = cv2.cvtColor(img_screensized, cv2.COLOR_BGR2GRAY)
     img_stretched = cv2.equalizeHist(img_gray)

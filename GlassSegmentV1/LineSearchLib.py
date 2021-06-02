@@ -196,7 +196,7 @@ def LineMerge(glassLines):
 
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
-def HoughLinesSearch(img, houghLength=40, houghDist=10):
+def HoughLinesSearch(img, houghLength=100, houghDist=10):
     #img has to be the edge detected image.
     #Copy of edge detected image into BGR image for drawing lines.
     houghImage = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
@@ -324,74 +324,54 @@ def LineExtend(glassSides,lineLength=100):
            
     return glassSides
 
-def grabberPoint(glassSides,lineLength=23):
+def grabberPoint(glassSides, lineLength=21):
     # ! Format of sides:
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
     grabPoint=np.empty([6])
+    grabPoint_tmp = np.empty([2])
     line_perp = np.empty([2])
     x1 = np.empty([2])
     y1 = np.empty([2])
+    
+    
     grabPoint[0] = (glassSides[1] + glassSides[3]) / 2 # l1x
     grabPoint[1] = (glassSides[2] + glassSides[4]) / 2 # l1y
+    
+    grabPoint_tmp[0] = (glassSides[7] + glassSides[9]) / 2 # l2x
+    grabPoint_tmp[1] = (glassSides[8] + glassSides[10]) / 2 # l2y
     line = np.polyfit([glassSides[1], glassSides[3]],[glassSides[2], glassSides[4]], 1)
     line_perp[0] = -1/line[0] # Slope of perpendicular line
     line_perp[1] = grabPoint[1] - 1 * line_perp[0] * grabPoint[0]
-    #grabPoint[2] = (glassSides[7] + glassSides[9]) / 2 # l2x
-    #grabPoint[3] = (glassSides[8] + glassSides[10]) / 2# l2y
     m = line_perp[0]
     b = line_perp[1]
     x0 = grabPoint[0]
     y0 = grabPoint[1]
     d = lineLength
-    x1[0] = 1/(m**2+1)*(-b*m+m*y0+math.sqrt(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)+x0)
-    x1[1] = -(b*m-m*y0+(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)**(1/2)-x0)/(m**2+1)
+    
+    x1[0] = 1/(m**2+1)*(-b*m+m*y0-math.sqrt(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)+x0)
+    x1[1] = 1/(m**2+1)*(-b*m+m*y0+math.sqrt(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)+x0)
+    #x1[1] = -(b*m-m*y0+(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)**(1/2)-x0)/(m**2+1)
     y1 = m * x1 + b
-    grabPoint[2] = x1[0]
-    grabPoint[3] = y1[0]
+    
+    dist0 = math.sqrt((grabPoint_tmp[0] - x1[0])**2 + (grabPoint_tmp[1] - y1[0])**2)
+    dist1 = math.sqrt((grabPoint_tmp[0] - x1[1])**2 + (grabPoint_tmp[1] - y1[1])**2)
+    
+    if dist0 < dist1:
+        grabPoint[2] = x1[0]
+        grabPoint[3] = y1[0]
+    else:
+        grabPoint[2] = x1[1]
+        grabPoint[3] = y1[1]
+    
+    #grabPoint[2] = x1
+    #grabPoint[3] = y1
     grabPoint[4] = (grabPoint[0] + grabPoint[2]) / 2
     grabPoint[5] = (grabPoint[1] + grabPoint[3]) / 2
     grabPointAngle = math.degrees(math.atan(m))
     return grabPoint, grabPointAngle
-    # Create orthogonal point to grabber point
-#    slopes = np.array([glassSides[0], glassSides[6]])
-    #slope_offset = math.degrees(math.atan(np.average(slopes)))
-    #slope_offset = 180 - abs(slope_offset)
-    #if slope_offset < 0:
-    #    slope_offset += 45
-    
-    #if np.average(slopes) > 0:
-    #    slope_offset = -slope_offset
-    
-    
-    '''
-    # ! Format of returned grabbing-points:
-    # * grabPoint = | l1x | l1y | l2x | l2y
-    #grabPoint[0] = (glassSides[1] + glassSides[3]) / 2
-    #grabPoint[1] = (glassSides[2] + glassSides[4]) / 2
-    #grabPoint[2] = (glassSides[7] + glassSides[9]) / 2
-    #grabPoint[3] = (glassSides[8] + glassSides[10]) / 2
-    #grabPoint[0,0],grabPoint[0,1] = abs(glassSides[0,1]-glassSides[0,3]), abs(glassSides[0,2]-glassSides[0,4])
-    #grabPoint[1,0],grabPoint[1,1] = abs(glassSides[1,1]-glassSides[1,3]), abs(glassSides[1,2]-glassSides[1,4])
-    
-    
-    # Mathias' version
-    if glassSides[0,5] > glassSides[1,5]:
-        grabPoint[0] = (glassSides[0,1] + glassSides[0,3]) / 2
-        grabPoint[1] = (glassSides[0,2] + glassSides[0,4]) / 2
-        xDist1,yDist1 = np.cos(math.degrees(math.atan(glassSides[1,0])))*lineLength, np.sin(math.degrees(math.atan(glassSides[1,0])))*lineLength
-        grabPoint[2],grabPoint[3] = glassSides[1,1]+np.round(xDist1), glassSides[1,2]+np.round(yDist1)
-    else:
-        xDist0,yDist0 = np.sin(math.degrees(math.atan(glassSides[0,0])))*lineLength, np.cos(math.degrees(math.atan(glassSides[0,0])))*lineLength
-        grabPoint[0],grabPoint[1] = glassSides[0,1]+np.round(xDist0), glassSides[0,2]+np.round(yDist0)
-        grabPoint[2] = (glassSides[1,1] + glassSides[1,3]) / 2
-        grabPoint[3] = (glassSides[1,2] + glassSides[1,4]) / 2
-    
-    grabPointAngle = math.degrees(math.atan(glassSides[0,0])) #? Dette er vel ikke en "angle" men slope?
-    
-    return grabPoint,grabPointAngle
-'''
 
-def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
+
+def templatematch(img, template, houghLocation, h_steps = 40, w_steps = 40):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
     if houghLocation.size < 7:
         print("One or no lines found!")
@@ -408,7 +388,7 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     
     if np.average(slopes) > 0:
         slope_offset = -slope_offset
-    
+        
     template_rot = imutils.rotate_bound(template, slope_offset)
     startPoint = np.argmin(pointsx + pointsy)
     
@@ -429,18 +409,12 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
             if matches >= maxval:
                 maxval = matches
                 max_idx = np.array([h, w])
-            #rotatingim = np.copy(img)
-            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            #cv2.imshow('Rotating progress', rotatingim)
-            #cv2.waitKey(20)
 
     startPoint = np.argmax(pointsx + pointsy)
         
-    #Yshifted = pointsy - int(template_rot.shape[0]/2)
     Xshifted = pointsx - int(template_rot.shape[1])
     template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
     
-    #pointsy -= int(template_rot.shape[0]/4)
     for h in np.arange(int(Yshifted[startPoint]) + int(h_steps/2), int(Yshifted[startPoint]) - int(h_steps/2), -1):
         for w in np.arange(int(Xshifted[startPoint]) + int(w_steps/2), int(Xshifted[startPoint]) - int(w_steps/2), -1):
             if h < 0 or w < 0 or h > (img.shape[0] - template_rot.shape[0]) or w > (img.shape[1] - template_rot.shape[1]):
@@ -451,20 +425,13 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
                 UpDown = 0 # 1 for up, 0 for down
                 maxval = matches
                 max_idx = np.array([h, w])
-            #rotatingim = np.copy(img)
-            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            #cv2.imshow('Rotating progress', rotatingim)
-            #cv2.waitKey(20)
-
     max_h = int(max_idx[0])
     max_w = int(max_idx[1])
 
 
     # * OVERLAY STUFF***************************************
-    #overlay = cv2.imread('VialOutline.png', 0)
     final = np.copy(img)
     final = cv2.cvtColor(final,cv2.COLOR_GRAY2RGB)
-    #templateStartH, templateStartW = shiftIdx(template_rot)
     
     TipOutline = cv2.imread('./images/VialTopGreen.png')
     # * To overlay template use code below
@@ -478,7 +445,6 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
         final[max_h : max_h + Overlay.shape[0],
         max_w : max_w + Overlay.shape[1]] = Overlay
         cv2.putText(final, 'Orientation: Down', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
-
 
     return final
 
