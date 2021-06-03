@@ -7,9 +7,8 @@ from cv2 import aruco
 import LineSearchLib as ls
 import PreprocessingLib as prep
 import RobotLib as rl
-#import CalibrationLib as cb
+import CalibrationLib as cb
 import numpy as np
-from scipy import ndimage
 # TODO: Fix line merge. Der sker en fejl ved billede opencv_frame_1
 # TODO: Lav movement filer om således at vi har et 'init' call og kan kalde de andre filer med argumenter for position.
 #*********** GLOBAL PARAMETERS **************
@@ -60,7 +59,7 @@ while True:
         cv2.namedWindow("Image")
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
-            img = cv2.imread('./images/opencv_frame_6.png')
+            img = cv2.imread('./images/opencv_frame_6_marked.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -73,7 +72,9 @@ while True:
 
     if state == "sourceimg":
         if statemsg == False:
-            print("Press key to process image, ESC to exit")
+            print("Press c to calibrate")
+            print("Press other to process image")
+            print("Press ESC to exit")
             statemsg = True
         if not offlineFlag:
             ret, img = cam.read()
@@ -81,6 +82,11 @@ while True:
         k = cv2.waitKey(5)
         if k%256 == 27:
             exitFunc()
+        if k%256 == 99:
+            corners, ids = cb.markerCalib(img)
+            cb.markerCrop(img, corners)
+            print("Starting calibration")
+            cv2.waitKey(0)
         elif k != -1:
             cv2.imwrite('unproc.png', img)
             img_binary = prep.PrepImg(img)
