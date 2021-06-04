@@ -65,6 +65,7 @@ def LineMerge(glassLines):
     k = 0
     if glassLines.size < 2:
         print("One or no lines found, aborting")
+        print("#############################################")
         return None
     if len(glassLines) == 2: # check if there exist only 2 lines
         #a = np.array(abs(glassLines[0:2,1] - glassLines[0:2, 3]))
@@ -196,7 +197,7 @@ def LineMerge(glassLines):
 
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
-def HoughLinesSearch(img, houghLength=100, houghDist=10):
+def HoughLinesSearch(img, houghLength=70, houghDist=10):
     #img has to be the edge detected image.
     #Copy of edge detected image into BGR image for drawing lines.
     houghImage = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
@@ -209,8 +210,6 @@ def HoughLinesSearch(img, houghLength=100, houghDist=10):
         glassSides = LineMerge(LineGrouping)
         if glassSides.all() == None:
             return None
-        print(" lines after merge")
-        print(glassSides)
         b = 255
         g = 0
         r = 0
@@ -229,8 +228,7 @@ def HoughLinesSearch(img, houghLength=100, houghDist=10):
             cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 1, cv2.LINE_AA)
             g+=-255
             r+=255
-        
-        print(len(glassSides),"lines found")
+
     else:
         glassSides = None
     #return houghImage
@@ -238,12 +236,11 @@ def HoughLinesSearch(img, houghLength=100, houghDist=10):
     cv2.waitKey(10)
     return glassSides
 
+#! CURRENTLY UNUSED
 def HoughLinesSearchSkimage(img):
-    
     minDist = 20
     maxDist = 50
     h,theta,d = hough_line(img)
-    
     fig, axes = plt.subplots(1, 2, figsize=(15, 6))
     ax = axes.ravel()
 
@@ -269,7 +266,7 @@ def HoughLinesSearchSkimage(img):
     
     return houghImage
 
-def LineExtend(glassSides,lineLength=100):
+def LineExtend(glassSides,lineLength=80):
     #! FIX NEEDED
     # TODO: Jeg mener at vi skal huske at ændre fra hældning til vinkel!
     line0,line1 = False, False
@@ -324,7 +321,7 @@ def LineExtend(glassSides,lineLength=100):
            
     return glassSides
 
-def grabberPoint(glassSides, lineLength=21):
+def grabberPoint(glassSides, lineLength=22):
     # ! Format of sides:
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
     grabPoint=np.empty([6])
@@ -455,3 +452,14 @@ def shiftIdx(array):
         for W in range(array.shape[1]):
             if array[H, W] > 0:
                 return H, W
+
+
+def pixelstocm(pickuppoint):
+    phys_x = 25 #cm
+    phys_y = 17.4 #cm
+    #Measured distances:
+    # From right side of p0 marker to left side of p1 marker: 25cm
+    # From lower side of p0 marker to top side of p3(?) marker: 17.4cm
+    x = (pickuppoint[0] / phys_x) / 100
+    y = (pickuppoint[1] / phys_y) / 100
+    return x, y

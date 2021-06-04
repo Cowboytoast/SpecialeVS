@@ -58,12 +58,9 @@ def robotInit():
     printflag = False
     extractCounter = 0
     #! Lumie box points
-    robotfunc.transform_init(p0i = [-436, 172.46, 906.56],pxi = [-457.53, -82.02, 906.27], pyi = [-268.78, 160.50, 907.45])
-    robot.transform_init([-436, 172.46, 906.56], [-457.53, -82.02, 906.27], [-268.78, 160.50, 907.45])
-    
-    #! Calibration paper points
-    #robotfunc.transform_init(p0i = [-70.73,-300.5,1002.39],pxi = [-325.82,-280.86,1002.65], pyi = [-60.36,-119.87,1005.88])
-    #robot.transform_init([-70.73,-300.5,1002.39],[-325.82,-280.86,1002.65],[-60.36,-119.87,1005.88])
+    robotfunc.transform_init(p0i = [-366.26, 162.16, 892.32],pxi = [-385, -91.7, 895.7], pyi = [-191.75, 148.97, 893.57])
+    robot.transform_init([-366.26, 162.16, 892.32], [-385, -91.7, 895.7], [-191.75, 148.97, 893.57])
+
     handOffPos = handOffPosLOT()
     #s.close()
     print("Going to wait position")
@@ -89,7 +86,7 @@ def robotRun(x = 0,y = 0,z = 0,rx = 0,ry = 0,rz = 0):
             contEmpty = True
             printflag = False
     if contEmpty == True:
-        pickupCommand()
+        pickupCommand(x, y)
         handoffCommand(handOffPos)
     return 
 
@@ -186,19 +183,13 @@ def waitPos(x=0.1,y=0.1,z=-0.2,rx=0,ry=0,rz=0):
 def handOffPosLOT():
     handOffPos = np.empty((6, 16),dtype=float)
     for j in range(0,16):
-        handOffPos[0,j] = 0.3325
-        handOffPos[1,j] = j * 0.016 + 0.407 #every other iteration of y has to be incremented with 16mm, the distance from center of each vial to the next in the handoff tray.
+        handOffPos[0,j] = 0.33
+        handOffPos[1,j] = j * 0.016 + 0.375 #every other iteration of y has to be incremented with 16mm, the distance from center of each vial to the next in the handoff tray.
         handOffPos[2,j] = 0.07 #z axis does not change since we only move the handoff position in one direction
         handOffPos[3,j] = 0 #* rx
         handOffPos[4,j] = 0 #* ry
         handOffPos[5,j] = -0.15 #* rz
         # handoff angles does not change, thus assigned with constants.
-    # moves the coordinates from world frame to robot/base frame. 
-    #for m in range(0,15):
-        #t=robot.transform(handOffPos[0,m],handOffPos[1,m],handOffPos[2,m]) #* Generate placement of the glass in robot frame
-        #handOffPos[0,m] = t[0]
-        #handOffPos[1,m] = t[1]
-        #handOffPos[2,m] = t[2]
 
     return handOffPos
 

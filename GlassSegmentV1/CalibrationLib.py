@@ -7,14 +7,14 @@ from cv2 import aruco
 #* Here we use ArUco markers to determind the corners of the box, corresponding to P0, Px and Py needed for the transformation between world frame and robot frame.
 
 def markerCalib(img):
-    
     dict = cv2.aruco.Dictionary_get(aruco.DICT_4X4_50)
     arucoParams = cv2.aruco.DetectorParameters_create()
     markers,ids,reject = cv2.aruco.detectMarkers(img,dict,parameters=arucoParams)
     imgMarkers = cv2.aruco.drawDetectedMarkers(img.copy(),markers,ids)
-    
     markers = np.array(markers, dtype = np.int32)
     corners = np.empty([4,1,2], dtype = np.int32)
+    if len(ids) < 4:
+        return None
     for cnt in range(0,4):
         ID = ids[cnt] - 1
         if ID == 0:
@@ -25,34 +25,19 @@ def markerCalib(img):
             corners[2] = markers[2, 0, 2, :]
         if ID == 3:
             corners[3] = markers[3, 0, 3, :]
-    
-    cv2.namedWindow("markers")
-    cv2.imshow("markers",imgMarkers)
-    
-    return corners,ids
+
+    return corners
 
 def markerCrop(img,corners):
     #https://jdhao.github.io/2019/02/23/crop_rotated_rectangle_opencv/
     #? We might need to acsociate the ids with a specifik corner
     #? to know what placement in the 'corners' array is belonging to what corner.
-
-    corners1 = np.array([
-            [[64, 49]],
-            [[122, 11]],
-            [[391, 326]],
-            [[308, 373]]
-        ])
-    print("shape of cnt: {}".format(corners.shape))
     rect = cv2.minAreaRect(corners)
-    print("rect: {}".format(rect))
 
     # the order of the box points: bottom left, top left, top right,
     # bottom right
     box = cv2.boxPoints(rect)
     box = np.int0(box)
-
-    print("bounding box: {}".format(box))
-    #cv2.drawContours(img, [box], 0, (0, 0, 255), 2)
 
     # get width and height of the detected rectangle
     width = int(rect[1][0])
@@ -72,8 +57,4 @@ def markerCrop(img,corners):
     # directly warp the rotated rectangle to get the straightened rectangle
     warped = cv2.warpPerspective(img, M, (width, height))
 
-    # cv2.imwrite("crop_img.jpg", warped)
-    cv2.imshow("warppp", warped)
-    cv2.waitKey(0)
-        
     return warped

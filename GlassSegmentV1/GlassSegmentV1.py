@@ -21,6 +21,7 @@ def exitFunc():
     global s
     global thread
     print("Escape hit, closing...")
+    print("#############################################")
     try:
         cam
     except NameError:
@@ -63,6 +64,7 @@ while True:
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
+        print("#############################################")
         k = cv2.waitKey(0)
         if k%256 == 27:
             exitFunc()
@@ -75,6 +77,7 @@ while True:
             print("Press c to calibrate")
             print("Press other to process image")
             print("Press ESC to exit")
+            print("#############################################")
             statemsg = True
         if not offlineFlag:
             ret, img = cam.read()
@@ -83,16 +86,31 @@ while True:
         if k%256 == 27:
             exitFunc()
         if k%256 == 99:
-            corners, ids = cb.markerCalib(img)
-            cb.markerCrop(img, corners)
-            print("Starting calibration")
-            cv2.waitKey(0)
+            corners = cb.markerCalib(img)
+            if corners is not None:
+                print("Calibration done")
+                print("#############################################")
+                cv2.waitKey(5)
+                statemsg = False
+            else:
+                print("Not enough markers, try again")
+                print("#############################################")
+                statemsg = False
+
         elif k != -1:
             cv2.imwrite('unproc.png', img)
-            img_binary = prep.PrepImg(img)
-            cv2.imwrite('procced.png', img_binary)
-            cv2.imshow("Binary image", img_binary)
-            edges_hough = ls.HoughLinesSearch(img_binary)
+            start_time = time.time()
+
+            edges_hough = None
+            try:
+                img_binary = prep.PrepImg(img, corners)
+                cv2.imwrite('procced.png', img_binary)
+                cv2.imshow("Binary image", img_binary)
+                edges_hough = ls.HoughLinesSearch(img_binary)
+            except NameError:
+                print("Calibration not performed, please calibrate")
+                print("#############################################")
+                statemsg = False
             if edges_hough is not None:
                 houghLocation = np.ndarray.flatten(edges_hough)
                 final = ls.templatematch(img_binary, template, houghLocation)
@@ -105,10 +123,14 @@ while True:
                     cv2.circle(final, (grabPoints[0], grabPoints[1]), 3, color = (0,255,0), thickness=2)
                     cv2.circle(final, (grabPoints[2], grabPoints[3]), 3, color = (0,255,0), thickness=2)
                     cv2.circle(final, (grabPoints[4], grabPoints[5]), 3, color = (0,0,255), thickness=2)
+                    print("Processing time: %s s" % (time.time() - start_time))
+                    print("#############################################")
                     cv2.imshow('Detection', final)
                     print("Press space to initiate pickup")
                     print("Press ESC to exit")
-                    print("Press other to recapture image")
+                    print("Press other to retry")
+                    print("#############################################")
+                    x,y = ls.pixelstocm([grabPoints[4], grabPoints[5]])
                     k = cv2.waitKey(0)
                     if k%256 == 27:
                         exitFunc()
@@ -116,8 +138,11 @@ while True:
                         state = "pickup"
                 else:
                     print("Not enough lines found")
+                    print("#############################################")
+                    statemsg = False
 
     if state == "pickup":
-        print('Initiating pickup at (x,y) = (%.1f,%.1f) cm' % (grabPoints[4], grabPoints[5]))
-        rl.robotRun()
+        print('Initiating pickup at (x,y) = (%.2f,%.2f) cm' % (x, y))
+        print("#############################################")
+        rl.robotRun(x, y)
         state = "sourceimg"
