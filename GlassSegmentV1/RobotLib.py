@@ -73,7 +73,7 @@ def robotRun(x = 0,y = 0,z = 0,rx = 0,ry = 0,rz = 0):
     global printflag
     global handOffPos
     contEmpty = True
-    if extractCounter == 2:
+    if extractCounter == 16:
         contEmpty = False
         if printflag == False:
             print('Container full, please empty container\n')
@@ -86,7 +86,7 @@ def robotRun(x = 0,y = 0,z = 0,rx = 0,ry = 0,rz = 0):
             contEmpty = True
             printflag = False
     if contEmpty == True:
-        pickupCommand(x, y)
+        pickupCommand()
         handoffCommand(handOffPos)
     return 
 
@@ -95,9 +95,9 @@ def robotRun(x = 0,y = 0,z = 0,rx = 0,ry = 0,rz = 0):
 def pickupCommand(x = 0.1,y = 0.1,z = -0.02,rx = 0,ry = 0,rz = 0):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP,30003))
-
+    q = get_URdata(True)
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
-    cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1.1,0.9)' + '\n'
+    cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1.1,0.7)' + '\n'
     s.send(cmdstring.encode())
     time.sleep(4)
     cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.2)' + '\n'
@@ -109,13 +109,13 @@ def pickupCommand(x = 0.1,y = 0.1,z = -0.02,rx = 0,ry = 0,rz = 0):
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP,30003))
-    z = -0.01
+    z = 0.031
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
-    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.4,0.05)' + '\n'
+    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.2,0.01)' + '\n'
     s.send(cmdstring.encode())
     #s.close()
     [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
-    while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and rz_robot >= rz - 0.09 and rz_robot <= rz + 0.09)):
+    while(not(x_robot >= x - 0.003 and x_robot <= x + 0.003 and y_robot >= y - 0.003 and y_robot <= y + 0.003 and z_robot >= z - 0.003 and z_robot <= z + 0.003 and rz_robot >= rz - 0.09 and rz_robot <= rz + 0.09)):
         [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
 
     gripperClose()
@@ -125,12 +125,40 @@ def pickupCommand(x = 0.1,y = 0.1,z = -0.02,rx = 0,ry = 0,rz = 0):
 #* Function that generates and sends a command to move to handoff placement of vials. Uses an array with x,y,z (for the transform) and rx,ry,rz with the angles.
 #* The array are generated in the function 'handOffPosLOT'.
 def handoffCommand(handoffPos):
-    
     #! handoffpos needs to be adjudsted with 16mm per turn, with a max of 16. If we are smart, lay it out so we only have to adjust in one direction.
     #? Should we make a global counter, or should we make an internal counter that is passed to maintain its value?
     global extractCounter
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP,30003))
+    x = 0.35
+    y = 0.1
+    z = -0.2
+    rx = 0
+    ry = 0
+    rz = 0
+    t=robot.transform(x,y,z)
+    time.sleep(0.2)
+    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1.1,0.4)' + '\n'
+    s.send(cmdstring.encode())
+    time.sleep(5)
+    #s.close()
+    q = get_URdata(True)
+    #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #s.connect((rcfg.HOST_IP,30003))
+    #cmdstring = 'movej(['+str(q[0])+','+str(q[1])+','+str(q[2])+','+str(q[3])+','+str(q[4])+','+str(0)+'],1.1,0.5)' + '\n'
+    #s.send(cmdstring.encode())
+    #s.close()
+    time.sleep(5)
+    [x_robot, y_robot, z_robot, _] = get_URdata()
+    q_tmp = get_URdata(True)
+    
+    while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.01 and y_robot <= y + 0.01 and z_robot >= z - 0.01 and z_robot <= z + 0.01)):
+        [x_robot, y_robot, z_robot, _] = get_URdata()
+    
+    
+    
+    
+    
     x = handoffPos[0, extractCounter]
     y = handoffPos[1, extractCounter]
     z = handoffPos[2, extractCounter]
@@ -140,7 +168,7 @@ def handoffCommand(handoffPos):
     extractCounter += 1
     t = robot.transform(x,y,z)
 
-    cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1.1,0.9)' + '\n'
+    cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1.1,0.7)' + '\n'
     s.send(cmdstring.encode())
     time.sleep(4)
     cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.2)' + '\n'
@@ -183,8 +211,8 @@ def waitPos(x=0.1,y=0.1,z=-0.2,rx=0,ry=0,rz=0):
 def handOffPosLOT():
     handOffPos = np.empty((6, 16),dtype=float)
     for j in range(0,16):
-        handOffPos[0,j] = 0.33
-        handOffPos[1,j] = j * 0.016 + 0.375 #every other iteration of y has to be incremented with 16mm, the distance from center of each vial to the next in the handoff tray.
+        handOffPos[0,j] = 0.327
+        handOffPos[1,j] = j * 0.016 + 0.362 #every other iteration of y has to be incremented with 16mm, the distance from center of each vial to the next in the handoff tray.
         handOffPos[2,j] = 0.07 #z axis does not change since we only move the handoff position in one direction
         handOffPos[3,j] = 0 #* rx
         handOffPos[4,j] = 0 #* ry
@@ -215,6 +243,7 @@ def get_URdata(joint_data = False):
     s.connect((rcfg.HOST_IP, 30003))
     time.sleep(0.1)
     data = s.recv(1024)
+    tmp = thread.transform_data(data)
     x_robot = thread.transform_data_point(data = data, data_name = 'x')
     y_robot = thread.transform_data_point(data = data, data_name = 'y')
     z_robot = thread.transform_data_point(data = data, data_name = 'z')

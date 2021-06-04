@@ -9,8 +9,25 @@ import PreprocessingLib as prep
 import RobotLib as rl
 import CalibrationLib as cb
 import numpy as np
-# TODO: Fix line merge. Der sker en fejl ved billede opencv_frame_1
-# TODO: Lav movement filer om således at vi har et 'init' call og kan kalde de andre filer med argumenter for position.
+# TODO: Indsæt q-værdier i movej i wait
+'''
+Waitpos 1:
+q_b:-0.5930274174336976
+q_s:-2.1429696608360045
+q_e:2.230737222704673
+q_w1:-1.658563888663564
+q_w2:1.5707963267948988
+q_w3:0
+
+
+Waitpos 2:
+q_b: 0.279633, 
+q_s: -1.921129,  
+q_e: 2.10817 , 
+q_w1: -1.757837,  
+q_w2: 1.570796,  
+q_w3: 1.291163
+'''
 #*********** GLOBAL PARAMETERS **************
 state = "init"
 statemsg = False
@@ -69,7 +86,7 @@ while True:
         if k%256 == 27:
             exitFunc()
         #if not offlineFlag:
-        #rl.robotInit()
+        rl.robotInit()
         state = "sourceimg"
 
     if state == "sourceimg":
@@ -144,5 +161,5 @@ while True:
     if state == "pickup":
         print('Initiating pickup at (x,y) = (%.2f,%.2f) cm' % (x, y))
         print("#############################################")
-        rl.robotRun(x, y)
+        rl.robotRun()
         state = "sourceimg"
