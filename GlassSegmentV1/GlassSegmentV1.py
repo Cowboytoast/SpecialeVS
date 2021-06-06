@@ -1,6 +1,7 @@
 import cv2
 import time
 import sys
+import math
 sys.path.append("./images")
 from cv2 import aruco
 
@@ -9,25 +10,7 @@ import PreprocessingLib as prep
 import RobotLib as rl
 import CalibrationLib as cb
 import numpy as np
-# TODO: Indsæt q-værdier i movej i wait
-'''
-Waitpos 1:
-q_b:-0.5930274174336976
-q_s:-2.1429696608360045
-q_e:2.230737222704673
-q_w1:-1.658563888663564
-q_w2:1.5707963267948988
-q_w3:0
 
-
-Waitpos 2:
-q_b: 0.279633, 
-q_s: -1.921129,  
-q_e: 2.10817 , 
-q_w1: -1.757837,  
-q_w2: 1.570796,  
-q_w3: 1.291163
-'''
 #*********** GLOBAL PARAMETERS **************
 state = "init"
 statemsg = False
@@ -117,17 +100,12 @@ while True:
         elif k != -1:
             cv2.imwrite('unproc.png', img)
             start_time = time.time()
-
             edges_hough = None
-            try:
-                img_binary = prep.PrepImg(img, corners)
-                cv2.imwrite('procced.png', img_binary)
-                cv2.imshow("Binary image", img_binary)
-                edges_hough = ls.HoughLinesSearch(img_binary)
-            except NameError:
-                print("Calibration not performed, please calibrate")
-                print("#############################################")
-                statemsg = False
+            img_binary = prep.PrepImg(img)
+            cv2.imwrite('procced.png', img_binary)
+            cv2.imshow("Binary image", img_binary)
+            edges_hough = ls.HoughLinesSearch(img_binary)
+            statemsg = False
             if edges_hough is not None:
                 houghLocation = np.ndarray.flatten(edges_hough)
                 final = ls.templatematch(img_binary, template, houghLocation)
@@ -147,7 +125,7 @@ while True:
                     print("Press ESC to exit")
                     print("Press other to retry")
                     print("#############################################")
-                    x,y = ls.pixelstocm([grabPoints[4], grabPoints[5]])
+                    x,y = ls.pixelstocm([grabPoints[4], grabPoints[5]], final.shape)
                     k = cv2.waitKey(0)
                     if k%256 == 27:
                         exitFunc()
@@ -159,7 +137,8 @@ while True:
                     statemsg = False
 
     if state == "pickup":
-        print('Initiating pickup at (x,y) = (%.2f,%.2f) cm' % (x, y))
+        print('Initiating pickup at (x,y) = (%.3f,%.3f) cm' % (x, y))
+        print('Angle of %f deg' %(math.degrees(grabAngle)))
         print("#############################################")
-        rl.robotRun()
+        rl.robotRun(x, y, rz = grabAngle)
         state = "sourceimg"

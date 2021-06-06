@@ -364,7 +364,7 @@ def grabberPoint(glassSides, lineLength=22):
     #grabPoint[3] = y1
     grabPoint[4] = (grabPoint[0] + grabPoint[2]) / 2
     grabPoint[5] = (grabPoint[1] + grabPoint[3]) / 2
-    grabPointAngle = math.degrees(math.atan(m))
+    grabPointAngle = math.atan(m) - math.pi / 2
     return grabPoint, grabPointAngle
 
 
@@ -454,12 +454,18 @@ def shiftIdx(array):
                 return H, W
 
 
-def pixelstocm(pickuppoint):
-    phys_x = 25 #cm
-    phys_y = 17.4 #cm
-    #Measured distances:
-    # From right side of p0 marker to left side of p1 marker: 25cm
-    # From lower side of p0 marker to top side of p3(?) marker: 17.4cm
-    x = (pickuppoint[0] / phys_x) / 100
-    y = (pickuppoint[1] / phys_y) / 100
+def pixelstocm(pickuppoint, imdim):
+    phys_x = 250 #mm
+    phys_y = 174 #mm
+    #imdim_x = 550 # px
+    #imdim_y = 348 # px
+    imdim_y = imdim[0]
+    imdim_x = imdim[1]
+    
+    factor_x = phys_x / imdim_x
+    factor_y = phys_y / imdim_y
+    
+    x = (pickuppoint[0] * factor_x) / 1000
+    y = (pickuppoint[1] * factor_y) / 1000
+    
     return x, y

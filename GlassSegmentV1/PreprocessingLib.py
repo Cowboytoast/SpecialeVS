@@ -4,16 +4,16 @@ import CalibrationLib as cb
 #from scipy import ndimage
 from skimage.util import img_as_ubyte
 
-def PrepImg(img, corners):
+def PrepImg(img):
     # * Chain should be:
     # * Crop -> Resize to (H,W = 403, 550) -> Cvt to gray -> ...
     # * Hist. stretch -> Blur (rad. = (3,3), SigmaX = 7) -> ...
     # * Unsharp mask (Size (3,3), amount 1, thresh. .131) -> ...
     # * Laplacian edge (delta = 5) -> Cvt. to UByte -> ...
     # * Threshold @ 32
-    img_cropped = cb.markerCrop(img, corners)
-    #img_cropped = img[28:28+336,327:327+528]
-    img_cropped = cv2.rotate(img_cropped, rotateCode = cv2.ROTATE_90_CLOCKWISE)
+    #img_cropped = cb.markerCrop(img, corners)
+    img_cropped = img[155:550, 304:902]
+    #img_cropped = cv2.rotate(img_cropped, rotateCode = cv2.ROTATE_90_CLOCKWISE)
     cv2.imshow("Cropped image", img_cropped)
     cv2.waitKey(5)
     img_screensized = ResizeToFit(img_cropped, H= 403, W = 550)
