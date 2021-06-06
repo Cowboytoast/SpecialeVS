@@ -108,11 +108,11 @@ while True:
             statemsg = False
             if edges_hough is not None:
                 houghLocation = np.ndarray.flatten(edges_hough)
-                final = ls.templatematch(img_binary, template, houghLocation)
+                final, UpDown = ls.templatematch(img_binary, template, houghLocation)
                 if final is not None:
                     statemsg = False
                     k = -1
-                    grabPoints, grabAngle = ls.grabberPoint(houghLocation)
+                    grabPoints, grabAngle = ls.grabberPoint(houghLocation, UpDown)
                     grabPoints = np.around(grabPoints)
                     grabPoints = grabPoints.astype(int)
                     cv2.circle(final, (grabPoints[0], grabPoints[1]), 3, color = (0,255,0), thickness=2)

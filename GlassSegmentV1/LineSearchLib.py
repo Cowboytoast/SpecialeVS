@@ -321,7 +321,7 @@ def LineExtend(glassSides,lineLength=80):
            
     return glassSides
 
-def grabberPoint(glassSides, lineLength=22):
+def grabberPoint(glassSides, UpDown, lineLength=22):
     # ! Format of sides:
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
     grabPoint=np.empty([6])
@@ -365,6 +365,9 @@ def grabberPoint(glassSides, lineLength=22):
     grabPoint[4] = (grabPoint[0] + grabPoint[2]) / 2
     grabPoint[5] = (grabPoint[1] + grabPoint[3]) / 2
     grabPointAngle = math.atan(m) - math.pi / 2
+    if UpDown:
+        grabPointAngle += math.pi
+    
     return grabPoint, grabPointAngle
 
 
@@ -443,7 +446,7 @@ def templatematch(img, template, houghLocation, h_steps = 40, w_steps = 40):
         max_w : max_w + Overlay.shape[1]] = Overlay
         cv2.putText(final, 'Orientation: Down', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
 
-    return final
+    return final, UpDown
 
 
 def shiftIdx(array):

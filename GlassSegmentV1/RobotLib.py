@@ -110,7 +110,7 @@ def pickupCommand(x = 0.1,y = 0.1,z = -0.02,rx = 0,ry = 0,rz = 0):
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP,30003))
-    z = 0.031
+    z = 0.0295
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
     cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.2,0.01)' + '\n'
     s.send(cmdstring.encode())
@@ -151,7 +151,6 @@ def handoffCommand(handoffPos):
     s.send(cmdstring.encode())
     #time.sleep(5)
     #s.close()
-    q = get_URdata(True)
     #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #s.connect((rcfg.HOST_IP,30003))
     #cmdstring = 'movej(['+str(q[0])+','+str(q[1])+','+str(q[2])+','+str(q[3])+','+str(q[4])+','+str(0)+'],1.1,0.5)' + '\n'
@@ -175,12 +174,16 @@ def handoffCommand(handoffPos):
     cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1.1,0.7)' + '\n'
     s.send(cmdstring.encode())
     time.sleep(4)
-    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.07)' + '\n'
+    q = get_URdata(True)
+    cmdstring = 'movej(['+str(q[0])+','+str(q[1])+','+str(q[2])+','+str(q[3])+','+str(q[4])+','+str(0.65)+'],1.1,0.5)' + '\n'
+    #cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.07)' + '\n'
     s.send(cmdstring.encode())
     #s.close()
-    [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
-    while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.005 and y_robot <= y + 0.005 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and rz_robot >= rz - 0.09 and rz_robot <= rz + 0.09)):
-        [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
+    [x_robot, y_robot, z_robot, _] = get_URdata()
+    q = get_URdata(True)
+    while(not(x_robot >= x - 0.01 and x_robot <= x + 0.01 and y_robot >= y - 0.005 and y_robot <= y + 0.005 and z_robot >= z - 0.01 and z_robot <= z + 0.01 and q[5] >= 0.65 - 0.09 and q[5] <= 0.65 + 0.09)):
+        [x_robot, y_robot, z_robot, _] = get_URdata()
+        q = get_URdata(True)
 
     gripperOpen()
 
