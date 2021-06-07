@@ -1,5 +1,4 @@
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 import math
 import imutils
@@ -68,14 +67,11 @@ def LineMerge(glassLines):
         print("#############################################")
         return None
     if len(glassLines) == 2: # check if there exist only 2 lines
-        #a = np.array(abs(glassLines[0:2,1] - glassLines[0:2, 3]))
         a0 = abs(glassLines[0,1]-glassLines[0,3])
         b0 = abs(glassLines[0,2]-glassLines[0,4])
         a1 = abs(glassLines[1,1]-glassLines[1,3])
         b1 = abs(glassLines[1,2]-glassLines[1,4])
-        #c0 = np.hypot(a[0],b0)
         c0 = np.hypot(a0,b0)
-        #c1 = np.hypot(a[1],b1)
         c1 = np.hypot(a1,b1)
         lineMerged[0,0:5] = glassLines[0,0:5]
         lineMerged[1,0:5] = glassLines[1,0:5]
@@ -236,47 +232,15 @@ def HoughLinesSearch(img, houghLength=70, houghDist=10):
     cv2.waitKey(10)
     return glassSides
 
-#! CURRENTLY UNUSED
-def HoughLinesSearchSkimage(img):
-    minDist = 20
-    maxDist = 50
-    h,theta,d = hough_line(img)
-    fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-    ax = axes.ravel()
-
-    ax[0].imshow(img, cmap=cm.gray)
-    ax[0].set_title('Input image')
-    ax[0].set_axis_off()
-
-    angle_step = 0.5 * np.diff(theta).mean()
-    d_step = 0.5 * np.diff(d).mean()
-    bounds = [np.rad2deg(theta[0] - angle_step),
-            np.rad2deg(theta[-1] + angle_step),
-            d[-1] + d_step, d[0] - d_step]
-    ax[1].imshow(np.log(1 + h), extent=bounds, cmap=cm.gray, aspect=1 / 1.5)
-    ax[1].set_title('Hough transform')
-    ax[1].set_xlabel('Angles (degrees)')
-    ax[1].set_ylabel('Distance (pixels)')
-    ax[1].axis('image')
-
-    plt.tight_layout()
-    plt.show()
-    
-    houghImage = img
-    
-    return houghImage
-
 def LineExtend(glassSides,lineLength=80):
-    #! FIX NEEDED
-    # TODO: Jeg mener at vi skal huske at ændre fra hældning til vinkel!
     line0,line1 = False, False
     if glassSides[0,5]<lineLength:
-        xDist0,yDist0,line0 = np.sin(glassSides[0,0])*lineLength, np.cos(glassSides[0,0])*lineLength,True
+        xDist0,yDist0,line0 = np.sin(math.atan(glassSides[0,0]))*lineLength, np.cos(math.atan(glassSides[0,0]))*lineLength,True
     else:
         pass
         
     if glassSides[1,5]<lineLength:
-        xDist1,yDist1,line1 = np.cos(glassSides[1,0])*lineLength, np.sin(glassSides[1,0])*lineLength,True
+        xDist1,yDist1,line1 = np.cos(math.atan(glassSides[1,0]))*lineLength, np.sin(math.atan(glassSides[1,0]))*lineLength,True
         
     else:
         pass   
@@ -347,7 +311,6 @@ def grabberPoint(glassSides, UpDown, lineLength=22):
     
     x1[0] = 1/(m**2+1)*(-b*m+m*y0-math.sqrt(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)+x0)
     x1[1] = 1/(m**2+1)*(-b*m+m*y0+math.sqrt(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)+x0)
-    #x1[1] = -(b*m-m*y0+(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)**(1/2)-x0)/(m**2+1)
     y1 = m * x1 + b
     
     dist0 = math.sqrt((grabPoint_tmp[0] - x1[0])**2 + (grabPoint_tmp[1] - y1[0])**2)
@@ -360,8 +323,7 @@ def grabberPoint(glassSides, UpDown, lineLength=22):
         grabPoint[2] = x1[1]
         grabPoint[3] = y1[1]
     
-    #grabPoint[2] = x1
-    #grabPoint[3] = y1
+
     grabPoint[4] = (grabPoint[0] + grabPoint[2]) / 2
     grabPoint[5] = (grabPoint[1] + grabPoint[3]) / 2
     grabPointAngle = math.atan(m) - math.pi / 2
@@ -460,8 +422,6 @@ def shiftIdx(array):
 def pixelstocm(pickuppoint, imdim):
     phys_x = 250 #mm
     phys_y = 174 #mm
-    #imdim_x = 550 # px
-    #imdim_y = 348 # px
     imdim_y = imdim[0]
     imdim_x = imdim[1]
     
