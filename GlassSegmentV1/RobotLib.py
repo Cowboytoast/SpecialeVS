@@ -3,6 +3,7 @@ import socket
 import time
 import numpy as np
 import cv2
+import math
 
 sys.path.append('./modules')
 sys.path.append('./modules/src/ur')
@@ -137,32 +138,19 @@ def handoffCommand(handoffPos):
             and q[5] >= q_w3 - 0.034 and q[5] <= q_w3 + 0.034):
         q = get_URdata(True)
 
-    x = handoffPos[0, extractCounter]
-    y = handoffPos[1, extractCounter]
-    z = handoffPos[2, extractCounter]
-    rx = handoffPos[3, extractCounter]
-    ry = handoffPos[4, extractCounter]
-    rz = handoffPos[5, extractCounter]
+    q = handoffPos[:, extractCounter]
     extractCounter += 1
-    t = robot.transform(x,y,z)
 
-    cmdstring = 'movej(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],1.1,0.7)' + '\n'
+    cmdstring = 'movej(['+str(q[0])+','+str(q[1])+','+str(q[2])+','+str(q[3])+','+str(q[4])+','+str(q[5])+'],1.1,0.6)' + '\n'
     s.send(cmdstring.encode())
-
-    [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
-    while(not(x_robot >= x - 0.005 and x_robot <= x + 0.005
-            and y_robot >= y - 0.005 and y_robot <= y + 0.005
-            and z_robot >= z - 0.005 and z_robot <= z + 0.005
-            and rz_robot >= rz - 0.035 and rz_robot <= rz + 0.035)):
-        [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
-
-    q = get_URdata(True)
-    q_w3 = 0.65 # Rotation value to hand off glasses properly
-    cmdstring = 'movej(['+str(q[0])+','+str(q[1])+','+str(q[2])+','+str(q[3])+','+str(q[4])+','+str(q_w3)+'],1.1,0.5)' + '\n'
-    s.send(cmdstring.encode())
-    q = get_URdata(True)
-    while not(q[5] >= q_w3 - 0.024 and q[5] <= q_w3 + 0.024):
-        q = get_URdata(True)
+    q_robot = get_URdata(True)
+    while not(q[0] >= q_robot[0] - 0.034 and q[0] <= q_robot[0] + 0.034
+            and q[1] >= q_robot[1] - 0.034 and q[1] <= q_robot[1] + 0.034
+            and q[2] >= q_robot[2] - 0.034 and q[2] <= q_robot[2] + 0.034
+            and q[3] >= q_robot[3] - 0.034 and q[3] <= q_robot[3] + 0.034
+            and q[4] >= q_robot[4] - 0.034 and q[4] <= q_robot[4] + 0.034
+            and q[5] >= q_robot[5] - 0.034 and q[5] <= q_robot[5] + 0.034):
+        q_robot = get_URdata(True)
     gripperOpen()
 
 
@@ -204,22 +192,6 @@ def startPos():
             and q[4] >= q_w2 - 0.034 and q[4] <= q_w2 + 0.034
             and q[5] >= q_w3 - 0.034 and q[5] <= q_w3 + 0.034):
         q = get_URdata(True)
-
-#* The function creates a Look-up Table since we have a finite number of specific places. This is utilized to speed up the program such that the positions only have to be calculated
-#* at the beginning of the program, thus adding the least amount of time once the recognition and movement of the vials are begun. This function should only be called once
-#* after init.
-def handOffPosLOT():
-    handOffPos = np.empty((6, 16),dtype=float)
-    for j in range(0,16):
-        handOffPos[0,j] = 0.327
-        handOffPos[1,j] = j * 0.016 + 0.362 #every other iteration of y has to be incremented with 16mm, the distance from center of each vial to the next in the handoff tray.
-        handOffPos[2,j] = 0.075 #z axis does not change since we only move the handoff position in one direction
-        handOffPos[3,j] = 0 #* rx
-        handOffPos[4,j] = 0 #* ry
-        handOffPos[5,j] = -0.154 #* rz
-        # handoff angles does not change, thus assigned with constants.
-
-    return handOffPos
 
 def gripperOpen(pos=180,speed=255,force=10):
     gripperfunc.set(pos,speed,force)
@@ -264,3 +236,122 @@ def get_URdata(joint_data = False):
         s.connect((rcfg.HOST_IP, 30003))
         time.sleep(0.1)
         return x_robot, y_robot, z_robot, rz_robot
+
+#* The function creates a Look-up Table since we have a finite number of specific places. This is utilized to speed up the program such that the positions only have to be calculated
+#* at the beginning of the program, thus adding the least amount of time once the recognition and movement of the vials are begun. This function should only be called once
+#* after init.
+def handOffPosLOT():
+    handOffPos = np.empty((6, 16),dtype=float)
+    #* Extract 1
+    handOffPos[0,0] = math.radians(46.52)
+    handOffPos[1,0] = math.radians(-124.03)
+    handOffPos[2,0] = math.radians(84.33)
+    handOffPos[3,0] = math.radians(-50.36)
+    handOffPos[4,0] = math.radians(90.07)
+    handOffPos[5,0] = math.radians(37.39)
+    #* Extract 2
+    handOffPos[0,1] = math.radians(50.41)
+    handOffPos[1,1] = math.radians(-124.56)
+    handOffPos[2,1] = math.radians(84.43)
+    handOffPos[3,1] = math.radians(-49.97)
+    handOffPos[4,1] = math.radians(90.07)
+    handOffPos[5,1] = math.radians(33.24)
+    #* Extract 3
+    handOffPos[0,2] = math.radians(55.35)
+    handOffPos[1,2] = math.radians(-124.56)
+    handOffPos[2,2] = math.radians(84.43)
+    handOffPos[3,2] = math.radians(-49.91)
+    handOffPos[4,2] = math.radians(90.07)
+    handOffPos[5,2] = math.radians(28.54)
+    #* Extract 4
+    handOffPos[0,3] = math.radians(60.53)
+    handOffPos[1,3] = math.radians(-124.46)
+    handOffPos[2,3] = math.radians(84.42)
+    handOffPos[3,3] = math.radians(-50)
+    handOffPos[4,3] = math.radians(90.07)
+    handOffPos[5,3] = math.radians(23.30)
+    #* Extract 5
+    handOffPos[0,4] = math.radians(65.79)
+    handOffPos[1,4] = math.radians(-124.15)
+    handOffPos[2,4] = math.radians(84.35)
+    handOffPos[3,4] = math.radians(-50.16)
+    handOffPos[4,4] = math.radians(90.07)
+    handOffPos[5,4] = math.radians(16.24)
+    #* Extract 6
+    handOffPos[0,5] = math.radians(72.19)
+    handOffPos[1,5] = math.radians(-123.04)
+    handOffPos[2,5] = math.radians(84.09)
+    handOffPos[3,5] = math.radians(-51.12)
+    handOffPos[4,5] = math.radians(90.07)
+    handOffPos[5,5] = math.radians(9.72)
+    #* Extract 7
+    handOffPos[0,6] = math.radians(77.53)
+    handOffPos[1,6] = math.radians(-122.42)
+    handOffPos[2,6] = math.radians(83.96)
+    handOffPos[3,6] = math.radians(-51.52)
+    handOffPos[4,6] = math.radians(90.07)
+    handOffPos[5,6] = math.radians(4.38)
+    #* Extract 8
+    handOffPos[0,7] = math.radians(83.08)
+    handOffPos[1,7] = math.radians(-121.37)
+    handOffPos[2,7] = math.radians(83.66)
+    handOffPos[3,7] = math.radians(-52.30)
+    handOffPos[4,7] = math.radians(90.07)
+    handOffPos[5,7] = math.radians(-1.49)
+    #* Extract 9
+    handOffPos[0,8] = math.radians(88.38)
+    handOffPos[1,8] = math.radians(-120.02)
+    handOffPos[2,8] = math.radians(83.25)
+    handOffPos[3,8] = math.radians(-53.26)
+    handOffPos[4,8] = math.radians(90.07)
+    handOffPos[5,8] = math.radians(-6.80)
+    #* Extract 10
+    handOffPos[0,9] = math.radians(92.68)
+    handOffPos[1,9] = math.radians(-119.17)
+    handOffPos[2,9] = math.radians(82.97)
+    handOffPos[3,9] = math.radians(-53.75)
+    handOffPos[4,9] = math.radians(90.07)
+    handOffPos[5,9] = math.radians(-10.73)
+    #* Extract 11
+    handOffPos[0,10] = math.radians(97.38)
+    handOffPos[1,10] = math.radians(-117.82)
+    handOffPos[2,10] = math.radians(82.48)
+    handOffPos[3,10] = math.radians(-54.64)
+    handOffPos[4,10] = math.radians(90.07)
+    handOffPos[5,10] = math.radians(-13.08)
+    #* Extract 12
+    handOffPos[0,11] = math.radians(101.21)
+    handOffPos[1,11] = math.radians(-116.12)
+    handOffPos[2,11] = math.radians(81.78)
+    handOffPos[3,11] = math.radians(-55.68)
+    handOffPos[4,11] = math.radians(90.07)
+    handOffPos[5,11] = math.radians(-16.80)
+    #* Extract 13
+    handOffPos[0,12] = math.radians(104.72)
+    handOffPos[1,12] = math.radians(-114.70)
+    handOffPos[2,12] = math.radians(81.16)
+    handOffPos[3,12] = math.radians(-56.48)
+    handOffPos[4,12] = math.radians(90.07)
+    handOffPos[5,12] = math.radians(-20.35)
+    #* Extract 14
+    handOffPos[0,13] = math.radians(108.22)
+    handOffPos[1,13] = math.radians(-113.40)
+    handOffPos[2,13] = math.radians(80.55)
+    handOffPos[3,13] = math.radians(-57.16)
+    handOffPos[4,13] = math.radians(90.07)
+    handOffPos[5,13] = math.radians(-25.70)
+    #* Extract 15
+    handOffPos[0,14] = math.radians(111.39)
+    handOffPos[1,14] = math.radians(-111.98)
+    handOffPos[2,14] = math.radians(79.84)
+    handOffPos[3,14] = math.radians(-57.91)
+    handOffPos[4,14] = math.radians(90.07)
+    handOffPos[5,14] = math.radians(-29)
+    #* Extract 16
+    handOffPos[0,15] = math.radians(114.43)
+    handOffPos[1,15] = math.radians(-110.33)
+    handOffPos[2,15] = math.radians(78.93)
+    handOffPos[3,15] = math.radians(-58.65)
+    handOffPos[4,15] = math.radians(90.07)
+    handOffPos[5,15] = math.radians(-31.94)
+    return handOffPos

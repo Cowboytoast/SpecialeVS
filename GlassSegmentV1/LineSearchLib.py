@@ -337,12 +337,18 @@ def templatematch(img, template, houghLocation, h_steps = 40, w_steps = 40):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
     if houghLocation.size < 7:
         print("One or no lines found!")
-        return None, None
+        return None, 0
         
+    
     pointsx = np.array([houghLocation[1], houghLocation[3], houghLocation[7], houghLocation[9]])
     pointsy = np.array([houghLocation[2], houghLocation[4], houghLocation[8], houghLocation[10]])
     slopes = np.array([houghLocation[0], houghLocation[6]])
-    
+
+
+    if (np.amax(pointsx) + w_steps) > img.shape[1] or (np.amin(pointsx) - w_steps) < 0 or (np.amax(pointsy) + h_steps) > img.shape[0] or (np.amin(pointsy) - h_steps) < 0:
+        print("Tip outside boundary")
+        return None, 0
+
     slope_offset = math.degrees(math.atan(np.average(slopes)))
     slope_offset = 90 - abs(slope_offset)
     if slope_offset < 0:

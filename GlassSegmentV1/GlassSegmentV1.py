@@ -68,8 +68,8 @@ while True:
         k = cv2.waitKey(0)
         if k%256 == 27:
             exitFunc()
-        #if not offlineFlag:
-        #rl.robotInit()
+        if not offlineFlag:
+            rl.robotInit()
         state = "sourceimg"
 
     if state == "sourceimg":
