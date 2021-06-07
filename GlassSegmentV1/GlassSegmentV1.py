@@ -69,7 +69,7 @@ while True:
         if k%256 == 27:
             exitFunc()
         #if not offlineFlag:
-        rl.robotInit()
+        #rl.robotInit()
         state = "sourceimg"
 
     if state == "sourceimg":

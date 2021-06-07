@@ -375,7 +375,7 @@ def templatematch(img, template, houghLocation, h_steps = 40, w_steps = 40):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | slope2 = b rad | x2start | y2start | x2end | y2end
     if houghLocation.size < 7:
         print("One or no lines found!")
-        return None
+        return None, None
         
     pointsx = np.array([houghLocation[1], houghLocation[3], houghLocation[7], houghLocation[9]])
     pointsy = np.array([houghLocation[2], houghLocation[4], houghLocation[8], houghLocation[10]])
