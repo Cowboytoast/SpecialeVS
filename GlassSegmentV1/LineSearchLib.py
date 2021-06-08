@@ -12,6 +12,7 @@ angleTolerance = 0.1
 def SortLines(linesP):
     # * function that sorts the found lines after gradient
     slope_sorted=[0 for i in range(len(linesP))]
+    is_nan = False
     for i in range(0, len(linesP)):
         l = linesP[i][0]
         x = [l[0], l[2]]
@@ -24,12 +25,15 @@ def SortLines(linesP):
             slope_fixed = slope.slope#+(2*3.1415)
         else:
             slope_fixed = slope.slope
+        if math.isnan(slope.slope):
+            slope_fixed = 200
+            is_nan = True
         # *               slope         x1   y1     x2   y2
         slope_sorted[i] = [slope_fixed,l[0],l[1],l[2],l[3]]
     slope_sorted.sort(key=lambda x:x[0])
     sortedLines = slope_sorted
     
-    return sortedLines
+    return sortedLines,is_nan
 
 def LinesGrouping(sortedLines):
     # * function that sorts the sorted lines into each glass, again using the slopes
@@ -58,7 +62,7 @@ def LinesGrouping(sortedLines):
             lineGroup = np.delete(lineGroup, (i), axis=0)
     return lineGroup
 
-def LineMerge(glassLines):
+def LineMerge(glassLines,is_nan=False):
     # * function that merge the lines of a side to only one line
     lineMerged = np.zeros([1000,6])
     k = 0
@@ -150,8 +154,12 @@ def LineMerge(glassLines):
 
             
     else: # For 3+ lines
+        if is_nan == True:
+            largest_slope = np.zeros([100,6])
+            m = 0
+            
         for i in range(0,len(glassLines)):
-            for j in range(i,len(glassLines)):
+            for j in range(0,len(glassLines)):
                 if j == i:
                     continue
                 a = abs(glassLines[i,1]-glassLines[j,3])
@@ -163,47 +171,50 @@ def LineMerge(glassLines):
                 angleRangeUpper = glassLines[i,0]+angleTolerance
                 
                 slope = linregress([coordinates[0], coordinates[2]], [coordinates[1], coordinates[3]])
-                if slope.slope > angleRangeLower and slope.slope < angleRangeUpper:
+                slope_fix = slope.slope
+                largest_slope[m,0] = slope.slope
+                largest_slope[m,1:5] = coordinates[0:4]
+                m += 1
+
+                if is_nan == True:
                     c = np.hypot(a,b)
+                    lineMerged[m,5] = c
+                else:
+                    if slope_fix > angleRangeLower and slope_fix < angleRangeUpper:
+                        c = np.hypot(a,b)
                     
-                    lineMerged[k,0] = slope.slope
-                    lineMerged[k,1:5] = coordinates
-                    lineMerged[k,5] = c
-                    k+=1
-                    
-        for i in range(0,len(glassLines)):
-            for j in range(1,len(glassLines)):
-                check = False
-                if i==j:
-                    continue
-                elif (lineMerged[i,1] >= (lineMerged[j,1]-3) and lineMerged[i,1] <= lineMerged[j,1]+3) and (lineMerged[i,2] >= (lineMerged[j,2]-3) and lineMerged[i,2] <= (lineMerged[j,2]+3)) and (lineMerged[i,3] >= (lineMerged[j,3]-3) and lineMerged[i,3] <= (lineMerged[j,3]+3)) and (lineMerged[i,4] >= (lineMerged[j,4]-3) and lineMerged[i,4] <= (lineMerged[j,4]+3)):
-                        lineMerged = np.delete(lineMerged,(j),axis=0)
-                        check = True
-                if check == False:
-                    for m in range(0,len(glassLines)):
-                        for n in range(1,len(glassLines)):
-                            if m == n:
-                                continue
-                            elif ((lineMerged[m,1] >= (lineMerged[n,1]-3) and lineMerged[m,1] <= (lineMerged[n,1]+3) and lineMerged[m,2] >= (lineMerged[n,2]-3) and lineMerged[m,2] <= (lineMerged[n,2]+3)) or (lineMerged[m,3] >= (lineMerged[n,3]-3) and lineMerged[m,3] <= (lineMerged[n,3]+3) and lineMerged[m,4] >= (lineMerged[n,4]-3) and lineMerged[m,4] <= (lineMerged[n,4]+3))):
-                                if lineMerged[m,5] > lineMerged[n,5]:
-                                    lineDelete = n
-                                else:
-                                    lineDelete = m
-                                lineMerged = np.delete(lineMerged,(lineDelete),axis=0)
+                        lineMerged[k,0] = slope.slope
+                        lineMerged[k,1:5] = coordinates
+                        lineMerged[k,5] = c
+                        k+=1
+            if is_nan == True:
+                largest_slope = list(largest_slope)
+                largest_slope.sort(key=lambda x:x[0])
+                largest_slope = np.array(largest_slope)
+                lineMerged[0,:] = largest_slope[0,:]
+                lineMerged[1,:] = largest_slope[1,:]
 
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
-def HoughLinesSearch(img, houghLength=30, houghDist=5):
+def HoughLinesSearch(img, houghLength=40, houghDist=5):
     #img has to be the edge detected image.
     #Copy of edge detected image into BGR image for drawing lines.
+    paramChange = False
     houghImage = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
     #Find HoughLines on the image. Default houghLengt = 40, houghDist=10
-    linesP = cv2.HoughLinesP(img, 1, np.pi / 180, 50, None, houghLength, houghDist)
+    linesP = cv2.HoughLinesP(img, 0.5, np.pi / 225, 50, None, houghLength, houghDist)
+        
+    if len(linesP) < 0:
+        linesP = cv2.HoughLinesP(img, 1, np.pi / 180, 50, None, 30, houghDist)
+    else:
+        pass
+    
+
     #If-statement drawing lines on the copy, if any lines are found.
     if linesP is not None:
-        sortedLines = SortLines(linesP)
+        sortedLines,is_nan = SortLines(linesP)
         LineGrouping = LinesGrouping(sortedLines)
-        glassSides = LineMerge(LineGrouping)
+        glassSides = LineMerge(LineGrouping,is_nan)
         if glassSides.all() == None:
             return None
         b = 255
