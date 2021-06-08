@@ -56,12 +56,12 @@ while True:
         cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         offlineFlag = False
         start_time = time.time()
-        template = cv2.imread('./images/vialTop.png', 0) # * Load template    
+        template = cv2.imread('./images/VialTop.png', 0) # * Load template    
         cv2.namedWindow("Image")
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
             #img = cv2.imread('./images/opencv_frame_6_marked.png')
-            img = cv2.imread('./final_images/final_setup_1.png')
+            img = cv2.imread('./final_images/final_setup_5.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
