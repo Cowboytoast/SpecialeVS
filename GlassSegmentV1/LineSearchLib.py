@@ -193,7 +193,7 @@ def LineMerge(glassLines):
 
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
-def HoughLinesSearch(img, houghLength=70, houghDist=10):
+def HoughLinesSearch(img, houghLength=30, houghDist=5):
     #img has to be the edge detected image.
     #Copy of edge detected image into BGR image for drawing lines.
     houghImage = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
