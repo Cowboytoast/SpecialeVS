@@ -61,7 +61,7 @@ while True:
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
             #img = cv2.imread('./images/opencv_frame_6_marked.png')
-            img = cv2.imread('./final_images/final_setup_5.png')
+            img = cv2.imread('./final_images/final_setup_16.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -109,6 +109,8 @@ while True:
             statemsg = False
             if edges_hough is not None:
                 houghLocation = np.ndarray.flatten(edges_hough)
+                houghLocation = ls.LineExtend(edges_hough)
+                houghLocation = np.ndarray.flatten(houghLocation)
                 final, UpDown = ls.templatematch(img_binary, template, houghLocation)
                 if final is not None:
                     statemsg = False
