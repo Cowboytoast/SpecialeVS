@@ -169,16 +169,17 @@ def LineMerge(glassLines,is_nan=False):
 
                 angleRangeLower = glassLines[i,0]-angleTolerance
                 angleRangeUpper = glassLines[i,0]+angleTolerance
-                
                 slope = linregress([coordinates[0], coordinates[2]], [coordinates[1], coordinates[3]])
                 slope_fix = slope.slope
-                largest_slope[m,0] = slope.slope
-                largest_slope[m,1:5] = coordinates[0:4]
-                m += 1
+
 
                 if is_nan == True:
+                    largest_slope[m,0] = slope.slope
+                    largest_slope[m,1:5] = coordinates[0:4]
+                    m += 1
                     c = np.hypot(a,b)
                     lineMerged[m,5] = c
+
                 else:
                     if slope_fix > angleRangeLower and slope_fix < angleRangeUpper:
                         c = np.hypot(a,b)
