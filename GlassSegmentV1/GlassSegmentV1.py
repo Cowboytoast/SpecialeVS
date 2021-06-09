@@ -60,9 +60,8 @@ while True:
         cv2.namedWindow("Image")
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
-            #img = cv2.imread('./images/opencv_frame_6_marked.png')
             #! Error on 2, 5
-            img = cv2.imread('./final_images/final_setup_1.png')
+            img = cv2.imread('./final_images/final_setup_6.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -106,10 +105,12 @@ while True:
             img_binary = prep.PrepImg(img)
             cv2.imwrite('procced.png', img_binary)
             cv2.imshow("Binary image", img_binary)
+            cv2.waitKey(5)
             edges_hough = ls.HoughLinesSearch(img_binary)
             statemsg = False
             if edges_hough.size > 0:
                 houghLocation = ls.LineExtend(img_binary, edges_hough)
+                houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines, TBD
                 houghLocation = np.ndarray.flatten(houghLocation)
                 final, UpDown = ls.templatematch(img_binary, template, houghLocation)
                 if final is not None:

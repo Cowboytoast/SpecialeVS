@@ -66,6 +66,7 @@ def LineMerge(glassLines,is_nan=False):
     # * function that merge the lines of a side to only one line
     lineMerged = np.zeros([1000,6])
     k = 0
+    aloneCnt = 0
     if glassLines.size < 2:
         print("One or no lines found, aborting")
         print("#############################################")
@@ -284,115 +285,45 @@ def HoughLinesSearch(img, houghLength=40, houghDist=5):
     cv2.waitKey(10)
     return glassSides
 
-def LineExtend(img, glassSides,lineLength=120):
+def LineExtend(img, glassSides,lineLength=128):
     # line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
-    #if glassSides[0,5] == glassSides[1,5]:
-    #    return glassSides
-    extendLeft = False
-    extendRight = False
-    if glassSides[0,5] < glassSides[1,5]:
-        lineExtend = 0
-        lineKeep = 1
+    if glassSides[0,5] == lineLength and glassSides[1,5] == lineLength:
+        return glassSides # If both lines are long enough, return
+    
+    if glassSides[0, 5] < lineLength and glassSides[1, 5] < lineLength:
+        Extends = 2 # Perform 2 extensions
     else:
-        lineExtend = 1
-        lineKeep = 0
-        
+        Extends = 1 # Perform 1 extension
     
-    pointDistStart = math.sqrt((glassSides[lineKeep, 1] - glassSides[lineExtend, 1])**2
-                                + (glassSides[lineKeep, 2] - glassSides[lineExtend, 2])**2)
-    pointDistEnd = math.sqrt((glassSides[lineKeep, 3] - glassSides[lineExtend, 3])**2
-                                + (glassSides[lineKeep, 4] - glassSides[lineExtend, 4])**2)
+    for i in range(0, Extends + 1):
     
-    # Method from https://math.stackexchange.com/questions/175896/finding-a-point-along-a-line-a-certain-distance-away-from-another-point
-    v = np.array([glassSides[lineExtend, 3] - glassSides[lineExtend, 1],
-                glassSides[lineExtend, 4] - glassSides[lineExtend, 2]])
-    u = np.array([v[0]/(math.sqrt(v[0]**2 + v[1]**2)),v[1]/(math.sqrt(v[0]**2 + v[1]**2))])
-    if pointDistStart > pointDistEnd:
-        lengthAdd = lineLength * u
-        glassSides[lineExtend, 1] = glassSides[lineExtend, 3] - lengthAdd[0]
-        glassSides[lineExtend, 2] = glassSides[lineExtend, 4] - lengthAdd[1]
-    else:
-        lengthAdd = lineLength * u
-        glassSides[lineExtend, 3] = glassSides[lineExtend, 1] + lengthAdd[0]
-        glassSides[lineExtend, 4] = glassSides[lineExtend, 2] + lengthAdd[1]
-
-    
-    
-    
-    
-    '''
-    m = line_perp[0]
-    b = line_perp[1]
-    x0 = grabPoint[0]
-    y0 = grabPoint[1]
-    d = lineLength
-
-    x1[0] = 1/(m**2+1)*(-b*m+m*y0-math.sqrt(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)+x0)
-    x1[1] = 1/(m**2+1)*(-b*m+m*y0+math.sqrt(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)+x0)
-    y1 = m * x1 + b
-
-    dist0 = math.sqrt((grabPoint_tmp[0] - x1[0])**2 + (grabPoint_tmp[1] - y1[0])**2)
-    dist1 = math.sqrt((grabPoint_tmp[0] - x1[1])**2 + (grabPoint_tmp[1] - y1[1])**2)
-
-    if dist0 < dist1:
-        grabPoint[2] = x1[0]
-        grabPoint[3] = y1[0]
-    else:
-        grabPoint[2] = x1[1]
-        grabPoint[3] = y1[1]
-    
-    
-    
-    
-    line0,line1 = False, False
-    if glassSides[0,5]<lineLength:
-        xDist0,yDist0,line0 = np.sin(math.atan(glassSides[0,0]))*lineLength, np.cos(math.atan(glassSides[0,0]))*lineLength,True
-    else:
-        pass
-
-    if glassSides[1,5]<lineLength:
-        xDist1,yDist1,line1 = np.cos(math.atan(glassSides[1,0]))*lineLength, np.sin(math.atan(glassSides[1,0]))*lineLength,True
-    else:
-        pass
-
-    if abs(glassSides[0,1]-glassSides[1,1]) > abs(glassSides[0,3]-glassSides[1,3]):
-        if line0==True:
-            glassSides[0,1],glassSides[0,2] = glassSides[0,1]+np.round(xDist0), glassSides[0,2]+np.round(yDist0)
+        if glassSides[0,5] < glassSides[1,5]:
+            lineExtend = 0
+            lineKeep = 1
         else:
-            pass
-        if line1==True:
-            glassSides[1,1],glassSides[1,2] = glassSides[1,1]+np.round(xDist1), glassSides[1,2]+np.round(yDist1)
-        else:
-            pass
+            lineExtend = 1
+            lineKeep = 0
 
-    elif abs(glassSides[0,1]-glassSides[1,1]) < abs(glassSides[0,3]-glassSides[1,3]):
-        if line0==True:
-            glassSides[0,3],glassSides[0,4] = glassSides[0,3]+np.round(xDist0), glassSides[0,4]+np.round(yDist0)
-        else:
-            pass
-        if line1==True:
-            glassSides[1,3],glassSides[1,4] = glassSides[1,3]+np.round(xDist1), glassSides[1,4]+np.round(yDist1)
-        else:
-            pass
-            
-    elif abs(glassSides[0,2]-glassSides[1,2]) > abs(glassSides[0,4]-glassSides[1,4]):
-        if line0==True:
-            glassSides[0,1],glassSides[0,2] = glassSides[0,1]+np.round(xDist0), glassSides[0,2]+np.round(yDist0)
-        else:
-            pass
-        if line1==True:
-            glassSides[1,1],glassSides[1,2] = glassSides[1,1]+np.round(xDist1), glassSides[1,2]+np.round(yDist1)
-        else:
-            pass
+        pointDistStart = math.sqrt((glassSides[lineKeep, 1] - glassSides[lineExtend, 1])**2
+                                    + (glassSides[lineKeep, 2] - glassSides[lineExtend, 2])**2)
+        pointDistEnd = math.sqrt((glassSides[lineKeep, 3] - glassSides[lineExtend, 3])**2
+                                    + (glassSides[lineKeep, 4] - glassSides[lineExtend, 4])**2)
 
-    elif abs(glassSides[0,2]-glassSides[1,2]) < abs(glassSides[0,4]-glassSides[1,4]):
-        if line0==True:
-            glassSides[0,3],glassSides[0,4] = glassSides[0,3]+np.round(xDist0), glassSides[0,4]+np.round(yDist0)
-        if line1==True:
-            glassSides[1,3],glassSides[1,4] = glassSides[1,3]+np.round(xDist1), glassSides[1,4]+np.round(yDist1)
-    else:
-        pass
-    '''
+        # Method from https://math.stackexchange.com/questions/175896/finding-a-point-along-a-line-a-certain-distance-away-from-another-point
+        v = np.array([glassSides[lineExtend, 3] - glassSides[lineExtend, 1],
+                    glassSides[lineExtend, 4] - glassSides[lineExtend, 2]])
+        u = np.array([v[0]/(math.sqrt(v[0]**2 + v[1]**2)),v[1]/(math.sqrt(v[0]**2 + v[1]**2))])
+        if pointDistStart > pointDistEnd:
+            lengthAdd = lineLength * u
+            glassSides[lineExtend, 1] = glassSides[lineExtend, 3] - lengthAdd[0]
+            glassSides[lineExtend, 2] = glassSides[lineExtend, 4] - lengthAdd[1]
+        else:
+            lengthAdd = lineLength * u
+            glassSides[lineExtend, 3] = glassSides[lineExtend, 1] + lengthAdd[0]
+            glassSides[lineExtend, 4] = glassSides[lineExtend, 2] + lengthAdd[1]
+
+        glassSides[lineExtend, 5] = lineLength # set the new hypotenuse
+
     houghImage = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
     b = 255
     g = 0
@@ -408,15 +339,17 @@ def LineExtend(img, glassSides,lineLength=120):
     cv2.waitKey(10)
     return glassSides
 
-def grabberPoint(glassSides, UpDown, lineLength=22):
+def grabberPoint(glassSides, UpDown, lineLength=20):
     # ! Format of sides:
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
     grabPoint=np.empty([6])
+    
+    BUGARRAY = np.array([[glassSides[0], glassSides[1], glassSides[2], glassSides[3], glassSides[4], glassSides[5]],
+                        [glassSides[6], glassSides[7], glassSides[8], glassSides[9], glassSides[10]]])
     grabPoint_tmp = np.empty([2])
     line_perp = np.empty([2])
     x1 = np.empty([2])
     y1 = np.empty([2])
-
 
     grabPoint[0] = (glassSides[1] + glassSides[3]) / 2 # l1x
     grabPoint[1] = (glassSides[2] + glassSides[4]) / 2 # l1y
@@ -425,6 +358,8 @@ def grabberPoint(glassSides, UpDown, lineLength=22):
     grabPoint_tmp[1] = (glassSides[8] + glassSides[10]) / 2 # l2y
     line = np.polyfit([glassSides[1], glassSides[3]],[glassSides[2], glassSides[4]], 1)
     line_perp[0] = -1/line[0] # Slope of perpendicular line
+    if line_perp[0] > 50: # In case of horizontal lines
+        line_perp[0] = 50
     line_perp[1] = grabPoint[1] - 1 * line_perp[0] * grabPoint[0]
     m = line_perp[0]
     b = line_perp[1]
@@ -446,18 +381,17 @@ def grabberPoint(glassSides, UpDown, lineLength=22):
         grabPoint[2] = x1[1]
         grabPoint[3] = y1[1]
 
-
     grabPoint[4] = (grabPoint[0] + grabPoint[2]) / 2
     grabPoint[5] = (grabPoint[1] + grabPoint[3]) / 2
     grabPointAngle = math.atan(m) - math.pi / 2
     if UpDown:
         grabPointAngle += math.pi
-
+    
     return grabPoint, grabPointAngle
-
 
 def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
+    
     if houghLocation.size < 11:
         print("One or no lines found!")
         return None, 0
@@ -503,10 +437,10 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
             if matches >= maxval:
                 maxval = matches
                 max_idx = [h, w]
-            rotatingim = np.copy(img)
-            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            cv2.imshow('Rotating progress', rotatingim)
-            cv2.waitKey(5)
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(5)
 
     template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
     for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
@@ -519,10 +453,10 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
                 maxval = matches
                 max_idx = [h, w]
                 UpDown = 0
-            rotatingim = np.copy(img)
-            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            cv2.imshow('Rotating progress', rotatingim)
-            cv2.waitKey(5)
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(5)
 
     template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
 
@@ -532,7 +466,7 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
     else:
         pointsy = (houghLocation[2] + houghLocation[8]) / 2
         pointidx = 1
-        
+
     pointsx = np.array([(houghLocation[1] + houghLocation[7]) / 2, (houghLocation[3] + houghLocation[9]) / 2])
     pointsx = pointsx[pointidx]
     Yshifted = pointsy - template_rot.shape[0] / 2
@@ -548,10 +482,10 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
                 UpDown = 1 # 1 for up, 0 for down
                 maxval = matches
                 max_idx = [h, w]
-            rotatingim = np.copy(img)
-            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            cv2.imshow('Rotating progress', rotatingim)
-            cv2.waitKey(5)
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(5)
 
     template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
 
@@ -565,11 +499,11 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
                 UpDown = 0 # 1 for up, 0 for down
                 maxval = matches
                 max_idx = [h, w]
-            rotatingim = np.copy(img)
-            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            cv2.imshow('Rotating progress', rotatingim)
-            cv2.waitKey(5)
-            
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(5)
+
     max_h = int(max_idx[0])
     max_w = int(max_idx[1])
 
@@ -577,7 +511,7 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
     # * OVERLAY STUFF***************************************
     final = np.copy(img)
     final = cv2.cvtColor(final,cv2.COLOR_GRAY2RGB)
-    
+
     TipOutline = cv2.imread('./images/VialTopRed.png')
     # * To overlay template use code below
     if UpDown == 1:
@@ -593,25 +527,16 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
 
     return final, UpDown
 
-
-def shiftIdx(array):
-    # * Finds first non-zero value in a 2D array or 2D array of arrays
-    for H in range(array.shape[0]):
-        for W in range(array.shape[1]):
-            if array[H, W] > 0:
-                return H, W
-
-
 def pixelstocm(pickuppoint, imdim):
     phys_x = 250 #mm
     phys_y = 174 #mm
     imdim_y = imdim[0]
     imdim_x = imdim[1]
-    
+
     factor_x = phys_x / imdim_x
     factor_y = phys_y / imdim_y
-    
+
     x = (pickuppoint[0] * factor_x) / 1000
     y = (pickuppoint[1] * factor_y) / 1000
-    
+
     return x, y

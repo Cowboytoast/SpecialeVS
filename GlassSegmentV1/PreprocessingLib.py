@@ -9,7 +9,7 @@ def PrepImg(img):
     # * Hist. stretch -> Blur (rad. = (3,3), SigmaX = 7) -> ...
     # * Unsharp mask (Size (3,3), amount 1, thresh. .131) -> ...
     # * Laplacian edge (delta = 5) -> Cvt. to UByte -> ...
-    # * Threshold @ 32
+    # * Threshold @ 35
     #img_cropped = cb.markerCrop(img, corners)
     img_cropped = img[155:550, 304:902]
     cv2.imshow("Cropped image", img_cropped)
@@ -21,8 +21,11 @@ def PrepImg(img):
     img_sharpen = unsharp_mask(img_blur, kernel_size = (3,3), amount = 1, threshold = 0.131)
     img_edges = cv2.Laplacian(img_sharpen, ddepth = cv2.CV_8U, delta = 5)
     img_edges = img_as_ubyte(img_edges)
-    img_binary = cv2.threshold(img_edges, 32, maxval = 255, type = cv2.THRESH_BINARY)
+    img_binary = cv2.threshold(img_edges, 35, maxval = 255, type = cv2.THRESH_BINARY)
     img_binary = img_binary[1]
+    kernel = np.ones((3,3), np.uint8)
+    img_binary = cv2.morphologyEx(img_binary, cv2.MORPH_CLOSE, kernel)
+    #img_binary = cv2.morphologyEx(img_binary, cv2.MORPH_DILATE, kernel)
     
     return img_binary
 
