@@ -191,12 +191,14 @@ def LineMerge(glassLines,is_nan=False):
             if is_nan == True:
                 
                 largest_slope = list(largest_slope)
-                largest_slope.sorted(key=lambda row: np.abs(row[0]))
+                largest_slope = sorted(largest_slope,key=lambda row: np.abs(row[0]))
                 largest_slope = np.array(largest_slope)
                                 
                 lineMerged[0,:] = largest_slope[0,:]
                 lineMerged[1,:] = largest_slope[1,:]
+                
         aloneCnt = 0
+        '''
         standAloneLine = False
         for i in range(0,len(glassLines)):
             for j in range(0,len(glassLines)):
@@ -212,7 +214,7 @@ def LineMerge(glassLines,is_nan=False):
                 np.insert(lineMerged,0,tmp,axis=0)
                 aloneCnt += 1
                 standAloneLine = False
-                    
+           '''         
     n = aloneCnt
                                 
     for i in range(n,(len(glassLines)*2)):
