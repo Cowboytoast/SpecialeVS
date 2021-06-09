@@ -189,53 +189,31 @@ def LineMerge(glassLines,is_nan=False):
                         lineMerged[k,5] = c
                         k+=1
             if is_nan == True:
-                
                 largest_slope = list(largest_slope)
-                largest_slope = sorted(largest_slope,key=lambda row: np.abs(row[0]))
+                largest_slope.sort(key=lambda x:x[0]) #! CHANGE TO SORT BY ABS VALUE!
                 largest_slope = np.array(largest_slope)
-                                
                 lineMerged[0,:] = largest_slope[0,:]
                 lineMerged[1,:] = largest_slope[1,:]
                 
-        aloneCnt = 0
-        '''
-        standAloneLine = False
-        for i in range(0,len(glassLines)):
-            for j in range(0,len(glassLines)):
-                if i == j:
-                    continue
-                if not ((glassLines[i,1] >= (glassLines[j,1]-5) and glassLines[i,1] <= glassLines[j,1]+5) and (glassLines[i,2] >= (glassLines[j,2]-5) and glassLines[i,2] <= (glassLines[j,2]+5))) or ((glassLines[i,3] >= (glassLines[j,3]-5) and glassLines[i,3] <= (glassLines[j,3]+5)) and (glassLines[i,4] >= (glassLines[j,4]-5) and glassLines[i,4] <= (glassLines[j,4]+5))):
-                    standAloneLine = True
-            if standAloneLine == True:
-                a = abs(glassLines[i,1]-glassLines[i,3])
-                b = abs(glassLines[i,2]-glassLines[i,4])
-                c = np.hypot(a,b)
-                tmp = [glassLines[i,0],glassLines[i,1],glassLines[i,2],glassLines[i,3],glassLines[i,4],c]
-                np.insert(lineMerged,0,tmp,axis=0)
-                aloneCnt += 1
-                standAloneLine = False
-           '''         
-    n = aloneCnt
-                                
-    for i in range(n,(len(glassLines)*2)):
-            for j in range(n,(len(glassLines)*2)):
+    for i in range(0,len(glassLines)):
+            for j in range(1,len(glassLines)):
+                check = False
                 if i==j:
                     continue
-                elif (lineMerged[i,1] >= (lineMerged[j,1]-5) and lineMerged[i,1] <= lineMerged[j,1]+5) and (lineMerged[i,2] >= (lineMerged[j,2]-5) and lineMerged[i,2] <= (lineMerged[j,2]+5)) and (lineMerged[i,3] >= (lineMerged[j,3]-5) and lineMerged[i,3] <= (lineMerged[j,3]+5)) and (lineMerged[i,4] >= (lineMerged[j,4]-5) and lineMerged[i,4] <= (lineMerged[j,4]+5)):
-                    if lineMerged[i,5] > lineMerged[j,5]:
+                elif (lineMerged[i,1] >= (lineMerged[j,1]-3) and lineMerged[i,1] <= lineMerged[j,1]+3) and (lineMerged[i,2] >= (lineMerged[j,2]-3) and lineMerged[i,2] <= (lineMerged[j,2]+3)) and (lineMerged[i,3] >= (lineMerged[j,3]-3) and lineMerged[i,3] <= (lineMerged[j,3]+3)) and (lineMerged[i,4] >= (lineMerged[j,4]-3) and lineMerged[i,4] <= (lineMerged[j,4]+3)):
                         lineMerged = np.delete(lineMerged,(j),axis=0)
-                    elif lineMerged[i,5] < lineMerged[j,5]:
-                        lineMerged = np.delete(lineMerged,(i),axis=0)
-    if len(lineMerged[~np.all(lineMerged == 0, axis=1)]) > 2:
-        for i in range(n,len(lineMerged[~np.all(lineMerged == 0, axis=1)])):
-            for j in range(n,len(lineMerged[~np.all(lineMerged == 0,axis=1)])):
-                if i == j:
-                    continue
-                elif ((lineMerged[i,1] >= (lineMerged[j,1]-5) and lineMerged[i,1] <= lineMerged[j,1]+5) and (lineMerged[i,2] >= (lineMerged[j,2]-5) and lineMerged[i,2] <= (lineMerged[j,2]+5))) or ((lineMerged[i,3] >= (lineMerged[j,3]-5) and lineMerged[i,3] <= (lineMerged[j,3]+5)) and (lineMerged[i,4] >= (lineMerged[j,4]-5) and lineMerged[i,4] <= (lineMerged[j,4]+5))):
-                    if lineMerged[i,5] > lineMerged[j,5]:
-                        lineMerged = np.delete(lineMerged,(j),axis=0)
-                    else:
-                        lineMerged = np.delete(lineMerged,(i),axis=0)
+                        check = True
+                if check == False:
+                    for m in range(0,len(glassLines)):
+                        for n in range(1,len(glassLines)):
+                            if m == n:
+                                continue
+                            elif ((lineMerged[m,1] >= (lineMerged[n,1]-3) and lineMerged[m,1] <= (lineMerged[n,1]+3) and lineMerged[m,2] >= (lineMerged[n,2]-3) and lineMerged[m,2] <= (lineMerged[n,2]+3)) or (lineMerged[m,3] >= (lineMerged[n,3]-3) and lineMerged[m,3] <= (lineMerged[n,3]+3) and lineMerged[m,4] >= (lineMerged[n,4]-3) and lineMerged[m,4] <= (lineMerged[n,4]+3))):
+                                if lineMerged[m,5] > lineMerged[n,5]:
+                                    lineDelete = n
+                                else:
+                                    lineDelete = m
+                                lineMerged = np.delete(lineMerged,(lineDelete),axis=0)
                 
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
