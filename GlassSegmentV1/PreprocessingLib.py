@@ -23,10 +23,7 @@ def PrepImg(img):
     img_edges = img_as_ubyte(img_edges)
     img_binary = cv2.threshold(img_edges, 35, maxval = 255, type = cv2.THRESH_BINARY)
     img_binary = img_binary[1]
-    kernel = np.ones((3,3), np.uint8)
-    img_binary = cv2.morphologyEx(img_binary, cv2.MORPH_CLOSE, kernel)
-    #img_binary = cv2.morphologyEx(img_binary, cv2.MORPH_DILATE, kernel)
-    
+
     return img_binary
 
 # https://stackoverflow.com/questions/4993082/how-can-i-sharpen-an-image-in-opencv

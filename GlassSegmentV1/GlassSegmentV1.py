@@ -60,8 +60,12 @@ while True:
         cv2.namedWindow("Image")
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
-            #! Error on 2, 5
-            img = cv2.imread('./final_images/final_setup_6.png')
+            #! Error on 2 (Type: Tilted lines)
+            #! Error on 4 (Type: Only one line)
+            #! Error on 8 (Type: Only one line)
+            #! Error on 12 (Type: No/not enough lines(?))
+            #! Error on 13 (Type: Line merge index out of bounds)
+            img = cv2.imread('./final_images/final_setup_17.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -108,9 +112,9 @@ while True:
             cv2.waitKey(5)
             edges_hough = ls.HoughLinesSearch(img_binary)
             statemsg = False
-            if edges_hough.size > 0:
+            if edges_hough is not None and edges_hough.size > 0:
                 houghLocation = ls.LineExtend(img_binary, edges_hough)
-                houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines, TBD
+                #houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines, TBD
                 houghLocation = np.ndarray.flatten(houghLocation)
                 final, UpDown = ls.templatematch(img_binary, template, houghLocation)
                 if final is not None:
@@ -135,10 +139,10 @@ while True:
                         exitFunc()
                     if k%256 == 32:
                         state = "pickup"
-                else:
-                    print("Not enough lines found")
-                    print("#############################################")
-                    statemsg = False
+            else:
+                print("Not enough lines found")
+                print("#############################################")
+                statemsg = False
 
     if state == "pickup":
         print('Initiating pickup at (x,y) = (%.3f,%.3f) cm' % (x, y))

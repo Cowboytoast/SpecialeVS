@@ -226,7 +226,7 @@ def HoughLinesSearch(img, houghLength=40, houghDist=5):
     #Find HoughLines on the image. Default houghLengt = 40, houghDist=10
     linesP = cv2.HoughLinesP(img, 0.5, np.pi / 225, 50, None, houghLength, houghDist)
         
-    if len(linesP) < 0:
+    if linesP is None or len(linesP) < 0:
         linesP = cv2.HoughLinesP(img, 1, np.pi / 180, 50, None, 30, houghDist)
     else:
         pass
@@ -323,9 +323,6 @@ def grabberPoint(glassSides, UpDown, lineLength=20):
     # ! Format of sides:
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
     grabPoint=np.empty([6])
-    
-    BUGARRAY = np.array([[glassSides[0], glassSides[1], glassSides[2], glassSides[3], glassSides[4], glassSides[5]],
-                        [glassSides[6], glassSides[7], glassSides[8], glassSides[9], glassSides[10]]])
     grabPoint_tmp = np.empty([2])
     line_perp = np.empty([2])
     x1 = np.empty([2])
