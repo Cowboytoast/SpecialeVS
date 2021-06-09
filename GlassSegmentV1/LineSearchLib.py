@@ -194,6 +194,26 @@ def LineMerge(glassLines,is_nan=False):
                 largest_slope = np.array(largest_slope)
                 lineMerged[0,:] = largest_slope[0,:]
                 lineMerged[1,:] = largest_slope[1,:]
+                
+    for i in range(0,len(glassLines)):
+            for j in range(1,len(glassLines)):
+                check = False
+                if i==j:
+                    continue
+                elif (lineMerged[i,1] >= (lineMerged[j,1]-3) and lineMerged[i,1] <= lineMerged[j,1]+3) and (lineMerged[i,2] >= (lineMerged[j,2]-3) and lineMerged[i,2] <= (lineMerged[j,2]+3)) and (lineMerged[i,3] >= (lineMerged[j,3]-3) and lineMerged[i,3] <= (lineMerged[j,3]+3)) and (lineMerged[i,4] >= (lineMerged[j,4]-3) and lineMerged[i,4] <= (lineMerged[j,4]+3)):
+                        lineMerged = np.delete(lineMerged,(j),axis=0)
+                        check = True
+                if check == False:
+                    for m in range(0,len(glassLines)):
+                        for n in range(1,len(glassLines)):
+                            if m == n:
+                                continue
+                            elif ((lineMerged[m,1] >= (lineMerged[n,1]-3) and lineMerged[m,1] <= (lineMerged[n,1]+3) and lineMerged[m,2] >= (lineMerged[n,2]-3) and lineMerged[m,2] <= (lineMerged[n,2]+3)) or (lineMerged[m,3] >= (lineMerged[n,3]-3) and lineMerged[m,3] <= (lineMerged[n,3]+3) and lineMerged[m,4] >= (lineMerged[n,4]-3) and lineMerged[m,4] <= (lineMerged[n,4]+3))):
+                                if lineMerged[m,5] > lineMerged[n,5]:
+                                    lineDelete = n
+                                else:
+                                    lineDelete = m
+                                lineMerged = np.delete(lineMerged,(lineDelete),axis=0)
 
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
