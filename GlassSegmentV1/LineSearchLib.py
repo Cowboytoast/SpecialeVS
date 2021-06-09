@@ -189,32 +189,34 @@ def LineMerge(glassLines,is_nan=False):
                         lineMerged[k,5] = c
                         k+=1
             if is_nan == True:
+                
                 largest_slope = list(largest_slope)
-                largest_slope.sort(key=lambda x:x[0])
+                largest_slope.sorted(key=lambda row: np.abs(row[0]))
                 largest_slope = np.array(largest_slope)
+                                
                 lineMerged[0,:] = largest_slope[0,:]
                 lineMerged[1,:] = largest_slope[1,:]
                 
-    for i in range(0,len(glassLines)):
-            for j in range(1,len(glassLines)):
-                check = False
+    for i in range(0,(len(glassLines)*2)):
+            for j in range(0,(len(glassLines)*2)):
                 if i==j:
                     continue
-                elif (lineMerged[i,1] >= (lineMerged[j,1]-3) and lineMerged[i,1] <= lineMerged[j,1]+3) and (lineMerged[i,2] >= (lineMerged[j,2]-3) and lineMerged[i,2] <= (lineMerged[j,2]+3)) and (lineMerged[i,3] >= (lineMerged[j,3]-3) and lineMerged[i,3] <= (lineMerged[j,3]+3)) and (lineMerged[i,4] >= (lineMerged[j,4]-3) and lineMerged[i,4] <= (lineMerged[j,4]+3)):
+                elif (lineMerged[i,1] >= (lineMerged[j,1]-5) and lineMerged[i,1] <= lineMerged[j,1]+5) and (lineMerged[i,2] >= (lineMerged[j,2]-5) and lineMerged[i,2] <= (lineMerged[j,2]+5)) and (lineMerged[i,3] >= (lineMerged[j,3]-5) and lineMerged[i,3] <= (lineMerged[j,3]+5)) and (lineMerged[i,4] >= (lineMerged[j,4]-5) and lineMerged[i,4] <= (lineMerged[j,4]+5)):
+                    if lineMerged[i,5] > lineMerged[j,5]:
                         lineMerged = np.delete(lineMerged,(j),axis=0)
-                        check = True
-                if check == False:
-                    for m in range(0,len(glassLines)):
-                        for n in range(1,len(glassLines)):
-                            if m == n:
-                                continue
-                            elif ((lineMerged[m,1] >= (lineMerged[n,1]-3) and lineMerged[m,1] <= (lineMerged[n,1]+3) and lineMerged[m,2] >= (lineMerged[n,2]-3) and lineMerged[m,2] <= (lineMerged[n,2]+3)) or (lineMerged[m,3] >= (lineMerged[n,3]-3) and lineMerged[m,3] <= (lineMerged[n,3]+3) and lineMerged[m,4] >= (lineMerged[n,4]-3) and lineMerged[m,4] <= (lineMerged[n,4]+3))):
-                                if lineMerged[m,5] > lineMerged[n,5]:
-                                    lineDelete = n
-                                else:
-                                    lineDelete = m
-                                lineMerged = np.delete(lineMerged,(lineDelete),axis=0)
-
+                    elif lineMerged[i,5] < lineMerged[j,5]:
+                        lineMerged = np.delete(lineMerged,(i),axis=0)
+    if len(lineMerged[~np.all(lineMerged == 0, axis=1)]) > 2:
+        for i in range(0,len(lineMerged[~np.all(lineMerged == 0, axis=1)])):
+            for j in range(0,len(lineMerged[~np.all(lineMerged == 0,axis=1)])):
+                if i == j:
+                    continue
+                elif ((lineMerged[i,1] >= (lineMerged[j,1]-5) and lineMerged[i,1] <= lineMerged[j,1]+5) and (lineMerged[i,2] >= (lineMerged[j,2]-5) and lineMerged[i,2] <= (lineMerged[j,2]+5))) or ((lineMerged[i,3] >= (lineMerged[j,3]-5) and lineMerged[i,3] <= (lineMerged[j,3]+5)) and (lineMerged[i,4] >= (lineMerged[j,4]-5) and lineMerged[i,4] <= (lineMerged[j,4]+5))):
+                    if lineMerged[i,5] > lineMerged[j,5]:
+                        lineMerged = np.delete(lineMerged,(j),axis=0)
+                    else:
+                        lineMerged = np.delete(lineMerged,(i),axis=0)
+                
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
 def HoughLinesSearch(img, houghLength=40, houghDist=5):
