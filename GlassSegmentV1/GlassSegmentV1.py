@@ -65,7 +65,7 @@ while True:
             #! Error on 8 (Type: Only one line)
             #! Error on 12 (Type: No/not enough lines(?))
             #! Error on 13 (Type: Line merge index out of bounds)
-            img = cv2.imread('./final_images/final_setup_17.png')
+            img = cv2.imread('./final_images/final_setup_6.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -110,11 +110,12 @@ while True:
             cv2.imwrite('procced.png', img_binary)
             cv2.imshow("Binary image", img_binary)
             cv2.waitKey(5)
-            edges_hough = ls.HoughLinesSearch(img_binary)
+            houghLocation = ls.HoughLinesSearch(img_binary)
             statemsg = False
-            if edges_hough is not None and edges_hough.size > 0:
-                houghLocation = ls.LineExtend(img_binary, edges_hough)
-                #houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines, TBD
+            if houghLocation is not None and houghLocation.size > 0:
+                
+                houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines, TBD
+                houghLocation = ls.LineExtend(img_binary, houghLocation)
                 houghLocation = np.ndarray.flatten(houghLocation)
                 final, UpDown = ls.templatematch(img_binary, template, houghLocation)
                 if final is not None:

@@ -265,8 +265,12 @@ def HoughLinesSearch(img, houghLength=40, houghDist=5):
     cv2.waitKey(10)
     return glassSides
 
-def LineExtend(img, glassSides,lineLength=128):
-    # line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
+def LineExtend(img, glassSides,lineLength=110):
+    if len(glassSides) < 2:
+        print("Only one line found, no extension performed")
+        print("#############################################")
+        return glassSides
+    
     if glassSides[0,5] == lineLength and glassSides[1,5] == lineLength:
         return glassSides # If both lines are long enough, return
     
@@ -276,7 +280,6 @@ def LineExtend(img, glassSides,lineLength=128):
         Extends = 1 # Perform 1 extension
     
     for i in range(0, Extends + 1):
-    
         if glassSides[0,5] < glassSides[1,5]:
             lineExtend = 0
             lineKeep = 1
@@ -308,8 +311,8 @@ def LineExtend(img, glassSides,lineLength=128):
     b = 255
     g = 0
     r = 0
-    for i in range(0, len(glassSides)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
-        l = glassSides[i] # same as above
+    for i in range(0, len(glassSides)):
+        l = glassSides[i]
         l = l.astype(int)
         cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 1, cv2.LINE_AA)
         g+=-255
@@ -335,8 +338,10 @@ def grabberPoint(glassSides, UpDown, lineLength=20):
     grabPoint_tmp[1] = (glassSides[8] + glassSides[10]) / 2 # l2y
     line = np.polyfit([glassSides[1], glassSides[3]],[glassSides[2], glassSides[4]], 1)
     line_perp[0] = -1/line[0] # Slope of perpendicular line
-    if line_perp[0] > 50: # In case of horizontal lines
-        line_perp[0] = 50
+    
+    if line_perp[0] > 100: # In case of horizontal lines, threshold at slope of 100
+        line_perp[0] = 100
+
     line_perp[1] = grabPoint[1] - 1 * line_perp[0] * grabPoint[0]
     m = line_perp[0]
     b = line_perp[1]
@@ -348,8 +353,10 @@ def grabberPoint(glassSides, UpDown, lineLength=20):
     x1[1] = 1/(m**2+1)*(-b*m+m*y0+math.sqrt(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)+x0)
     y1 = m * x1 + b
 
-    dist0 = math.sqrt((grabPoint_tmp[0] - x1[0])**2 + (grabPoint_tmp[1] - y1[0])**2)
-    dist1 = math.sqrt((grabPoint_tmp[0] - x1[1])**2 + (grabPoint_tmp[1] - y1[1])**2)
+    dist0 = math.hypot(grabPoint_tmp[0] - x1[0], grabPoint_tmp[1] - y1[0])
+    dist1 = math.hypot(grabPoint_tmp[0] - x1[1], grabPoint_tmp[1] - y1[1])
+    #dist0 = math.sqrt((grabPoint_tmp[0] - x1[0])**2 + (grabPoint_tmp[1] - y1[0])**2)
+    #dist1 = math.sqrt((grabPoint_tmp[0] - x1[1])**2 + (grabPoint_tmp[1] - y1[1])**2)
 
     if dist0 < dist1:
         grabPoint[2] = x1[0]
@@ -503,6 +510,30 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
         cv2.putText(final, 'Orientation: Down', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
 
     return final, UpDown
+
+def removeExtras(houghLocation):
+    # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
+    tmp_lines = np.empty([2, 6])
+    tmp_dists = 0
+    dist_max = 0
+    if len(houghLocation) > 2:
+        l1keep = 0 # Keep line 1 and 2 as default
+        l2keep = 1
+        for cnt1 in range(0, len(houghLocation)):
+            for cnt2 in range(cnt1, len(houghLocation)):
+                if cnt1 == cnt2:
+                    continue
+                diststart = math.hypot(houghLocation[cnt1, 1] - houghLocation[cnt2, 1], houghLocation[cnt1, 2] - houghLocation[cnt2, 2])
+                distend = math.hypot(houghLocation[cnt1, 3] - houghLocation[cnt2, 3], houghLocation[cnt1, 4] - houghLocation[cnt2, 4])
+                tmp_dists = abs(diststart + distend)
+                if tmp_dists > dist_max:
+                    l1keep = cnt1
+                    l2keep = cnt2
+    else:
+        return houghLocation
+    tmp_lines[0, :] = houghLocation[l1keep, :]
+    tmp_lines[1, :] = houghLocation[l2keep, :]
+    return tmp_lines
 
 def pixelstocm(pickuppoint, imdim):
     phys_x = 250 #mm
