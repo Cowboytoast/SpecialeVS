@@ -492,8 +492,21 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
     max_w = int(max_idx[1])
 
 
+    #Solution from https://math.stackexchange.com/questions/656500/given-a-point-slope-and-a-distance-along-that-slope-easily-find-a-second-p
+    template_center_x = round(max_w + template_rot.shape[1] / 2)
+    template_center_y = round(max_h + template_rot.shape[0] / 2)
+    template_slope = np.average(slopes)
+    r = math.sqrt(1+template_slope**2)
+    if UpDown == 1:
+        xgrab = round(template_center_x - 60/r)
+        ygrab = round(template_center_y - 60*template_slope/r)
+    else:
+        xgrab = round(template_center_x + 60/r)
+        ygrab = round(template_center_y + 60*template_slope/r)
+
     # * OVERLAY STUFF***************************************
     final = np.copy(img)
+    final = 255 - final
     final = cv2.cvtColor(final,cv2.COLOR_GRAY2RGB)
 
     TipOutline = cv2.imread('./images/VialTopRed.png')
@@ -508,7 +521,7 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
         final[max_h : max_h + Overlay.shape[0],
         max_w : max_w + Overlay.shape[1]] = Overlay
         cv2.putText(final, 'Orientation: Down', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
-
+    cv2.circle(final, (xgrab, ygrab), 3, color = (0,0,255), thickness=2)
     return final, UpDown
 
 def removeExtras(houghLocation):
