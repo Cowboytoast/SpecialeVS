@@ -67,7 +67,7 @@ while True:
             
             #! Error on 0: Short line
             #! Error on 12: One line too long
-            img = cv2.imread('./final_images/final_setup_10.png')
+            img = cv2.imread('./final_images/final_setup_0.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")

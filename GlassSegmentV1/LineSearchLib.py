@@ -521,7 +521,7 @@ def templatematch(img, template, houghLocation, h_steps = 15, w_steps = 15):
     maxval = 0
     threshold = 150
     iterations = 1
-    while iterations < 5 or maxval < threshold:
+    while iterations < 5 and maxval < threshold:
         h_steps = round(h_steps * iterations / 2)
         w_steps = round(w_steps * iterations / 2)
         if houghLocation.size == 12:
