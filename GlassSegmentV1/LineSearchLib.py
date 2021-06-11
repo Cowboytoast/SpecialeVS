@@ -67,10 +67,18 @@ def LineMerge(glassLines,is_nan=False):
     lineMerged = np.zeros([1000,6])
     k = 0
     aloneCnt = 0
-    if glassLines.size < 2:
+    if glassLines.size < 1:
         print("One or no lines found, aborting")
         print("#############################################")
         return None
+    
+    elif len(glassLines) == 1:
+        a = abs(glassLines[0,1]-glassLines[0,3])
+        b = abs(glassLines[0,2]-glassLines[0,4])
+        c = np.hypot(a,b)
+        lineMerged[0,0:4] = glassLines[0,0:4]
+        lineMerged[0,5] = c
+    
     if len(glassLines) == 2: # check if there exist only 2 lines
         a0 = abs(glassLines[0,1]-glassLines[0,3])
         b0 = abs(glassLines[0,2]-glassLines[0,4])
@@ -105,22 +113,22 @@ def LineMerge(glassLines,is_nan=False):
                         xCoordinate = glassLines[linea,1]
                         lineMerged[k,1], lineMerged[k,3] = xCoordinate,xCoordinate
                         if glassLines[linea,4] < glassLines[lineb,4] and glassLines[linea,4] < glassLines[lineb,2]:
-                            lineMerged[k,2] = glassLines[linea,4]
+                            lineMerged[k,4] = glassLines[linea,4]
                         elif glassLines[lineb,4] < glassLines[linea,2] and glassLines[lineb,4] < glassLines[linea,4]:
-                            lineMerged[k,2] = glassLines[lineb,4]
+                            lineMerged[k,4] = glassLines[lineb,4]
                         elif glassLines[linea,2] < glassLines[lineb,2] and glassLines[linea,2] < glassLines[lineb,4]:
-                            lineMerged[k,2] = glassLines[linea,2]
+                            lineMerged[k,4] = glassLines[linea,2]
                         elif glassLines[lineb,2] < glassLines[linea,2] and glassLines[lineb,2] < glassLines[linea,4]:
-                            lineMerged[k,2] = glassLines[lineb,2]
+                            lineMerged[k,4] = glassLines[lineb,2]
                             
                         if glassLines[linea,4] > glassLines[lineb,4] and glassLines[linea,4] > glassLines[lineb,2]:
-                            lineMerged[k,4] = glassLines[linea,4]
+                            lineMerged[k,2] = glassLines[linea,4]
                         elif glassLines[lineb,4] > glassLines[linea,4] and glassLines[lineb,4] > glassLines[linea,2]:
-                            lineMerged[k,4] = glassLines[lineb,4]
+                            lineMerged[k,2] = glassLines[lineb,4]
                         elif glassLines[linea,2] > glassLines[lineb,2] and glassLines[linea,2] > glassLines[lineb,4]:
-                            lineMerged[k,4] = glassLines[linea,2]
+                            lineMerged[k,2] = glassLines[linea,2]
                         else:
-                            lineMerged[k,4] = glassLines[lineb,2]
+                            lineMerged[k,2] = glassLines[lineb,2]
                             
                         a = abs(lineMerged[k,1]-lineMerged[k,3])
                         b = abs(lineMerged[k,2]-lineMerged[k,4])
@@ -239,7 +247,7 @@ def LineMerge(glassLines,is_nan=False):
                                 lineMerged[k,4] = glassLines[j,4]
             
         else:    
-            tmp = np.zeroes([100,1])    
+            tmp = np.zeros([100,1])    
                 
             for i in range(0,len(glassLines)):
                 for j in range(0,len(glassLines)):
