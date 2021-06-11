@@ -305,33 +305,11 @@ def LineMerge(glassLines,is_nan=False):
                     lineMerged[k,1:5] = coordinates
                     lineMerged[k,5] = c
                     k+=1
-        '''           
-        for i in range(0,len(glassLines)):
-            for j in range(1,len(glassLines)):
-                check = False
-                if i==j:
-                    continue
-                elif (lineMerged[i,1] >= (lineMerged[j,1]-3) and lineMerged[i,1] <= lineMerged[j,1]+3) and (lineMerged[i,2] >= (lineMerged[j,2]-3) and lineMerged[i,2] <= (lineMerged[j,2]+3)) and (lineMerged[i,3] >= (lineMerged[j,3]-3) and lineMerged[i,3] <= (lineMerged[j,3]+3)) and (lineMerged[i,4] >= (lineMerged[j,4]-3) and lineMerged[i,4] <= (lineMerged[j,4]+3)):
-                        lineMerged = np.delete(lineMerged,(j),axis=0)
-                        check = True
-                if check == False:
-                    for m in range(0,len(glassLines)):
-                        for n in range(1,len(glassLines)):
-                            if m == n:
-                                continue
-                            elif ((lineMerged[m,1] >= (lineMerged[n,1]-3) and lineMerged[m,1] <= (lineMerged[n,1]+3) and lineMerged[m,2] >= (lineMerged[n,2]-3) and lineMerged[m,2] <= (lineMerged[n,2]+3)) or (lineMerged[m,3] >= (lineMerged[n,3]-3) and lineMerged[m,3] <= (lineMerged[n,3]+3) and lineMerged[m,4] >= (lineMerged[n,4]-3) and lineMerged[m,4] <= (lineMerged[n,4]+3))):
-                                if lineMerged[m,5] > lineMerged[n,5]:
-                                    lineDelete = n
-                                else:
-                                    lineDelete = m
-                                lineMerged = np.delete(lineMerged,(lineDelete),axis=0)
-        '''
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
 def HoughLinesSearch(img, houghLength=40, houghDist=5):
     #img has to be the edge detected image.
     #Copy of edge detected image into BGR image for drawing lines.
-    paramChange = False
     houghImage = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
     #Find HoughLines on the image. Default houghLengt = 40, houghDist=10
     linesP = cv2.HoughLinesP(img, 0.5, np.pi / 225, 50, None, houghLength, houghDist)
@@ -433,55 +411,7 @@ def LineExtend(img, glassSides,lineLength=110):
     return glassSides
 
 def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 60):
-    # ! Format of sides:
-    # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
-    '''
-    grabPoint=np.empty([6])
-    grabPoint_tmp = np.empty([2])
-    line_perp = np.empty([2])
-    x1 = np.empty([2])
-    y1 = np.empty([2])
 
-    grabPoint[0] = (glassSides[1] + glassSides[3]) / 2 # l1x
-    grabPoint[1] = (glassSides[2] + glassSides[4]) / 2 # l1y
-
-    grabPoint_tmp[0] = (glassSides[7] + glassSides[9]) / 2 # l2x
-    grabPoint_tmp[1] = (glassSides[8] + glassSides[10]) / 2 # l2y
-    line = np.polyfit([glassSides[1], glassSides[3]],[glassSides[2], glassSides[4]], 1)
-    line_perp[0] = -1/line[0] # Slope of perpendicular line
-
-    if line_perp[0] > 100: # In case of horizontal lines, threshold at slope of 100
-        line_perp[0] = 100
-
-    line_perp[1] = grabPoint[1] - 1 * line_perp[0] * grabPoint[0]
-    m = line_perp[0]
-    b = line_perp[1]
-    x0 = grabPoint[0]
-    y0 = grabPoint[1]
-    d = lineLength
-
-    x1[0] = 1/(m**2+1)*(-b*m+m*y0-math.sqrt(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)+x0)
-    x1[1] = 1/(m**2+1)*(-b*m+m*y0+math.sqrt(d**2*m**2-m**2*x0**2-2*b*m*x0+2*m*x0*y0-b**2+2*b*y0+d**2-y0**2)+x0)
-    y1 = m * x1 + b
-
-    dist0 = math.hypot(grabPoint_tmp[0] - x1[0], grabPoint_tmp[1] - y1[0])
-    dist1 = math.hypot(grabPoint_tmp[0] - x1[1], grabPoint_tmp[1] - y1[1])
-    #dist0 = math.sqrt((grabPoint_tmp[0] - x1[0])**2 + (grabPoint_tmp[1] - y1[0])**2)
-    #dist1 = math.sqrt((grabPoint_tmp[0] - x1[1])**2 + (grabPoint_tmp[1] - y1[1])**2)
-
-    if dist0 < dist1:
-        grabPoint[2] = x1[0]
-        grabPoint[3] = y1[0]
-    else:
-        grabPoint[2] = x1[1]
-        grabPoint[3] = y1[1]
-
-    grabPoint[4] = (grabPoint[0] + grabPoint[2]) / 2
-    grabPoint[5] = (grabPoint[1] + grabPoint[3]) / 2
-    grabPointAngle = math.atan(m) - math.pi / 2
-    if UpDown:
-        grabPointAngle += math.pi
-    '''
     #Solution from https://math.stackexchange.com/questions/656500/given-a-point-slope-and-a-distance-along-that-slope-easily-find-a-second-p
     #* Format of idxs: [max_w, max_h, template shape x, template shape y]
     max_w = idxs[0]
