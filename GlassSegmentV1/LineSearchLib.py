@@ -82,120 +82,219 @@ def LineMerge(glassLines,is_nan=False):
         lineMerged[1,0:5] = glassLines[1,0:5]
         lineMerged[0,5] = c0
         lineMerged[1,5] = c1
-    elif len(glassLines) == 3: # check if there exist only 3 lines
-        angleRangeLower = glassLines[0,0]-angleTolerance
-        angleRangeUpper = glassLines[0,0]+angleTolerance
-
-        x0Start,y0Start,x0End,y0End = glassLines[0,1:5]
-        x1Start,y1Start,x1End,y1End = glassLines[1,1:5]
-        x2Start,y2Start,x2End,y2End = glassLines[2,1:5]
-
-        slope01 = linregress([x0Start,x1End],[y0Start,y1End])
-        slope02 = linregress([x0Start,x2End],[y0Start,y2End])
-        slope12 = linregress([x1Start,x2End],[y1Start,y2End])
         
-        slope01 = slope01.slope
-        slope02 = slope02.slope
-        slope12 = slope12.slope
-            
-        if (slope01 > angleRangeLower) and (slope01 < angleRangeUpper):
-            a1 = abs(glassLines[0,1]-glassLines[1,3])
-            b1 = abs(glassLines[0,2]-glassLines[1,4])
-            c1 = np.hypot(a1,b1)
-            a2 = abs(glassLines[1,1]-glassLines[0,3])
-            b2 = abs(glassLines[1,2]-glassLines[0,4])
-            c2 = np.hypot(a2,b2)
-            
-            if c1 > c2:
-                lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope01,x0Start,y0Start,x1End,y1End,c1
-            else:
-                lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope01,x1Start,y1Start,x0End,y0End,c2
-            
-            a = abs(glassLines[2,1]-glassLines[2,3])
-            b = abs(glassLines[2,2]-glassLines[2,4])
-            c = np.hypot(a,b)
-            lineMerged[1,0],lineMerged[1,1],lineMerged[1,2],lineMerged[1,3],lineMerged[1,4],lineMerged[1,5] = glassLines[2,0],x2Start,y2Start,x2End,y2End,c
-            
-        elif (slope02 > angleRangeLower and slope02 < angleRangeUpper):
-            a1 = abs(glassLines[0,1]-glassLines[2,3])
-            b1 = abs(glassLines[0,2]-glassLines[2,4])
-            c1 = np.hypot(a1,b1)
-            a2 = abs(glassLines[2,1]-glassLines[0,3])
-            b2 = abs(glassLines[2,2]-glassLines[0,4])
-            c2 = np.hypot(a2,b2)
-            
-            if c1 > c2:
-                lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope02,x0Start,y0Start,x2End,y2End,c1
+    elif len(glassLines) == 3: # check if there exist only 3 lines
+        if is_nan == True:
+            #largest_slope = np.zeros([100,6])
+            #m = 0
+            rowNumber = np.zeros([3,2])
 
-            else:
-                lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope02,x2Start,y2Start,x0End,y0End,c2
-            
-            a = abs(glassLines[1,1]-glassLines[1,3])
-            b = abs(glassLines[1,2]-glassLines[1,4])
-            c = np.hypot(a,b)
-            lineMerged[1,0],lineMerged[1,1],lineMerged[1,2],lineMerged[1,3],lineMerged[1,4],lineMerged[1,5] = glassLines[1,0],x1Start,y1Start,x1End,y1End,c
-            
+            for i in range(0,len(glassLines)):
+                for j in range(1,len(glassLines)):
+                    if i == j:
+                        continue
+                    else:
+                        if abs(glassLines[i,1]-glassLines[j,1]) < 5 and abs(glassLines[i,3]-glassLines[j,3]) < 5:
+                            rowNumber[i,:] = [i,j]
+                            
+            for i in range(0,len(rowNumber)):
+                    if not rowNumber[i,1] == 0:
+                        lineMerged[k,0] = 50
+                        linea = rowNumber[i,0].astype(int)
+                        lineb = rowNumber[i,1].astype(int)
+                        xCoordinate = glassLines[linea,1]
+                        lineMerged[k,1], lineMerged[k,3] = xCoordinate,xCoordinate
+                        if glassLines[linea,4] < glassLines[lineb,4] and glassLines[linea,4] < glassLines[lineb,2]:
+                            lineMerged[k,2] = glassLines[linea,4]
+                        elif glassLines[lineb,4] < glassLines[linea,2] and glassLines[lineb,4] < glassLines[linea,4]:
+                            lineMerged[k,2] = glassLines[lineb,4]
+                        elif glassLines[linea,2] < glassLines[lineb,2] and glassLines[linea,2] < glassLines[lineb,4]:
+                            lineMerged[k,2] = glassLines[linea,2]
+                        elif glassLines[lineb,2] < glassLines[linea,2] and glassLines[lineb,2] < glassLines[linea,4]:
+                            lineMerged[k,2] = glassLines[lineb,2]
+                            
+                        if glassLines[linea,4] > glassLines[lineb,4] and glassLines[linea,4] > glassLines[lineb,2]:
+                            lineMerged[k,4] = glassLines[linea,4]
+                        elif glassLines[lineb,4] > glassLines[linea,4] and glassLines[lineb,4] > glassLines[linea,2]:
+                            lineMerged[k,4] = glassLines[lineb,4]
+                        elif glassLines[linea,2] > glassLines[lineb,2] and glassLines[linea,2] > glassLines[lineb,4]:
+                            lineMerged[k,4] = glassLines[linea,2]
+                        else:
+                            lineMerged[k,4] = glassLines[lineb,2]
+                            
+                        a = abs(lineMerged[k,1]-lineMerged[k,3])
+                        b = abs(lineMerged[k,2]-lineMerged[k,4])
+                        lineMerged[k,5] = np.hypot(a,b)
+                        
+            lineExist = np.where(rowNumber == 1)
+            lineExist = np.array(lineExist)
+            isEmpty = lineExist.size == 0
+            if isEmpty:
+                lineMerged[k+1,0] = 50
+                lineMerged[k+1,1] = glassLines[1,1]
+                lineMerged[k+1,2] = glassLines[1,2]
+                lineMerged[k+1,3] = glassLines[1,3]
+                lineMerged[k+1,4] = glassLines[1,4]
+                lineMerged[k+1,5] = np.hypot(abs(lineMerged[k,1]-lineMerged[k,3]),abs(lineMerged[k,2]-lineMerged[k,4]))
+        
         else:
-            a1 = abs(glassLines[1,1]-glassLines[2,3])
-            b1 = abs(glassLines[1,2]-glassLines[2,4])
-            c1 = np.hypot(a1,b1)
-            a2 = abs(glassLines[2,1]-glassLines[1,3])
-            b2 = abs(glassLines[2,2]-glassLines[1,4])
-            c2 = np.hypot(a2,b2)
+            angleRangeLower = glassLines[0,0]-angleTolerance
+            angleRangeUpper = glassLines[0,0]+angleTolerance
+
+            x0Start,y0Start,x0End,y0End = glassLines[0,1:5]
+            x1Start,y1Start,x1End,y1End = glassLines[1,1:5]
+            x2Start,y2Start,x2End,y2End = glassLines[2,1:5]
+
+            slope01 = linregress([x0Start,x1End],[y0Start,y1End])
+            slope02 = linregress([x0Start,x2End],[y0Start,y2End])
+            slope12 = linregress([x1Start,x2End],[y1Start,y2End])
             
-            if c1 > c2:
-                lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope12,x1Start,y1Start,x2End,y2End,c1
+            slope01 = slope01.slope
+            slope02 = slope02.slope
+            slope12 = slope12.slope
+                
+            if (slope01 > angleRangeLower) and (slope01 < angleRangeUpper):
+                a1 = abs(glassLines[0,1]-glassLines[1,3])
+                b1 = abs(glassLines[0,2]-glassLines[1,4])
+                c1 = np.hypot(a1,b1)
+                a2 = abs(glassLines[1,1]-glassLines[0,3])
+                b2 = abs(glassLines[1,2]-glassLines[0,4])
+                c2 = np.hypot(a2,b2)
+                
+                if c1 > c2:
+                    lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope01,x0Start,y0Start,x1End,y1End,c1
+                else:
+                    lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope01,x1Start,y1Start,x0End,y0End,c2
+                
+                a = abs(glassLines[2,1]-glassLines[2,3])
+                b = abs(glassLines[2,2]-glassLines[2,4])
+                c = np.hypot(a,b)
+                lineMerged[1,0],lineMerged[1,1],lineMerged[1,2],lineMerged[1,3],lineMerged[1,4],lineMerged[1,5] = glassLines[2,0],x2Start,y2Start,x2End,y2End,c
+                
+            elif (slope02 > angleRangeLower and slope02 < angleRangeUpper):
+                a1 = abs(glassLines[0,1]-glassLines[2,3])
+                b1 = abs(glassLines[0,2]-glassLines[2,4])
+                c1 = np.hypot(a1,b1)
+                a2 = abs(glassLines[2,1]-glassLines[0,3])
+                b2 = abs(glassLines[2,2]-glassLines[0,4])
+                c2 = np.hypot(a2,b2)
+                
+                if c1 > c2:
+                    lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope02,x0Start,y0Start,x2End,y2End,c1
+
+                else:
+                    lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope02,x2Start,y2Start,x0End,y0End,c2
+                
+                a = abs(glassLines[1,1]-glassLines[1,3])
+                b = abs(glassLines[1,2]-glassLines[1,4])
+                c = np.hypot(a,b)
+                lineMerged[1,0],lineMerged[1,1],lineMerged[1,2],lineMerged[1,3],lineMerged[1,4],lineMerged[1,5] = glassLines[1,0],x1Start,y1Start,x1End,y1End,c
+                
             else:
-                lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope12,x2Start,y2Start,x1End,y1End,c2
-            
-            a = abs(glassLines[0,1]-glassLines[0,3])
-            b = abs(glassLines[0,2]-glassLines[0,4])
-            c = np.hypot(a,b)
-            lineMerged[1,0],lineMerged[1,1],lineMerged[1,2],lineMerged[1,3],lineMerged[1,4],lineMerged[1,5] = glassLines[0,0],x0Start,y0Start,x0End,y0End,c
+                a1 = abs(glassLines[1,1]-glassLines[2,3])
+                b1 = abs(glassLines[1,2]-glassLines[2,4])
+                c1 = np.hypot(a1,b1)
+                a2 = abs(glassLines[2,1]-glassLines[1,3])
+                b2 = abs(glassLines[2,2]-glassLines[1,4])
+                c2 = np.hypot(a2,b2)
+                
+                if c1 > c2:
+                    lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope12,x1Start,y1Start,x2End,y2End,c1
+                else:
+                    lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope12,x2Start,y2Start,x1End,y1End,c2
+                
+                a = abs(glassLines[0,1]-glassLines[0,3])
+                b = abs(glassLines[0,2]-glassLines[0,4])
+                c = np.hypot(a,b)
+                lineMerged[1,0],lineMerged[1,1],lineMerged[1,2],lineMerged[1,3],lineMerged[1,4],lineMerged[1,5] = glassLines[0,0],x0Start,y0Start,x0End,y0End,c
 
             
     else: # For 3+ lines
         if is_nan == True:
-            largest_slope = np.zeros([100,6])
-            m = 0
+            #largest_slope = np.zeros([100,6])
+            #m = 0
+
+            for i in range(0,len(glassLines)):
+                for j in range(1,len(glassLines)):
+                    if i == j:
+                        continue
+                    else:
+                        if abs(glassLines[i,1]-glassLines[j,1]) < 5 and abs(glassLines[i,3]-glassLines[j,3]) < 5:
+                            lineMerged[k,0] = 50
+                            if glassLines[i,1] < glassLines[j,1]:
+                                lineMerged[k,1] = glassLines[i,1]
+                            else:
+                                lineMerged[k,1] = glassLines[j,1]
+                            if glassLines[i,2] < glassLines[j,2]:
+                                lineMerged[k,2] = glassLines[i,2]
+                            else:
+                                lineMerged[k,2] = glassLines[j,2]
+                            if glassLines[i,3] > glassLines[j,3]:
+                                lineMerged[k,3] = glassLines[i,3]
+                            else:
+                                lineMerged[k,3] = glassLines[j,3]
+                            if glassLines[i,4] > glassLines[j,4]:
+                                lineMerged[k,4] = glassLines[i,4]
+                            else:
+                                lineMerged[k,4] = glassLines[j,4]
             
-        for i in range(0,len(glassLines)):
-            for j in range(0,len(glassLines)):
-                if j == i:
-                    continue
-                a = abs(glassLines[i,1]-glassLines[j,3])
-                b = abs(glassLines[i,2]-glassLines[j,4])
-
-                coordinates = np.array(np.r_[glassLines[i,1:3], glassLines[j, 3:5]]) #xstart ystart xend yend
-
-                angleRangeLower = glassLines[i,0]-angleTolerance
-                angleRangeUpper = glassLines[i,0]+angleTolerance
-                slope = linregress([coordinates[0], coordinates[2]], [coordinates[1], coordinates[3]])
-                slope_fix = slope.slope
-
-
-                if is_nan == True:
-                    largest_slope[m,0] = slope.slope
-                    largest_slope[m,1:5] = coordinates[0:4]
-                    m += 1
-                    c = np.hypot(a,b)
-                    lineMerged[m,5] = c
-
-                else:
-                    if slope_fix > angleRangeLower and slope_fix < angleRangeUpper:
-                        c = np.hypot(a,b)
+        else:    
+            tmp = np.zeroes([100,1])    
+                
+            for i in range(0,len(glassLines)):
+                for j in range(0,len(glassLines)):
+                    if j == i:
+                        continue
+                        
+                    if (abs(glassLines[i,1]-glassLines[j,1]) > 5 or abs(glassLines[i,2]-glassLines[j,2]) > 5) and (abs(glassLines[i,3]-glassLines[j,3]) > 5 or abs(glassLines[i,4]-glassLines[j,4]) > 5):
+                        tmp[i] += 1
+                        continue
                     
-                        lineMerged[k,0] = slope.slope
-                        lineMerged[k,1:5] = coordinates
-                        lineMerged[k,5] = c
-                        k+=1
+                    a = abs(glassLines[i,1]-glassLines[j,3])
+                    b = abs(glassLines[i,2]-glassLines[j,4])
+
+                    coordinates = np.array(np.r_[glassLines[i,1:3], glassLines[j, 3:5]]) #xstart ystart xend yend
+
+                    angleRangeLower = glassLines[i,0]-angleTolerance
+                    angleRangeUpper = glassLines[i,0]+angleTolerance
+                    slope = linregress([coordinates[0], coordinates[2]], [coordinates[1], coordinates[3]])
+                    slope_fix = slope.slope
+
+
+                    if is_nan == True:
+                        largest_slope[m,0] = slope.slope
+                        largest_slope[m,1:5] = coordinates[0:4]
+                        m += 1
+                        c = np.hypot(a,b)
+                        lineMerged[m,5] = c
+
+                    else:
+                        if slope_fix > angleRangeLower and slope_fix < angleRangeUpper:
+                            c = np.hypot(a,b)
+                        
+                            lineMerged[k,0] = slope.slope
+                            lineMerged[k,1:5] = coordinates
+                            lineMerged[k,5] = c
+                            k+=1
+    '''
             if is_nan == True:
                 largest_slope = list(largest_slope)
-                largest_slope.sort(key=lambda x:x[0]) #! CHANGE TO SORT BY ABS VALUE!
+                #largest_slope.sort(key=lambda x:x[0]) #! CHANGE TO SORT BY ABS VALUE!
+                largest_slope = sorted(largest_slope,key=lambda row: np.abs(row[0]))
                 largest_slope = np.array(largest_slope)
                 lineMerged[0,:] = largest_slope[0,:]
                 lineMerged[1,:] = largest_slope[1,:]
                 
+        singleLines = tmp[~np.all(lineMerged == 0, axis=1)]
+        
+        for l in range(0,len(singleLines)):
+                if tmp[l] == 1:
+                    a = abs(glassLines[l,1]-glassLines[l,3])
+                    b = abs(glassLines[l,2]-glassLines[l,4])
+                    c = np.hypot(a,b)
+                    insertArray = np.array([glassLines[l,0],glassLines[l,1],glassLines[l,2],glassLines[l,3],glassLines[l,4],c])
+                    np.insert(lineMerged,0,insertArray,axis=0)
+              
     for i in range(0,len(glassLines)):
             for j in range(1,len(glassLines)):
                 check = False
@@ -215,7 +314,7 @@ def LineMerge(glassLines,is_nan=False):
                                 else:
                                     lineDelete = m
                                 lineMerged = np.delete(lineMerged,(lineDelete),axis=0)
-                
+    '''            
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
 def HoughLinesSearch(img, houghLength=40, houghDist=5):
@@ -242,7 +341,7 @@ def HoughLinesSearch(img, houghLength=40, houghDist=5):
         b = 255
         g = 0
         r = 0
-        '''
+        
         # * For printing all lines use:
         for i in range(0, len(linesP)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
             l = linesP[i] # same as above
@@ -257,7 +356,7 @@ def HoughLinesSearch(img, houghLength=40, houghDist=5):
             cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 1, cv2.LINE_AA)
             g+=-255
             r+=255
-
+        '''
     else:
         glassSides = None
     #return houghImage
