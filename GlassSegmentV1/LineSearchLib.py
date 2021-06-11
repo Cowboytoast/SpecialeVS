@@ -67,10 +67,18 @@ def LineMerge(glassLines,is_nan=False):
     lineMerged = np.zeros([1000,6])
     k = 0
     aloneCnt = 0
-    if glassLines.size < 2:
+    if glassLines.size < 1:
         print("One or no lines found, aborting")
         print("#############################################")
         return None
+    
+    elif len(glassLines) == 1:
+        a = abs(glassLines[0,1]-glassLines[0,3])
+        b = abs(glassLines[0,2]-glassLines[0,4])
+        c = np.hypot(a,b)
+        lineMerged[0,0:4] = glassLines[0,0:4]
+        lineMerged[0,5] = c
+    
     if len(glassLines) == 2: # check if there exist only 2 lines
         a0 = abs(glassLines[0,1]-glassLines[0,3])
         b0 = abs(glassLines[0,2]-glassLines[0,4])
