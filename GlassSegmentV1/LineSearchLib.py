@@ -421,9 +421,10 @@ def LineExtend(img, glassSides,lineLength=110):
     cv2.waitKey(10)
     return glassSides
 
-def grabberPoint(glassSides, UpDown, lineLength=20):
+def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 60):
     # ! Format of sides:
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp | slope2 = b rad | x2start | y2start | x2end | y2end | hyp |
+    '''
     grabPoint=np.empty([6])
     grabPoint_tmp = np.empty([2])
     line_perp = np.empty([2])
@@ -469,10 +470,39 @@ def grabberPoint(glassSides, UpDown, lineLength=20):
     grabPointAngle = math.atan(m) - math.pi / 2
     if UpDown:
         grabPointAngle += math.pi
+    '''
+    #Solution from https://math.stackexchange.com/questions/656500/given-a-point-slope-and-a-distance-along-that-slope-easily-find-a-second-p
+    #* Format of idxs: [max_w, max_h, template shape x, template shape y]
+    max_w = idxs[0]
+    max_h = idxs[1]
+    templatex = idxs[2]
+    templatey = idxs[3]
+    template_center_x = round(max_w + templatex / 2)
+    template_center_y = round(max_h + templatey / 2)
+    template_slope = np.average(slopes)
+    r = math.sqrt(1+template_slope**2)
+    # We have four possible orientation combinations so we need four cases
+    if angle >= 0 and UpDown == 1:
+        xgrab = round(template_center_x - grabDist/r)
+        ygrab = round(template_center_y - grabDist*template_slope/r)
+    if angle >= 0 and UpDown == 0:
+        xgrab = round(template_center_x + grabDist/r)
+        ygrab = round(template_center_y + grabDist*template_slope/r)
+    if angle <= 0 and UpDown == 1:
+        xgrab = round(template_center_x + grabDist/r)
+        ygrab = round(template_center_y + grabDist*template_slope/r)
+    else:
+        xgrab = round(template_center_x - grabDist/r)
+        ygrab = round(template_center_y - grabDist*template_slope/r)
+        
+    grabPoint = np.array([xgrab, ygrab])
+    grabPointAngle = math.radians(angle)
+    if UpDown:
+        grabPointAngle += math.pi
     
     return grabPoint, grabPointAngle
 
-def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
+def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30, grabDist = 60):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
     
     if houghLocation.size < 11:
@@ -492,16 +522,15 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
 
     max_idx = np.empty([1, 2])
 
-    slope_offset = math.degrees(math.atan(np.average(slopes)))
-    slope_offset = 90 - abs(slope_offset)
+    angle_offset = math.degrees(math.atan(np.average(slopes)))
+    angle_offset = 90 - abs(angle_offset)
 
-    if slope_offset < 0:
-        slope_offset += 45
-
+    if angle_offset < 0:
+        angle_offset += 45
     if np.average(slopes) > 0:
-        slope_offset = -slope_offset
+        angle_offset = -angle_offset
 
-    template_rot = imutils.rotate_bound(template, slope_offset)
+    template_rot = imutils.rotate_bound(template, angle_offset)
 
     Yshifted = pointsy - template_rot.shape[0] / 2
     Xshifted = pointsx - template_rot.shape[1] / 2
@@ -524,7 +553,6 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
             #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
             #cv2.imshow('Rotating progress', rotatingim)
             #cv2.waitKey(5)
-
     template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
     for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
         for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
@@ -540,7 +568,6 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
             #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
             #cv2.imshow('Rotating progress', rotatingim)
             #cv2.waitKey(5)
-
     template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
 
     if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
@@ -589,26 +616,27 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30):
 
     max_h = int(max_idx[0])
     max_w = int(max_idx[1])
-
+    grabPoint, grabAngle = grabberPoint([max_w, max_h, template_rot.shape[1], template_rot.shape[0]], UpDown, np.average(slopes), angle_offset)
 
     # * OVERLAY STUFF***************************************
     final = np.copy(img)
+    final = 255 - final
     final = cv2.cvtColor(final,cv2.COLOR_GRAY2RGB)
 
     TipOutline = cv2.imread('./images/VialTopRed.png')
     # * To overlay template use code below
     if UpDown == 1:
-        Overlay = imutils.rotate_bound(TipOutline, slope_offset)
+        Overlay = imutils.rotate_bound(TipOutline, angle_offset)
         final[max_h : max_h + Overlay.shape[0],
         max_w : max_w + Overlay.shape[1]] = Overlay
         cv2.putText(final, 'Orientation: Up', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
     else:
-        Overlay = imutils.rotate_bound(TipOutline, slope_offset + 180)
+        Overlay = imutils.rotate_bound(TipOutline, angle_offset + 180)
         final[max_h : max_h + Overlay.shape[0],
         max_w : max_w + Overlay.shape[1]] = Overlay
         cv2.putText(final, 'Orientation: Down', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
-
-    return final, UpDown
+    cv2.circle(final, (grabPoint[0], grabPoint[1]), 3, color = (0,0,255), thickness=2)
+    return final, UpDown, grabPoint, grabAngle
 
 def removeExtras(houghLocation):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |

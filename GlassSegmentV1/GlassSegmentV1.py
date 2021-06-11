@@ -22,6 +22,7 @@ def exitFunc():
     global thread
     print("Escape hit, closing...")
     print("#############################################")
+
     try:
         cam
     except NameError:
@@ -56,16 +57,15 @@ while True:
         cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         offlineFlag = False
         start_time = time.time()
-        template = cv2.imread('./images/VialTop.png', 0) # * Load template    
+        template = cv2.imread('./images/VialTop.png', 0) # * Load template
         cv2.namedWindow("Image")
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
-            #! Error on 2 (Type: Tilted lines)
-            #! Error on 4 (Type: Only one line)
-            #! Error on 8 (Type: Only one line)
-            #! Error on 12 (Type: No/not enough lines(?))
-            #! Error on 13 (Type: Line merge index out of bounds)
-            img = cv2.imread('./final_images/final_setup_6.png')
+            #! TODO SOON:
+            #! Fix program to work with one line and thus 8 template matchings
+            #! Speed up robot
+            #! Test special cases
+            img = cv2.imread('./final_images/final_setup_11.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -113,20 +113,18 @@ while True:
             houghLocation = ls.HoughLinesSearch(img_binary)
             statemsg = False
             if houghLocation is not None and houghLocation.size > 0:
-                
-                houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines, TBD
+                houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines
                 houghLocation = ls.LineExtend(img_binary, houghLocation)
                 houghLocation = np.ndarray.flatten(houghLocation)
-                final, UpDown = ls.templatematch(img_binary, template, houghLocation)
+                final, UpDown, grabPoint, grabAngle = ls.templatematch(img_binary, template, houghLocation)
                 if final is not None:
                     statemsg = False
                     k = -1
-                    grabPoints, grabAngle = ls.grabberPoint(houghLocation, UpDown)
-                    grabPoints = np.around(grabPoints)
-                    grabPoints = grabPoints.astype(int)
-                    cv2.circle(final, (grabPoints[0], grabPoints[1]), 3, color = (0,255,0), thickness=2)
-                    cv2.circle(final, (grabPoints[2], grabPoints[3]), 3, color = (0,255,0), thickness=2)
-                    cv2.circle(final, (grabPoints[4], grabPoints[5]), 3, color = (0,0,255), thickness=2)
+                    #grabPoints, grabAngle = ls.grabberPoint(houghLocation, UpDown)
+                    grabPoints = np.around(grabPoint)
+                    grabPoints = grabPoint.astype(int)
+                    #cv2.circle(final, (grabPoints[0], grabPoints[1]), 3, color = (0,255,0), thickness=2)
+                    #cv2.circle(final, (grabPoints[2], grabPoints[3]), 3, color = (0,255,0), thickness=2)
                     print("Processing time: %s s" % (time.time() - start_time))
                     print("#############################################")
                     cv2.imshow('Detection', final)
@@ -134,7 +132,7 @@ while True:
                     print("Press ESC to exit")
                     print("Press other to retry")
                     print("#############################################")
-                    x,y = ls.pixelstocm([grabPoints[4], grabPoints[5]], final.shape)
+                    x,y = ls.pixelstocm([grabPoint[0], grabPoint[1]], final.shape)
                     k = cv2.waitKey(0)
                     if k%256 == 27:
                         exitFunc()

@@ -155,7 +155,7 @@ def handoffCommand(handoffPos):
 
 
 #* Function to generate and move the robot to its waiting position / start-end position
-def waitPos(x=0.1,y=0.1,z=-0.2,rx=0,ry=0,rz=0):
+def waitPos():
     global s
     q_b = -0.5930274174336976
     q_s = -2.1429696608360045
