@@ -65,7 +65,7 @@ while True:
             #! Fix program to work with one line and thus 8 template matchings
             #! Speed up robot
             #! Test special cases
-            img = cv2.imread('./final_images/final_setup_2.png')
+            img = cv2.imread('./final_images/final_setup_0.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -116,7 +116,10 @@ while True:
                 houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines
                 houghLocation = ls.LineExtend(img_binary, houghLocation)
                 houghLocation = np.ndarray.flatten(houghLocation)
-                final, UpDown, grabPoint, grabAngle = ls.templatematch(img_binary, template, houghLocation)
+                if houghLocation.size > 6:
+                    final, UpDown, grabPoint, grabAngle = ls.templatematch(img_binary, template, houghLocation)
+                else:
+                    final, UpDown, grabPoint, grabAngle = ls.templatematchOneLine(img_binary, template, houghLocation)
                 if final is not None:
                     statemsg = False
                     k = -1

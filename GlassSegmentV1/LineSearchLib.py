@@ -105,22 +105,22 @@ def LineMerge(glassLines,is_nan=False):
                         xCoordinate = glassLines[linea,1]
                         lineMerged[k,1], lineMerged[k,3] = xCoordinate,xCoordinate
                         if glassLines[linea,4] < glassLines[lineb,4] and glassLines[linea,4] < glassLines[lineb,2]:
-                            lineMerged[k,2] = glassLines[linea,4]
+                            lineMerged[k,4] = glassLines[linea,4]
                         elif glassLines[lineb,4] < glassLines[linea,2] and glassLines[lineb,4] < glassLines[linea,4]:
-                            lineMerged[k,2] = glassLines[lineb,4]
+                            lineMerged[k,4] = glassLines[lineb,4]
                         elif glassLines[linea,2] < glassLines[lineb,2] and glassLines[linea,2] < glassLines[lineb,4]:
-                            lineMerged[k,2] = glassLines[linea,2]
+                            lineMerged[k,4] = glassLines[linea,2]
                         elif glassLines[lineb,2] < glassLines[linea,2] and glassLines[lineb,2] < glassLines[linea,4]:
-                            lineMerged[k,2] = glassLines[lineb,2]
+                            lineMerged[k,4] = glassLines[lineb,2]
                             
                         if glassLines[linea,4] > glassLines[lineb,4] and glassLines[linea,4] > glassLines[lineb,2]:
-                            lineMerged[k,4] = glassLines[linea,4]
+                            lineMerged[k,2] = glassLines[linea,4]
                         elif glassLines[lineb,4] > glassLines[linea,4] and glassLines[lineb,4] > glassLines[linea,2]:
-                            lineMerged[k,4] = glassLines[lineb,4]
+                            lineMerged[k,2] = glassLines[lineb,4]
                         elif glassLines[linea,2] > glassLines[lineb,2] and glassLines[linea,2] > glassLines[lineb,4]:
-                            lineMerged[k,4] = glassLines[linea,2]
+                            lineMerged[k,2] = glassLines[linea,2]
                         else:
-                            lineMerged[k,4] = glassLines[lineb,2]
+                            lineMerged[k,2] = glassLines[lineb,2]
                             
                         a = abs(lineMerged[k,1]-lineMerged[k,3])
                         b = abs(lineMerged[k,2]-lineMerged[k,4])
@@ -239,7 +239,7 @@ def LineMerge(glassLines,is_nan=False):
                                 lineMerged[k,4] = glassLines[j,4]
             
         else:    
-            tmp = np.zeroes([100,1])    
+            tmp = np.zeros([100,1])    
                 
             for i in range(0,len(glassLines)):
                 for j in range(0,len(glassLines)):
@@ -341,7 +341,7 @@ def HoughLinesSearch(img, houghLength=40, houghDist=5):
         b = 255
         g = 0
         r = 0
-        
+        '''
         # * For printing all lines use:
         for i in range(0, len(linesP)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
             l = linesP[i] # same as above
@@ -356,7 +356,7 @@ def HoughLinesSearch(img, houghLength=40, houghDist=5):
             cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 1, cv2.LINE_AA)
             g+=-255
             r+=255
-        '''
+
     else:
         glassSides = None
     #return houghImage
@@ -365,19 +365,19 @@ def HoughLinesSearch(img, houghLength=40, houghDist=5):
     return glassSides
 
 def LineExtend(img, glassSides,lineLength=110):
+
     if len(glassSides) < 2:
-        print("Only one line found, no extension performed")
-        print("#############################################")
+        print("Only one or zero lines found, no extension performed")
         return glassSides
-    
+
     if glassSides[0,5] == lineLength and glassSides[1,5] == lineLength:
         return glassSides # If both lines are long enough, return
-    
+
     if glassSides[0, 5] < lineLength and glassSides[1, 5] < lineLength:
         Extends = 2 # Perform 2 extensions
     else:
         Extends = 1 # Perform 1 extension
-    
+
     for i in range(0, Extends + 1):
         if glassSides[0,5] < glassSides[1,5]:
             lineExtend = 0
@@ -438,7 +438,7 @@ def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 60):
     grabPoint_tmp[1] = (glassSides[8] + glassSides[10]) / 2 # l2y
     line = np.polyfit([glassSides[1], glassSides[3]],[glassSides[2], glassSides[4]], 1)
     line_perp[0] = -1/line[0] # Slope of perpendicular line
-    
+
     if line_perp[0] > 100: # In case of horizontal lines, threshold at slope of 100
         line_perp[0] = 100
 
@@ -510,10 +510,6 @@ def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 60):
 
 def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30, grabDist = 60):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
-    
-    if houghLocation.size < 11:
-        print("One or no lines found!")
-        return None, 0, 0, 0
 
     slopes = np.array([houghLocation[0], houghLocation[6]])
     if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
@@ -527,13 +523,13 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30, grab
     pointsx = pointsx[pointidx]
 
     max_idx = np.empty([1, 2])
-
-    angle_offset = math.degrees(math.atan(np.average(slopes)))
+    slope_avg = np.average(slopes)
+    angle_offset = math.degrees(math.atan(slope_avg))
     angle_offset = 90 - abs(angle_offset)
 
     if angle_offset < 0:
         angle_offset += 45
-    if np.average(slopes) > 0:
+    if slope_avg > 0:
         angle_offset = -angle_offset
 
     template_rot = imutils.rotate_bound(template, angle_offset)
@@ -559,6 +555,7 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30, grab
             #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
             #cv2.imshow('Rotating progress', rotatingim)
             #cv2.waitKey(5)
+            
     template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
     for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
         for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
@@ -622,7 +619,7 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30, grab
 
     max_h = int(max_idx[0])
     max_w = int(max_idx[1])
-    grabPoint, grabAngle = grabberPoint([max_w, max_h, template_rot.shape[1], template_rot.shape[0]], UpDown, np.average(slopes), angle_offset)
+    grabPoint, grabAngle = grabberPoint([max_w, max_h, template_rot.shape[1], template_rot.shape[0]], UpDown, slope_avg, angle_offset)
 
     # * OVERLAY STUFF***************************************
     final = np.copy(img)
@@ -643,6 +640,132 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30, grab
         cv2.putText(final, 'Orientation: Down', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
     cv2.circle(final, (grabPoint[0], grabPoint[1]), 3, color = (0,0,255), thickness=2)
     return final, UpDown, grabPoint, grabAngle
+
+def templatematchOneLine(img, template, houghLocation, h_steps = 30, w_steps = 30, grabDist = 60):
+    # * line = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1
+    if houghLocation.size < 11:
+        houghLocation = np.append(houghLocation, houghLocation, axis=0)
+
+    slope = houghLocation[0]
+    pointsy = houghLocation[2]
+    pointsx = houghLocation[1]
+
+    max_idx = np.empty([1, 2])
+    angle_offset = math.degrees(math.atan(slope))
+    angle_offset = 90 - abs(angle_offset)
+
+    if angle_offset < 0:
+        angle_offset += 45
+    if slope > 0:
+        angle_offset = -angle_offset
+
+    template_rot = imutils.rotate_bound(template, angle_offset)
+
+    Yshifted = pointsy - template_rot.shape[0]
+    Xshifted = pointsx - template_rot.shape[1]
+
+    maxval = 0
+    UpDown = 1 # 1 for up, 0 for down
+    max_idx = np.zeros((2,1))
+    for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
+        for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
+            if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
+                break
+            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+            matches = np.count_nonzero(matches)
+            if matches >= maxval:
+                maxval = matches
+                max_idx = [h, w]
+            rotatingim = np.copy(img)
+            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            cv2.imshow('Rotating progress', rotatingim)
+            cv2.waitKey(5)
+            
+    template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
+    for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
+        for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
+            if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
+                break
+            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+            matches = np.count_nonzero(matches)
+            if matches >= maxval:
+                maxval = matches
+                max_idx = [h, w]
+                UpDown = 0
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(5)
+    template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
+
+    if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
+        pointsy = max((houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2)
+        pointidx = np.argmax(np.array([(houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2]))
+    else:
+        pointsy = (houghLocation[2] + houghLocation[8]) / 2
+        pointidx = 1
+
+    pointsx = np.array([(houghLocation[1] + houghLocation[7]) / 2, (houghLocation[3] + houghLocation[9]) / 2])
+    pointsx = pointsx[pointidx]
+    Yshifted = pointsy - template_rot.shape[0] / 2
+    Xshifted = pointsx - template_rot.shape[1] / 2
+
+    for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
+        for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
+            if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w > (img.shape[1] + template_rot.shape[1]):
+                break
+            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+            matches = np.count_nonzero(matches)
+            if matches >= maxval:
+                UpDown = 1 # 1 for up, 0 for down
+                maxval = matches
+                max_idx = [h, w]
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(5)
+
+    template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
+
+    for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
+        for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
+            if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
+                break
+            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+            matches = np.count_nonzero(matches)
+            if matches >= maxval:
+                UpDown = 0 # 1 for up, 0 for down
+                maxval = matches
+                max_idx = [h, w]
+            #rotatingim = np.copy(img)
+            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+            #cv2.imshow('Rotating progress', rotatingim)
+            #cv2.waitKey(5)
+
+    max_h = int(max_idx[0])
+    max_w = int(max_idx[1])
+    grabPoint, grabAngle = grabberPoint([max_w, max_h, template_rot.shape[1], template_rot.shape[0]], UpDown, slope_avg, angle_offset)
+
+    # * OVERLAY STUFF***************************************
+    final = np.copy(img)
+    final = 255 - final
+    final = cv2.cvtColor(final,cv2.COLOR_GRAY2RGB)
+
+    TipOutline = cv2.imread('./images/VialTopRed.png')
+    # * To overlay template use code below
+    if UpDown == 1:
+        Overlay = imutils.rotate_bound(TipOutline, angle_offset)
+        final[max_h : max_h + Overlay.shape[0],
+        max_w : max_w + Overlay.shape[1]] = Overlay
+        cv2.putText(final, 'Orientation: Up', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
+    else:
+        Overlay = imutils.rotate_bound(TipOutline, angle_offset + 180)
+        final[max_h : max_h + Overlay.shape[0],
+        max_w : max_w + Overlay.shape[1]] = Overlay
+        cv2.putText(final, 'Orientation: Down', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
+    cv2.circle(final, (grabPoint[0], grabPoint[1]), 3, color = (0,0,255), thickness=2)
+    return final, UpDown, grabPoint, grabAngle
+
 
 def removeExtras(houghLocation):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
