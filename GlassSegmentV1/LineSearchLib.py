@@ -383,19 +383,25 @@ def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 60):
     template_slope = np.average(slopes)
     r = math.sqrt(1+template_slope**2)
     # We have four possible orientation combinations so we need four cases
-    if angle >= 0 and UpDown == 1:
+    # Also, two cases in case the angle is close to 0 (vertical glass)
+    if angle > 1 and UpDown == 1:
         xgrab = round(template_center_x - grabDist/r)
         ygrab = round(template_center_y - grabDist*template_slope/r)
-    if angle >= 0 and UpDown == 0:
+    elif angle > 1 and UpDown == 0:
         xgrab = round(template_center_x + grabDist/r)
         ygrab = round(template_center_y + grabDist*template_slope/r)
-    if angle <= 0 and UpDown == 1:
+    elif angle <= -1 and UpDown == 1:
         xgrab = round(template_center_x + grabDist/r)
         ygrab = round(template_center_y + grabDist*template_slope/r)
+    elif angle <= -1 and UpDown == 0:
+        xgrab = round(template_center_x - grabDist/r)
+        ygrab = round(template_center_y - grabDist*template_slope/r)
+    elif abs(angle) < 1 and UpDown == 1:
+        xgrab = round(template_center_x - grabDist/r)
+        ygrab = round(template_center_y - grabDist*template_slope/r)
     else:
-        xgrab = round(template_center_x - grabDist/r)
-        ygrab = round(template_center_y - grabDist*template_slope/r)
-        
+        xgrab = round(template_center_x + grabDist/r)
+        ygrab = round(template_center_y + grabDist*template_slope/r)
     grabPoint = np.array([xgrab, ygrab])
     grabPointAngle = math.radians(angle)
     if UpDown:
@@ -408,7 +414,7 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30, grab
     
     if houghLocation.size < 11:
         print("One or no lines found!")
-        return None, 0
+        return None, 0, 0, 0
 
     slopes = np.array([houghLocation[0], houghLocation[6]])
     if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:

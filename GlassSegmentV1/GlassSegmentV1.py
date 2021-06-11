@@ -65,7 +65,7 @@ while True:
             #! Fix program to work with one line and thus 8 template matchings
             #! Speed up robot
             #! Test special cases
-            img = cv2.imread('./final_images/final_setup_11.png')
+            img = cv2.imread('./final_images/final_setup_2.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
