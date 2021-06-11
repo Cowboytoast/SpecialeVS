@@ -62,10 +62,12 @@ while True:
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
             #! TODO SOON:
-            #! Fix program to work with one line and thus 8 template matchings
             #! Speed up robot
             #! Test special cases
-            img = cv2.imread('./final_images/final_setup_0.png')
+            
+            #! Error on 0: Short line
+            #! Error on 12: One line too long
+            img = cv2.imread('./final_images/final_setup_10.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -112,14 +114,13 @@ while True:
             cv2.waitKey(5)
             houghLocation = ls.HoughLinesSearch(img_binary)
             statemsg = False
+            #! DELETE BELOW, ONLY FOR PIC 0 TESTING
+            #houghLocation = np.array([[50, 277, 244, 278, 117, 115]])
             if houghLocation is not None and houghLocation.size > 0:
                 houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines
                 houghLocation = ls.LineExtend(img_binary, houghLocation)
                 houghLocation = np.ndarray.flatten(houghLocation)
-                if houghLocation.size > 6:
-                    final, UpDown, grabPoint, grabAngle = ls.templatematch(img_binary, template, houghLocation)
-                else:
-                    final, UpDown, grabPoint, grabAngle = ls.templatematchOneLine(img_binary, template, houghLocation)
+                final, UpDown, grabPoint, grabAngle = ls.templatematch(img_binary, template, houghLocation)
                 if final is not None:
                     statemsg = False
                     k = -1

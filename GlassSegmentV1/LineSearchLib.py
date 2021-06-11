@@ -516,114 +516,130 @@ def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 60):
     
     return grabPoint, grabPointAngle
 
-def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30, grabDist = 60):
+def templatematch(img, template, houghLocation, h_steps = 15, w_steps = 15):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
-
-    slopes = np.array([houghLocation[0], houghLocation[6]])
-    if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
-        pointsy = min((houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2)
-        pointidx = np.argmin(np.array([(houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2]))
-    else:
-        pointsy = (houghLocation[2] + houghLocation[8]) / 2
-        pointidx = 0
-    
-    pointsx = np.array([(houghLocation[1] + houghLocation[7]) / 2, (houghLocation[3] + houghLocation[9]) / 2])
-    pointsx = pointsx[pointidx]
-
-    max_idx = np.empty([1, 2])
-    slope_avg = np.average(slopes)
-    angle_offset = math.degrees(math.atan(slope_avg))
-    angle_offset = 90 - abs(angle_offset)
-
-    if angle_offset < 0:
-        angle_offset += 45
-    if slope_avg > 0:
-        angle_offset = -angle_offset
-
-    template_rot = imutils.rotate_bound(template, angle_offset)
-
-    Yshifted = pointsy - template_rot.shape[0] / 2
-    Xshifted = pointsx - template_rot.shape[1] / 2
-
-    # Do & operation in increments, that is moving the template image a few pixels right/down
-    # for each iteration and store most pixel hits
     maxval = 0
-    UpDown = 1 # 1 for up, 0 for down
-    max_idx = np.zeros((2,1))
-    for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
-        for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
-            if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
-                break
-            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
-            matches = np.count_nonzero(matches)
-            if matches >= maxval:
-                maxval = matches
-                max_idx = [h, w]
-            #rotatingim = np.copy(img)
-            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            #cv2.imshow('Rotating progress', rotatingim)
-            #cv2.waitKey(5)
-            
-    template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
-    for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
-        for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
-            if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
-                break
-            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
-            matches = np.count_nonzero(matches)
-            if matches >= maxval:
-                maxval = matches
-                max_idx = [h, w]
-                UpDown = 0
-            #rotatingim = np.copy(img)
-            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            #cv2.imshow('Rotating progress', rotatingim)
-            #cv2.waitKey(5)
-    template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
+    threshold = 150
+    iterations = 1
+    while iterations < 5 or maxval < threshold:
+        h_steps = round(h_steps * iterations / 2)
+        w_steps = round(w_steps * iterations / 2)
+        if houghLocation.size == 12:
+            slopes = np.array([houghLocation[0], houghLocation[6]])
+            if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
+                pointsy = min((houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2)
+                pointidx = np.argmin(np.array([(houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2]))
+            else:
+                pointsy = (houghLocation[2] + houghLocation[8]) / 2
+                pointidx = 0
+            pointsx = np.array([(houghLocation[1] + houghLocation[7]) / 2, (houghLocation[3] + houghLocation[9]) / 2])
+            pointsx = pointsx[pointidx]
+            slope_avg = np.average(slopes)
+        else:
+            h_steps = round(h_steps * 1.5)
+            w_steps = round(w_steps * 1.5)
+            slope_avg = houghLocation[0]
+            pointsy = houghLocation[2]
+            pointsx = houghLocation[1]
 
-    if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
-        pointsy = max((houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2)
-        pointidx = np.argmax(np.array([(houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2]))
-    else:
-        pointsy = (houghLocation[2] + houghLocation[8]) / 2
-        pointidx = 1
+        max_idx = np.empty([1, 2])
+        angle_offset = math.degrees(math.atan(slope_avg))
+        angle_offset = 90 - abs(angle_offset)
 
-    pointsx = np.array([(houghLocation[1] + houghLocation[7]) / 2, (houghLocation[3] + houghLocation[9]) / 2])
-    pointsx = pointsx[pointidx]
-    Yshifted = pointsy - template_rot.shape[0] / 2
-    Xshifted = pointsx - template_rot.shape[1] / 2
+        if angle_offset < 0:
+            angle_offset += 45
+        if slope_avg > 0:
+            angle_offset = -angle_offset
 
-    for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
-        for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
-            if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w > (img.shape[1] + template_rot.shape[1]):
-                break
-            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
-            matches = np.count_nonzero(matches)
-            if matches >= maxval:
-                UpDown = 1 # 1 for up, 0 for down
-                maxval = matches
-                max_idx = [h, w]
-            #rotatingim = np.copy(img)
-            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            #cv2.imshow('Rotating progress', rotatingim)
-            #cv2.waitKey(5)
+        template_rot = imutils.rotate_bound(template, angle_offset)
 
-    template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
+        Yshifted = pointsy - template_rot.shape[0] / 2
+        Xshifted = pointsx - template_rot.shape[1] / 2
 
-    for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
-        for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
-            if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
-                break
-            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
-            matches = np.count_nonzero(matches)
-            if matches >= maxval:
-                UpDown = 0 # 1 for up, 0 for down
-                maxval = matches
-                max_idx = [h, w]
-            #rotatingim = np.copy(img)
-            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            #cv2.imshow('Rotating progress', rotatingim)
-            #cv2.waitKey(5)
+        # Do & operation in increments, that is moving the template image a few pixels right/down
+        # for each iteration and store most pixel hits
+        UpDown = 1 # 1 for up, 0 for down
+        max_idx = np.zeros((2,1))
+        for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
+            for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
+                if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
+                    break
+                matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+                matches = np.count_nonzero(matches)
+                if matches >= maxval:
+                    maxval = matches
+                    max_idx = [h, w]
+                #rotatingim = np.copy(img)
+                #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+                #cv2.imshow('Rotating progress', rotatingim)
+                #cv2.waitKey(5)
+
+        template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
+        for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
+            for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
+                if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
+                    break
+                matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+                matches = np.count_nonzero(matches)
+                if matches >= maxval:
+                    maxval = matches
+                    max_idx = [h, w]
+                    UpDown = 0
+                #rotatingim = np.copy(img)
+                #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+                #cv2.imshow('Rotating progress', rotatingim)
+                #cv2.waitKey(5)
+        template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
+
+        if houghLocation.size == 12:
+            if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
+                pointsy = max((houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2)
+                pointidx = np.argmax(np.array([(houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2]))
+            else:
+                pointsy = (houghLocation[2] + houghLocation[8]) / 2
+                pointidx = 1
+            pointsx = np.array([(houghLocation[1] + houghLocation[7]) / 2, (houghLocation[3] + houghLocation[9]) / 2])
+            pointsx = pointsx[pointidx]
+        else:
+            pointsy = houghLocation[4]
+            pointsx = houghLocation[3]
+
+        Yshifted = pointsy - template_rot.shape[0] / 2
+        Xshifted = pointsx - template_rot.shape[1] / 2
+
+        for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
+            for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
+                if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w > (img.shape[1] + template_rot.shape[1]):
+                    break
+                matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+                matches = np.count_nonzero(matches)
+                if matches >= maxval:
+                    UpDown = 1 # 1 for up, 0 for down
+                    maxval = matches
+                    max_idx = [h, w]
+                #rotatingim = np.copy(img)
+                #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+                #cv2.imshow('Rotating progress', rotatingim)
+                #cv2.waitKey(5)
+
+        template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
+
+        for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
+            for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
+                if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
+                    break
+                matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
+                matches = np.count_nonzero(matches)
+                if matches >= maxval:
+                    UpDown = 0 # 1 for up, 0 for down
+                    maxval = matches
+                    max_idx = [h, w]
+                #rotatingim = np.copy(img)
+                #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
+                #cv2.imshow('Rotating progress', rotatingim)
+                #cv2.waitKey(5)
+
+        iterations += 1
 
     max_h = int(max_idx[0])
     max_w = int(max_idx[1])
@@ -648,132 +664,6 @@ def templatematch(img, template, houghLocation, h_steps = 30, w_steps = 30, grab
         cv2.putText(final, 'Orientation: Down', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
     cv2.circle(final, (grabPoint[0], grabPoint[1]), 3, color = (0,0,255), thickness=2)
     return final, UpDown, grabPoint, grabAngle
-
-def templatematchOneLine(img, template, houghLocation, h_steps = 30, w_steps = 30, grabDist = 60):
-    # * line = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1
-    if houghLocation.size < 11:
-        houghLocation = np.append(houghLocation, houghLocation, axis=0)
-
-    slope = houghLocation[0]
-    pointsy = houghLocation[2]
-    pointsx = houghLocation[1]
-
-    max_idx = np.empty([1, 2])
-    angle_offset = math.degrees(math.atan(slope))
-    angle_offset = 90 - abs(angle_offset)
-
-    if angle_offset < 0:
-        angle_offset += 45
-    if slope > 0:
-        angle_offset = -angle_offset
-
-    template_rot = imutils.rotate_bound(template, angle_offset)
-
-    Yshifted = pointsy - template_rot.shape[0]
-    Xshifted = pointsx - template_rot.shape[1]
-
-    maxval = 0
-    UpDown = 1 # 1 for up, 0 for down
-    max_idx = np.zeros((2,1))
-    for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
-        for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
-            if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
-                break
-            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
-            matches = np.count_nonzero(matches)
-            if matches >= maxval:
-                maxval = matches
-                max_idx = [h, w]
-            rotatingim = np.copy(img)
-            rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            cv2.imshow('Rotating progress', rotatingim)
-            cv2.waitKey(5)
-            
-    template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
-    for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
-        for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
-            if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
-                break
-            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
-            matches = np.count_nonzero(matches)
-            if matches >= maxval:
-                maxval = matches
-                max_idx = [h, w]
-                UpDown = 0
-            #rotatingim = np.copy(img)
-            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            #cv2.imshow('Rotating progress', rotatingim)
-            #cv2.waitKey(5)
-    template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
-
-    if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
-        pointsy = max((houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2)
-        pointidx = np.argmax(np.array([(houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2]))
-    else:
-        pointsy = (houghLocation[2] + houghLocation[8]) / 2
-        pointidx = 1
-
-    pointsx = np.array([(houghLocation[1] + houghLocation[7]) / 2, (houghLocation[3] + houghLocation[9]) / 2])
-    pointsx = pointsx[pointidx]
-    Yshifted = pointsy - template_rot.shape[0] / 2
-    Xshifted = pointsx - template_rot.shape[1] / 2
-
-    for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
-        for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
-            if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w > (img.shape[1] + template_rot.shape[1]):
-                break
-            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
-            matches = np.count_nonzero(matches)
-            if matches >= maxval:
-                UpDown = 1 # 1 for up, 0 for down
-                maxval = matches
-                max_idx = [h, w]
-            #rotatingim = np.copy(img)
-            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            #cv2.imshow('Rotating progress', rotatingim)
-            #cv2.waitKey(5)
-
-    template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
-
-    for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
-        for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
-            if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
-                break
-            matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
-            matches = np.count_nonzero(matches)
-            if matches >= maxval:
-                UpDown = 0 # 1 for up, 0 for down
-                maxval = matches
-                max_idx = [h, w]
-            #rotatingim = np.copy(img)
-            #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-            #cv2.imshow('Rotating progress', rotatingim)
-            #cv2.waitKey(5)
-
-    max_h = int(max_idx[0])
-    max_w = int(max_idx[1])
-    grabPoint, grabAngle = grabberPoint([max_w, max_h, template_rot.shape[1], template_rot.shape[0]], UpDown, slope_avg, angle_offset)
-
-    # * OVERLAY STUFF***************************************
-    final = np.copy(img)
-    final = 255 - final
-    final = cv2.cvtColor(final,cv2.COLOR_GRAY2RGB)
-
-    TipOutline = cv2.imread('./images/VialTopRed.png')
-    # * To overlay template use code below
-    if UpDown == 1:
-        Overlay = imutils.rotate_bound(TipOutline, angle_offset)
-        final[max_h : max_h + Overlay.shape[0],
-        max_w : max_w + Overlay.shape[1]] = Overlay
-        cv2.putText(final, 'Orientation: Up', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
-    else:
-        Overlay = imutils.rotate_bound(TipOutline, angle_offset + 180)
-        final[max_h : max_h + Overlay.shape[0],
-        max_w : max_w + Overlay.shape[1]] = Overlay
-        cv2.putText(final, 'Orientation: Down', (0,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
-    cv2.circle(final, (grabPoint[0], grabPoint[1]), 3, color = (0,0,255), thickness=2)
-    return final, UpDown, grabPoint, grabAngle
-
 
 def removeExtras(houghLocation):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
