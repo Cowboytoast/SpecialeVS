@@ -522,11 +522,11 @@ def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 60):
 def templatematch(img, template, houghLocation, h_steps = 15, w_steps = 15):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
     maxval = 0
-    threshold = 150
+    threshold = 140
     iterations = 1
     while iterations < 5 and maxval < threshold:
-        h_steps = round(h_steps * iterations / 2)
-        w_steps = round(w_steps * iterations / 2)
+        h_steps = round((h_steps * iterations) / 2)
+        w_steps = round((w_steps * iterations) / 2)
         if houghLocation.size == 12:
             slopes = np.array([houghLocation[0], houghLocation[6]])
             if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:

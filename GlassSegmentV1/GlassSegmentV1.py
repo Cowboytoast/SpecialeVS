@@ -61,12 +61,8 @@ while True:
         cv2.namedWindow("Image")
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
-            #! TODO SOON:
-            #! Speed up robot
-            #! Test special cases
-            
-            #! Error on 0: Short line
-            #! Error on 12: One line too long
+            # TODO Speed up robot
+            # TODO Test special cases
             img = cv2.imread('./final_images/final_setup_0.png')
             offlineFlag = True
             cam.release()
@@ -117,8 +113,8 @@ while True:
             #! DELETE BELOW, ONLY FOR PIC 0 TESTING
             #houghLocation = np.array([[50, 277, 244, 278, 117, 115]])
             if houghLocation is not None and houghLocation.size > 0:
-                houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines
                 houghLocation = ls.LineExtend(img_binary, houghLocation)
+                houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines
                 houghLocation = np.ndarray.flatten(houghLocation)
                 final, UpDown, grabPoint, grabAngle = ls.templatematch(img_binary, template, houghLocation)
                 if final is not None:
