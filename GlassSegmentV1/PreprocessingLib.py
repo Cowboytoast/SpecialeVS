@@ -3,7 +3,7 @@ import numpy as np
 import CalibrationLib as cb
 from skimage.util import img_as_ubyte
 
-def PrepImg(img):
+def PrepImg(img, corners):
     # * Chain should be:
     # * Crop -> Resize to (H,W = 403, 550) -> Cvt to gray -> ...
     # * Hist. stretch -> Blur (rad. = (3,3), SigmaX = 7) -> ...
@@ -11,7 +11,8 @@ def PrepImg(img):
     # * Laplacian edge (delta = 5) -> Cvt. to UByte -> ...
     # * Threshold @ 35
     #img_cropped = cb.markerCrop(img, corners)
-    img_cropped = img[155:550, 304:902]
+    #img_cropped = img[155:550, 304:902]
+    img_cropped = img[corners[3, 1]:corners[1, 1], corners[3, 0]:corners[2, 0]]
     cv2.imshow("Cropped image", img_cropped)
     cv2.waitKey(5)
     img_screensized = ResizeToFit(img_cropped, H= 403, W = 550)

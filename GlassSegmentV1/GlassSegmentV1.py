@@ -100,18 +100,16 @@ while True:
                 print("#############################################")
                 statemsg = False
 
-        elif k != -1:
+        elif k != -1 and corners is not None:
             cv2.imwrite('unproc.png', img)
             start_time = time.time()
             edges_hough = None
-            img_binary = prep.PrepImg(img)
+            img_binary = prep.PrepImg(img, corners)
             cv2.imwrite('procced.png', img_binary)
             cv2.imshow("Binary image", img_binary)
             cv2.waitKey(5)
             houghLocation = ls.HoughLinesSearch(img_binary)
             statemsg = False
-            #! DELETE BELOW, ONLY FOR PIC 0 TESTING
-            #houghLocation = np.array([[50, 277, 244, 278, 117, 115]])
             if houghLocation is not None and houghLocation.size > 0:
                 houghLocation = ls.LineExtend(img_binary, houghLocation)
                 houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines
@@ -120,11 +118,6 @@ while True:
                 if final is not None:
                     statemsg = False
                     k = -1
-                    #grabPoints, grabAngle = ls.grabberPoint(houghLocation, UpDown)
-                    grabPoints = np.around(grabPoint)
-                    grabPoints = grabPoint.astype(int)
-                    #cv2.circle(final, (grabPoints[0], grabPoints[1]), 3, color = (0,255,0), thickness=2)
-                    #cv2.circle(final, (grabPoints[2], grabPoints[3]), 3, color = (0,255,0), thickness=2)
                     print("Processing time: %s s" % (time.time() - start_time))
                     print("#############################################")
                     cv2.imshow('Detection', final)

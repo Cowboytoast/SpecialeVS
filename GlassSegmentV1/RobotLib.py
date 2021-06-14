@@ -51,8 +51,8 @@ def robotInit():
     printflag = False
     extractCounter = 0
     #! Lumie box points
-    robotfunc.transform_init(p0i = [-366.26, 162.16, 892.32],pxi = [-385, -91.7, 895.7], pyi = [-191.75, 148.97, 893.57])
-    robot.transform_init([-366.26, 162.16, 892.32], [-385, -91.7, 895.7], [-191.75, 148.97, 893.57])
+    robotfunc.transform_init(p0i = [-383.45, 171.83, 893.33],pxi = [-404.21, -100.2, 893.19], pyi = [-191.8, 159, 896.35])
+    robot.transform_init([-383.45, 171.83, 893.33], [-404.21, -100.2, 893.19], [-191.8, 159, 896.35])
 
     handOffPos = handOffPosLOT()
     #s.close()

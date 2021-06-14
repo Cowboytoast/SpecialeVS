@@ -12,21 +12,39 @@ def markerCalib(img):
     markers,ids,reject = cv2.aruco.detectMarkers(img,dict,parameters=arucoParams)
     imgMarkers = cv2.aruco.drawDetectedMarkers(img.copy(),markers,ids)
     markers = np.array(markers, dtype = np.int32)
-    corners = np.empty([4,1,2], dtype = np.int32)
+    corners_4x4 = np.empty([4,1,2], dtype = np.int32)
+    corners_avg = np.empty([4,2], dtype = np.int32)
     if len(ids) < 4:
         return None
-    for cnt in range(0,4):
-        ID = ids[cnt] - 1
-        if ID == 0:
-            corners[0] = markers[0, 0, 0, :]
-        if ID == 1:
-            corners[1] = markers[1, 0, 1, :]
-        if ID == 2:
-            corners[2] = markers[2, 0, 2, :]
-        if ID == 3:
-            corners[3] = markers[3, 0, 3, :]
+    for cnt in range(0, 4):
+            #corners_4x4[0] = markers[0, 0, 2, :]
+        if cnt == 0:
+            corners_avg[1, 0] = round(markers[0, 0, 0, 0] + markers[0, 0, 1, 0] + 
+                            markers[0, 0, 2, 0] + markers[0, 0, 3, 0]) / 4 # x avg
+            corners_avg[1, 1] = round(markers[0, 0, 0, 1] + markers[0, 0, 1, 1] + 
+                            markers[0, 0, 2, 1] + markers[0, 0, 3, 1]) / 4 # y avg
+        if cnt == 1:
+            #corners_4x4[1] = markers[1, 0, 3, :]
+            corners_avg[2, 0] = round(markers[1, 0, 0, 0] + markers[1, 0, 1, 0] + 
+                                markers[1, 0, 2, 0] + markers[1, 0, 3, 0]) / 4
+            corners_avg[2, 1] = round(markers[1, 0, 0, 1] + markers[1, 0, 1, 1] + 
+                                markers[1, 0, 2, 1] + markers[1, 0, 3, 1]) / 4
+        if cnt == 2:
+            #corners_4x4[2] = markers[2, 0, 0, :]
+            corners_avg[3, 0] = round(markers[2, 0, 0, 0] + markers[2, 0, 1, 0] + 
+                                markers[2, 0, 2, 0] + markers[2, 0, 3, 0]) / 4
+            corners_avg[3, 1] = round(markers[2, 0, 0, 1] + markers[2, 0, 1, 1] + 
+                                markers[2, 0, 2, 1] + markers[2, 0, 3, 1]) / 4
+        if cnt == 3:
+            #corners_4x4[3] = markers[3, 0, 1, :]
+            corners_avg[0, 0] = round(markers[3, 0, 0, 0] + markers[3, 0, 1, 0] + 
+                                markers[3, 0, 2, 0] + markers[3, 0, 3, 0]) / 4
+            corners_avg[0, 1] = round(markers[3, 0, 0, 1] + markers[3, 0, 1, 1] + 
+                                markers[3, 0, 2, 1] + markers[3, 0, 3, 1]) / 4
 
-    return corners
+    #corners_avg = corners_avg[sort, :]
+
+    return corners_avg
 
 def markerCrop(img,corners):
     #https://jdhao.github.io/2019/02/23/crop_rotated_rectangle_opencv/

@@ -623,8 +623,8 @@ def removeExtras(houghLocation):
     return tmp_lines
 
 def pixelstocm(pickuppoint, imdim):
-    phys_x = 250 #mm
-    phys_y = 174 #mm
+    phys_x = 267 #mm
+    phys_y = 190 #mm
     imdim_y = imdim[0]
     imdim_x = imdim[1]
 
