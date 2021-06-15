@@ -5,6 +5,7 @@ import math
 sys.path.append("./images")
 from cv2 import aruco
 
+
 import LineSearchLib as ls
 import PreprocessingLib as prep
 import RobotLib as rl
@@ -64,8 +65,8 @@ while True:
         if not ret or img.shape != (720, 1280, 3):
             # TODO Speed up robot
             # TODO Test special cases
-            img = cv2.imread('./final_images/final_setup_0.png')
-            #img = cv2.imread('./tmp/im1.png')
+            img = cv2.imread('./final_images/final_setup_4.png')
+            #img = cv2.imread('./tmp/im4.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")

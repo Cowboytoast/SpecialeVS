@@ -322,6 +322,18 @@ def HoughLinesSearch(img, houghLength=40, houghDist=5):
 
     #If-statement drawing lines on the copy, if any lines are found.
     if linesP is not None:
+        index = 0
+        idx = []
+        for cnt in range(0, len(linesP)):
+            p1 = linesP[cnt,0,0], linesP[cnt,0,1] #x, y start
+            p2 = linesP[cnt,0,2], linesP[cnt,0,3] #x, y end
+            length = math.hypot(p1[0] - p2[0], p1[1] - p2[1])
+            if length > 140:
+                idx.append(index)
+            index+=1
+        linesP = np.delete(linesP, idx, axis=0)
+
+
         sortedLines,is_nan = SortLines(linesP)
         LineGrouping = LinesGrouping(sortedLines)
         glassSides = LineMerge(LineGrouping,is_nan)

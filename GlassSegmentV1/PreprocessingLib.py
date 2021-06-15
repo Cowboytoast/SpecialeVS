@@ -10,31 +10,17 @@ def PrepImg(img, corners):
     # * Unsharp mask (Size (3,3), amount 1, thresh. .131) -> ...
     # * Laplacian edge (delta = 5) -> Cvt. to UByte -> ...
     # * Threshold @ 35
-    #img_cropped = cb.markerCrop(img, corners)
     img_cropped = img[155:550, 304:902]
-    #img_cropped = img[corners[0, 1]:corners[2, 1], corners[0, 0]:corners[1, 0]]
-    #img_cropped = img
-    #!cv2.imshow("Cropped image", img_cropped)
+    #img_cropped = img[corners[0, 1] + 35:corners[2, 1] - 20, corners[0, 0] + 28:corners[1, 0] - 20]
+    cv2.imshow("Cropped image", img_cropped)
     cv2.waitKey(5)
     img_screensized = ResizeToFit(img_cropped, H= 403, W = 550)
-    cv2.imwrite("Test1.png", img_screensized)
-    cv2.waitKey(10)
     img_gray = cv2.cvtColor(img_screensized, cv2.COLOR_BGR2GRAY)
-    img_stretched = cv2.equalizeHist(img_gray)
-    #cv2.imshow("eqhist", img_stretched)
-    #cv2.waitKey(0)
-    img_blur = cv2.GaussianBlur(img_stretched, (3,3), 7)
-    #cv2.imshow("blur", img_blur)
-    #cv2.waitKey(0)
-    img_sharpen = unsharp_mask(img_blur, kernel_size = (5,5), amount = 1, threshold = 0.131)
-    #cv2.imshow("sharpen", img_sharpen)
-    #cv2.waitKey(0)
+    img_blur = cv2.GaussianBlur(img_gray, (3,3), 7)
+    img_sharpen = unsharp_mask(img_blur, kernel_size = (3,3), amount = 1, threshold = 0.131)
     img_edges = cv2.Laplacian(img_sharpen, ddepth = cv2.CV_8U, delta = 5)
     img_edges = img_as_ubyte(img_edges)
-    #cv2.imwrite("testsharpen.png", img_sharpen)
-    #cv2.imshow("edge", img_edges)
-    #cv2.waitKey(0)
-    img_binary = cv2.threshold(img_edges, 30, maxval = 255, type = cv2.THRESH_BINARY)
+    img_binary = cv2.threshold(img_edges, 12, maxval = 255, type = cv2.THRESH_BINARY)
     img_binary = img_binary[1]
 
     return img_binary
