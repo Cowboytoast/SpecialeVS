@@ -42,25 +42,64 @@ def LinesGrouping(sortedLines):
     range_upper = 0
     k = 0
     glass = np.zeros([1200, 5])
+    centerLines = np.zeros([100,5])
+    edgeLines = np.zeros([100,5])
     sortedLinesArray = np.array(sortedLines)
+    xMin = 125
+    xMax = 325
+    yMin = 102
+    yMax = 302
+    j = 0
+    l = 0
     np.set_printoptions(precision=6,suppress=True)
     
-    # for-loop to determine the range of allowed difference in slope            
     for i in range(0,len(sortedLinesArray)):
-        if value is None:
-            value=sortedLinesArray[0,0]
-            range_upper=value+angleTolerance
-        elif range_upper < sortedLinesArray[i,0]:
-            break
-        glass[k, 0:5] = sortedLinesArray[i, 0:5]
-        k += 1
-    lineGroup=glass
+        if sortedLinesArray[i,1] > xMin and sortedLinesArray[i,1] < xMax and sortedLinesArray[i,2] > yMin and sortedLinesArray[i,2] < yMax:
+            if sortedLinesArray[i,3] > xMin and sortedLinesArray[i,3] < xMax and sortedLinesArray[i,4] > yMin and sortedLinesArray[i,4] < yMax:
+                centerLines[j,:] = sortedLinesArray[i,:]
+                j += 1
+        else:
+            edgeLines[l,:] = sortedLinesArray[i,:]
+            l += 1
     
-    # deletion of zero rows
-    for i in range(len(lineGroup)-1,0,-1):
-        if ((lineGroup[i,1] == 0) and (lineGroup[i,2] == 0) and (lineGroup[i,3] == 0) and (lineGroup[i,4] == 0)):
-            lineGroup = np.delete(lineGroup, (i), axis=0)
-    return lineGroup
+    centerLines = centerLines[~np.all(centerLines == 0, axis=1)]
+    if centerLines is not None:
+    # for-loop to determine the range of allowed difference in slope            
+        for i in range(0,len(sortedLinesArray)):
+            if value is None:
+                value=centerLines[0,0]
+                range_upper=value+angleTolerance
+            elif range_upper < centerLines[i,0]:
+                break
+            glass[k,:] = centerLines[i,:]
+            k += 1
+        lineGroup=glass
+    
+    elif edgeLines is not None:
+        # for-loop to determine the range of allowed difference in slope            
+        for i in range(0,len(sortedLinesArray)):
+            if value is None:
+                value=edgeLines[0,0]
+                range_upper=value+angleTolerance
+            elif range_upper < edgeLines[i,0]:
+                break
+            glass[k,:] = edgeLines[i,:]
+            k += 1
+        lineGroup=glass
+        
+    else:
+        # for-loop to determine the range of allowed difference in slope            
+        for i in range(0,len(sortedLinesArray)):
+            if value is None:
+                value=sortedLinesArray[0,0]
+                range_upper=value+angleTolerance
+            elif range_upper < sortedLinesArray[i,0]:
+                break
+            glass[k,:] = sortedLinesArray[i,:]
+            k += 1
+        lineGroup=glass
+    
+    return lineGroup[~np.all(lineGroup == 0, axis=1)]
 
 def LineMerge(glassLines,is_nan=False):
     # * function that merge the lines of a side to only one line
