@@ -17,7 +17,7 @@ def markerCalib(img):
     if len(ids) < 4:
         return None
     
-    rowNumber = np.zeros([4])
+    rowNumber = np.zeros([4], dtype = np.int32)
     for i in range(0,len(ids)):
         if ids[i] == 1:
             rowNumber[0] = i
@@ -32,27 +32,28 @@ def markerCalib(img):
     for cnt in range(0, 4):
             #corners_4x4[0] = markers[0, 0, 2, :]
         if cnt == 0:
-            corners_avg[1, 0] = round(markers[rowNumber[0], 0, 0, 0] + markers[rowNumber[0], 0, 1, 0] + 
+            corners_avg[0, 0] = round(markers[rowNumber[0], 0, 0, 0] + markers[rowNumber[0], 0, 1, 0] + 
                             markers[rowNumber[0], 0, 2, 0] + markers[rowNumber[0], 0, 3, 0]) / 4 # x avg
-            corners_avg[1, 1] = round(markers[rowNumber[0], 0, 0, 1] + markers[rowNumber[0], 0, 1, 1] + 
+            corners_avg[0, 1] = round(markers[rowNumber[0], 0, 0, 1] + markers[rowNumber[0], 0, 1, 1] + 
                             markers[rowNumber[0], 0, 2, 1] + markers[rowNumber[0], 0, 3, 1]) / 4 # y avg
+        
         if cnt == 1:
             #corners_4x4[1] = markers[1, 0, 3, :]
-            corners_avg[2, 0] = round(markers[rowNumber[1], 0, 0, 0] + markers[rowNumber[1], 0, 1, 0] + 
+            corners_avg[1, 0] = round(markers[rowNumber[1], 0, 0, 0] + markers[rowNumber[1], 0, 1, 0] + 
                                 markers[rowNumber[1], 0, 2, 0] + markers[rowNumber[1], 0, 3, 0]) / 4
-            corners_avg[2, 1] = round(markers[rowNumber[1], 0, 0, 1] + markers[rowNumber[1], 0, 1, 1] + 
+            corners_avg[1, 1] = round(markers[rowNumber[1], 0, 0, 1] + markers[rowNumber[1], 0, 1, 1] + 
                                 markers[rowNumber[1], 0, 2, 1] + markers[rowNumber[1], 0, 3, 1]) / 4
         if cnt == 2:
             #corners_4x4[2] = markers[2, 0, 0, :]
-            corners_avg[3, 0] = round(markers[rowNumber[2], 0, 0, 0] + markers[rowNumber[2], 0, 1, 0] + 
+            corners_avg[2, 0] = round(markers[rowNumber[2], 0, 0, 0] + markers[rowNumber[2], 0, 1, 0] + 
                                 markers[rowNumber[2], 0, 2, 0] + markers[rowNumber[2], 0, 3, 0]) / 4
-            corners_avg[3, 1] = round(markers[rowNumber[2], 0, 0, 1] + markers[rowNumber[2], 0, 1, 1] + 
+            corners_avg[2, 1] = round(markers[rowNumber[2], 0, 0, 1] + markers[rowNumber[2], 0, 1, 1] + 
                                 markers[rowNumber[2], 0, 2, 1] + markers[rowNumber[2], 0, 3, 1]) / 4
         if cnt == 3:
             #corners_4x4[3] = markers[3, 0, 1, :]
-            corners_avg[0, 0] = round(markers[rowNumber[3], 0, 0, 0] + markers[rowNumber[3], 0, 1, 0] + 
+            corners_avg[3, 0] = round(markers[rowNumber[3], 0, 0, 0] + markers[rowNumber[3], 0, 1, 0] + 
                                 markers[rowNumber[3], 0, 2, 0] + markers[rowNumber[3], 0, 3, 0]) / 4
-            corners_avg[0, 1] = round(markers[rowNumber[3], 0, 0, 1] + markers[rowNumber[3], 0, 1, 1] + 
+            corners_avg[3, 1] = round(markers[rowNumber[3], 0, 0, 1] + markers[rowNumber[3], 0, 1, 1] + 
                                 markers[rowNumber[3], 0, 2, 1] + markers[rowNumber[3], 0, 3, 1]) / 4
 
     #corners_avg = corners_avg[sort, :]

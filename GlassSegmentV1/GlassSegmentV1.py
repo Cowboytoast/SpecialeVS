@@ -48,6 +48,7 @@ def exitFunc():
     exit()
 
 #**********************Main loop********************************
+corners = 0
 while True:
     if state == "init":
         angleTolerance = 0.3
@@ -64,6 +65,7 @@ while True:
             # TODO Speed up robot
             # TODO Test special cases
             img = cv2.imread('./final_images/final_setup_0.png')
+            #img = cv2.imread('./tmp/im1.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -78,6 +80,7 @@ while True:
     if state == "sourceimg":
         if statemsg == False:
             print("Press c to calibrate")
+            print("Press s to go to start position")
             print("Press other to process image")
             print("Press ESC to exit")
             print("#############################################")
@@ -88,7 +91,8 @@ while True:
         k = cv2.waitKey(5)
         if k%256 == 27:
             exitFunc()
-        if k%256 == 99:
+        elif k%256 == 99:
+            k = -1
             corners = cb.markerCalib(img)
             if corners is not None:
                 print("Calibration done")
@@ -99,7 +103,13 @@ while True:
                 print("Not enough markers, try again")
                 print("#############################################")
                 statemsg = False
-
+        elif k%256 == 115:
+            print("Going to start pos.")
+            print("#############################################")
+            statemsg = False
+            rl.waitPos()
+            rl.startPos()
+        
         elif k != -1 and corners is not None:
             cv2.imwrite('unproc.png', img)
             start_time = time.time()

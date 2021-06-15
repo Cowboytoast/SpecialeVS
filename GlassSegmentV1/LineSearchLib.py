@@ -410,7 +410,7 @@ def LineExtend(img, glassSides,lineLength=110):
     cv2.waitKey(10)
     return glassSides
 
-def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 60):
+def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 53):
 
     #Solution from https://math.stackexchange.com/questions/656500/given-a-point-slope-and-a-distance-along-that-slope-easily-find-a-second-p
     #* Format of idxs: [max_w, max_h, template shape x, template shape y]
@@ -443,7 +443,7 @@ def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 60):
         xgrab = round(template_center_x + grabDist/r)
         ygrab = round(template_center_y + grabDist*template_slope/r)
     grabPoint = np.array([xgrab, ygrab])
-    grabPointAngle = math.radians(angle)
+    grabPointAngle = math.radians(angle) - math.pi / 2
     if UpDown:
         grabPointAngle += math.pi
     
@@ -542,7 +542,7 @@ def templatematch(img, template, houghLocation, h_steps = 15, w_steps = 15):
 
         for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
             for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
-                if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w > (img.shape[1] + template_rot.shape[1]):
+                if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
                     break
                 matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
                 matches = np.count_nonzero(matches)

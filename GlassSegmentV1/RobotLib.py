@@ -85,12 +85,12 @@ def robotRun(x, y, z = 0, rx = 0, ry = 0, rz = 0):
 
 
 #* Function to move the robot arm from 'waiting' position, to a vial and pick it up. This does not lift it as such, just takes it into the grabber.
-def pickupCommand(x, y, z = -0.02,rx = 0,ry = 0,rz = 0):
+def pickupCommand(x, y, z = -0.014,rx = 0,ry = 0,rz = 0):
     global s
 
     waitPos()
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
-    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.1)' + '\n'
+    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.3)' + '\n'
     s.send(cmdstring.encode())
 
     [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
@@ -102,7 +102,7 @@ def pickupCommand(x, y, z = -0.02,rx = 0,ry = 0,rz = 0):
 
     z = 0.0295
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
-    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.2,0.01)' + '\n'
+    cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.2,0.09)' + '\n'
     s.send(cmdstring.encode())
 
     [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
@@ -127,7 +127,7 @@ def handoffCommand(handoffPos):
     q_w2 = 1.570796
     q_w3 = 1.291163
 
-    cmdstring = 'movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],1.1,0.4)' + '\n'
+    cmdstring = 'movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],1.1,1.3)' + '\n'
     s.send(cmdstring.encode())
     q = get_URdata(True)
     while not(q[0] >= q_b - 0.034 and q[0] <= q_b + 0.034
@@ -141,7 +141,7 @@ def handoffCommand(handoffPos):
     q = handoffPos[:, extractCounter]
     extractCounter += 1
 
-    cmdstring = 'movej(['+str(q[0])+','+str(q[1])+','+str(q[2])+','+str(q[3])+','+str(q[4])+','+str(q[5])+'],1.1,0.6)' + '\n'
+    cmdstring = 'movej(['+str(q[0])+','+str(q[1])+','+str(q[2])+','+str(q[3])+','+str(q[4])+','+str(q[5])+'],1.1,1.3)' + '\n'
     s.send(cmdstring.encode())
     q_robot = get_URdata(True)
     while not(q[0] >= q_robot[0] - 0.034 and q[0] <= q_robot[0] + 0.034
@@ -162,8 +162,8 @@ def waitPos():
     q_e = 2.230737222704673
     q_w1 = -1.658563888663564
     q_w2 = 1.5707963267948988
-    q_w3 = 0
-    cmdstring = 'movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],1.1,0.5)' + '\n'
+    q_w3 = 1.58
+    cmdstring = 'movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],1.1,1.2)' + '\n'
     s.send(cmdstring.encode())
     q = get_URdata(True)
     while not(q[0] >= q_b - 0.034 and q[0] <= q_b + 0.034
@@ -182,7 +182,7 @@ def startPos():
     q_w1 = -1.658563888663564
     q_w2 = 1.5707963267948988
     q_w3 = 0
-    cmdstring = 'movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],1.1,0.5)' + '\n'
+    cmdstring = 'movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],1.1,0.4)' + '\n'
     s.send(cmdstring.encode())
     q = get_URdata(True)
     while not(q[0] >= q_b - 0.034 and q[0] <= q_b + 0.034
