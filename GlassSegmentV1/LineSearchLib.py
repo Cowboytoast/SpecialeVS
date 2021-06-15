@@ -52,20 +52,20 @@ def LinesGrouping(sortedLines):
     j = 0
     l = 0
     np.set_printoptions(precision=6,suppress=True)
-    
+
     for i in range(0,len(sortedLinesArray)):
-        if sortedLinesArray[i,1] > xMin and sortedLinesArray[i,1] < xMax and sortedLinesArray[i,2] > yMin and sortedLinesArray[i,2] < yMax:
-            if sortedLinesArray[i,3] > xMin and sortedLinesArray[i,3] < xMax and sortedLinesArray[i,4] > yMin and sortedLinesArray[i,4] < yMax:
+        if sortedLinesArray[i,1] > xMin and sortedLinesArray[i,1] < xMax and sortedLinesArray[i,2] > yMin and sortedLinesArray[i,2] < yMax and sortedLinesArray[i,3] > xMin and sortedLinesArray[i,3] < xMax and sortedLinesArray[i,4] > yMin and sortedLinesArray[i,4] < yMax:
                 centerLines[j,:] = sortedLinesArray[i,:]
                 j += 1
         else:
             edgeLines[l,:] = sortedLinesArray[i,:]
             l += 1
-    
+
     centerLines = centerLines[~np.all(centerLines == 0, axis=1)]
-    if centerLines is not None:
-    # for-loop to determine the range of allowed difference in slope            
-        for i in range(0,len(sortedLinesArray)):
+    edgeLines = edgeLines[~np.all(edgeLines == 0, axis=1)]
+    if centerLines is not None and len(centerLines) > 0:
+    # for-loop to determine the range of allowed difference in slope
+        for i in range(0,len(centerLines)):
             if value is None:
                 value=centerLines[0,0]
                 range_upper=value+angleTolerance
@@ -77,7 +77,7 @@ def LinesGrouping(sortedLines):
     
     elif edgeLines is not None:
         # for-loop to determine the range of allowed difference in slope            
-        for i in range(0,len(sortedLinesArray)):
+        for i in range(0,len(centerLines)):
             if value is None:
                 value=edgeLines[0,0]
                 range_upper=value+angleTolerance
@@ -346,21 +346,21 @@ def LineMerge(glassLines,is_nan=False):
                     k+=1
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
-def HoughLinesSearch(img, houghLength=40, houghDist=5):
+def HoughLinesSearch(img, houghLength=40, houghDist=10):
     #img has to be the edge detected image.
     #Copy of edge detected image into BGR image for drawing lines.
     houghImage = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
     #Find HoughLines on the image. Default houghLengt = 40, houghDist=10
-    linesP = cv2.HoughLinesP(img, 0.5, np.pi / 225, 50, None, houghLength, houghDist)
-        
-    if linesP is None or len(linesP) < 0:
-        linesP = cv2.HoughLinesP(img, 1, np.pi / 180, 50, None, 30, houghDist)
-    else:
-        pass
-    
+    #linesP = cv2.HoughLinesP(img, 0.5, np.pi / 225, 50, None, houghLength, houghDist)
+    #if linesP is None or len(linesP) < 0:
+    linesP = cv2.HoughLinesP(img, 1, np.pi / 225, 50, None, houghLength, houghDist)
+    #else:
+    #    pass
+
 
     #If-statement drawing lines on the copy, if any lines are found.
     if linesP is not None:
+
         index = 0
         idx = []
         for cnt in range(0, len(linesP)):
@@ -376,7 +376,7 @@ def HoughLinesSearch(img, houghLength=40, houghDist=5):
         sortedLines,is_nan = SortLines(linesP)
         LineGrouping = LinesGrouping(sortedLines)
         glassSides = LineMerge(LineGrouping,is_nan)
-        if glassSides.all() == None:
+        if glassSides.any() == None:
             return None
         b = 255
         g = 0
@@ -500,14 +500,14 @@ def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 53):
     
     return grabPoint, grabPointAngle
 
-def templatematch(img, template, houghLocation, h_steps = 15, w_steps = 15):
+def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
     maxval = 0
-    threshold = 140
+    threshold = 185
     iterations = 1
-    while iterations < 5 and maxval < threshold:
-        h_steps = round((h_steps * iterations) / 2)
-        w_steps = round((w_steps * iterations) / 2)
+    while iterations < 4 and maxval < threshold:
+        h_steps = round((h_steps * iterations))
+        w_steps = round((w_steps * iterations))
         if houghLocation.size == 12:
             slopes = np.array([houghLocation[0], houghLocation[6]])
             if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
@@ -546,7 +546,7 @@ def templatematch(img, template, houghLocation, h_steps = 15, w_steps = 15):
         max_idx = np.zeros((2,1))
         for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
             for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
-                if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
+                if h - template_rot.shape[0] < 0 or h + template_rot.shape[0] > img.shape[0] or w - template_rot.shape[1] < 0 or w + template_rot.shape[1] > img.shape[1]:
                     break
                 matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
                 matches = np.count_nonzero(matches)
@@ -561,7 +561,7 @@ def templatematch(img, template, houghLocation, h_steps = 15, w_steps = 15):
         template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
         for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
             for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
-                if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
+                if h - template_rot.shape[0] < 0 or h + template_rot.shape[0] > img.shape[0] or w - template_rot.shape[1] < 0 or w + template_rot.shape[1] > img.shape[1]:
                     break
                 matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
                 matches = np.count_nonzero(matches)
@@ -593,7 +593,7 @@ def templatematch(img, template, houghLocation, h_steps = 15, w_steps = 15):
 
         for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
             for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
-                if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
+                if h - template_rot.shape[0] < 0 or h + template_rot.shape[0] > img.shape[0] or w - template_rot.shape[1] < 0 or w + template_rot.shape[1] > img.shape[1]:
                     break
                 matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
                 matches = np.count_nonzero(matches)
@@ -610,7 +610,7 @@ def templatematch(img, template, houghLocation, h_steps = 15, w_steps = 15):
 
         for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
             for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
-                if h < 0 or h + template_rot.shape[0] > img.shape[0] or w < 0 or w + template_rot.shape[1] > img.shape[1]:
+                if h - template_rot.shape[0] < 0 or h + template_rot.shape[0] > img.shape[0] or w - template_rot.shape[1] < 0 or w + template_rot.shape[1] > img.shape[1]:
                     break
                 matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
                 matches = np.count_nonzero(matches)

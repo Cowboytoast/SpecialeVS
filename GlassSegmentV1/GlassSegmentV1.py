@@ -63,9 +63,8 @@ while True:
         cv2.namedWindow("Image")
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
-            # TODO Speed up robot
-            # TODO Test special cases
-            img = cv2.imread('./final_images/final_setup_4.png')
+            #! Fault on 2: Line going the wrong way
+            img = cv2.imread('./final_images/final_setup_16.png')
             #img = cv2.imread('./tmp/im4.png')
             offlineFlag = True
             cam.release()

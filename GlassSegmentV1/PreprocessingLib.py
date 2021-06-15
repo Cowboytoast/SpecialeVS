@@ -10,20 +10,21 @@ def PrepImg(img, corners):
     # * Unsharp mask (Size (3,3), amount 1, thresh. .131) -> ...
     # * Laplacian edge (delta = 5) -> Cvt. to UByte -> ...
     # * Threshold @ 35
-    img_cropped = img[155:550, 304:902]
+    img = img[155:550, 304:902]
     #img_cropped = img[corners[0, 1] + 35:corners[2, 1] - 20, corners[0, 0] + 28:corners[1, 0] - 20]
-    cv2.imshow("Cropped image", img_cropped)
+    cv2.imshow("Cropped image", img)
     cv2.waitKey(5)
-    img_screensized = ResizeToFit(img_cropped, H= 403, W = 550)
-    img_gray = cv2.cvtColor(img_screensized, cv2.COLOR_BGR2GRAY)
-    img_blur = cv2.GaussianBlur(img_gray, (3,3), 7)
-    img_sharpen = unsharp_mask(img_blur, kernel_size = (3,3), amount = 1, threshold = 0.131)
-    img_edges = cv2.Laplacian(img_sharpen, ddepth = cv2.CV_8U, delta = 5)
-    img_edges = img_as_ubyte(img_edges)
-    img_binary = cv2.threshold(img_edges, 12, maxval = 255, type = cv2.THRESH_BINARY)
-    img_binary = img_binary[1]
+    img = ResizeToFit(img, H= 403, W = 550)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = cv2.equalizeHist(img)
+    img = cv2.GaussianBlur(img, (3,3), 7)
+    #img = unsharp_mask(img, kernel_size = (3,3), amount = 1, threshold = 0.131)
+    img = cv2.Laplacian(img, ddepth = cv2.CV_8U, delta = 5)
+    img = img_as_ubyte(img)
+    img = cv2.threshold(img, 20, maxval = 255, type = cv2.THRESH_BINARY)
+    img = img[1]
 
-    return img_binary
+    return img
 
 # * Histogram stretching function
 def HistStretch(img):
