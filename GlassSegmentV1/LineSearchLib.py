@@ -60,6 +60,7 @@ def LinesGrouping(sortedLines):
                 j += 1
         else:
             edgeLines[l,:] = sortedLinesArray[i,:]
+            l += 1
     
     centerLines = centerLines[~np.all(centerLines == 0, axis=1)]
     if centerLines is not None:
@@ -70,7 +71,7 @@ def LinesGrouping(sortedLines):
                 range_upper=value+angleTolerance
             elif range_upper < centerLines[i,0]:
                 break
-            glass[k,0:5] = centerLines[i,0:5]
+            glass[k,:] = centerLines[i,:]
             k += 1
         lineGroup=glass
     
@@ -82,7 +83,7 @@ def LinesGrouping(sortedLines):
                 range_upper=value+angleTolerance
             elif range_upper < edgeLines[i,0]:
                 break
-            glass[k,0:5] = edgeLines[i,0:5]
+            glass[k,:] = edgeLines[i,:]
             k += 1
         lineGroup=glass
         
@@ -94,7 +95,7 @@ def LinesGrouping(sortedLines):
                 range_upper=value+angleTolerance
             elif range_upper < sortedLinesArray[i,0]:
                 break
-            glass[k,0:5] = sortedLinesArray[i,0:5]
+            glass[k,:] = sortedLinesArray[i,:]
             k += 1
         lineGroup=glass
     
