@@ -29,9 +29,10 @@ def SortLines(linesP):
     
     return sortedLines,is_nan
 
-def LinesGrouping(sortedLines):
+def LinesGrouping(sortedLines,is_nan):
     # * function that sorts the sorted lines into each glass, again using the slopes
     value = None
+    verticalVial = False
     lineGroup = []
     range_upper = 0
     k = 0
@@ -69,6 +70,7 @@ def LinesGrouping(sortedLines):
             k += 1
         lineGroup=glass
     
+    
     else:
         # for-loop to determine the range of allowed difference in slope            
         for i in range(0,len(edgeLines)):
@@ -80,8 +82,16 @@ def LinesGrouping(sortedLines):
             glass[k,:] = edgeLines[i,:]
             k += 1
         lineGroup=glass
+    
+    lineGroup = lineGroup[~np.all(lineGroup == 0, axis=1)]   
+    if is_nan == True:
+        for i in range(0,len(lineGroup)):
+            if lineGroup[i,0] == 50:
+                verticalVial = True
+            else:
+                continue
 
-    return lineGroup[~np.all(lineGroup == 0, axis=1)]
+    return lineGroup,verticalVial
 
 def LineMerge(glassLines,is_nan=False):
     # * function that merge the lines of a side to only one line
@@ -388,7 +398,7 @@ def HoughLinesSearch(img, houghLength=20, houghDist=5):
         linesP = np.delete(linesP, idx, axis=0)
 
         sortedLines,is_nan = SortLines(linesP)
-        LineGrouping = LinesGrouping(sortedLines)
+        LineGrouping,is_nan = LinesGrouping(sortedLines,is_nan)
         glassSides = LineMerge(LineGrouping,is_nan)
         b = 255
         g = 0
