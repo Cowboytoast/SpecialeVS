@@ -11,8 +11,14 @@ def PrepImg(img, corners):
     # * Unsharp mask (Size (3,3), amount 1, thresh. .131) -> ...
     # * Laplacian edge (delta = 5) -> Cvt. to UByte -> ...
     # * Threshold @ 35
-    img = img[155:550, 304:902]
-    #img_cropped = img[corners[0, 1] + 35:corners[2, 1] - 20, corners[0, 0] + 28:corners[1, 0] - 20]
+    #img = img[155:550, 304:902]
+    if corners == 0: # In case of no calibration
+        corners = np.empty([4, 2], dtype = np.uint32)
+        corners[0] = [267, 132]
+        corners[1] = [930, 133]
+        corners[2] = [270, 607]
+        corners[3] = [933, 601]
+    img = img[corners[0, 1] + 35:corners[2, 1] - 20, corners[0, 0] + 28:corners[1, 0] - 20]
     cv2.imshow("Cropped image", img)
     cv2.waitKey(5)
     img = ResizeToFit(img, H= 403, W = 550)
@@ -24,7 +30,7 @@ def PrepImg(img, corners):
     img = img_as_ubyte(img)
     img = cv2.threshold(img, 20, maxval = 255, type = cv2.THRESH_BINARY)
     img = img[1]
-    
+
     # Filter using contour area and remove small noise
     cnts = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
@@ -33,32 +39,6 @@ def PrepImg(img, corners):
         if area < 5:
             cv2.drawContours(img, [c], -1, (0,0,0), -1)
 
-    '''
-    # Initialize and apply the BLOB detector
-    params = cv2.SimpleBlobDetector_Params()
-    params.blobColor = 255
-    params.filterByArea = True
-    params.minArea = 1
-    params.maxArea = 10
-    params.filterByCircularity = False
-    params.filterByArea = False
-    params.filterByInertia = False
-    params.filterByConvexity = False
-
-    detector = cv2.SimpleBlobDetector_create(params)
-    keypoints = detector.detect(img)
-    # Draw the filtered BLOB(s) on the image
-    xd = np.empty([img.shape[0], img.shape[1]])
-    im_with_keypoints = cv2.drawKeypoints(img, keypoints, xd)
-    #cv2.imshow("hahahhue", im_with_keypoints)
-    #cv2.waitKey(5)
-    im_with_keypoints = cv2.cvtColor(im_with_keypoints, cv2.COLOR_BGR2GRAY)
-    img = img - xd
-    cv2.imshow("hahahhue", xd)
-    cv2.waitKey(5)
-    '''
-    
-            
     return img
 
 # * Histogram stretching function

@@ -182,7 +182,7 @@ def startPos():
     q_w1 = -1.658563888663564
     q_w2 = 1.5707963267948988
     q_w3 = 0
-    cmdstring = 'movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],1.1,0.4)' + '\n'
+    cmdstring = 'movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],0.9,0.4)' + '\n'
     s.send(cmdstring.encode())
     q = get_URdata(True)
     while not(q[0] >= q_b - 0.034 and q[0] <= q_b + 0.034

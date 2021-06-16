@@ -15,7 +15,7 @@ import numpy as np
 #*********** GLOBAL PARAMETERS **************
 state = "init"
 statemsg = False
-
+corners = 0
 #********************************************
 def exitFunc():
     global cam
@@ -49,7 +49,6 @@ def exitFunc():
     exit()
 
 #**********************Main loop********************************
-corners = 0
 while True:
     if state == "init":
         angleTolerance = 0.3
@@ -148,8 +147,9 @@ while True:
                 statemsg = False
 
     if state == "pickup":
-        print('Initiating pickup at (x,y) = (%.3f,%.3f) cm' % (x, y))
+        print('Initiating pickup at (x,y) = (%.1f,%.1f) cm' % (x * 100, y * 100))
         print('Angle of %f deg' %(math.degrees(grabAngle)))
         print("#############################################")
+
         rl.robotRun(x, y, rz = grabAngle)
         state = "sourceimg"
