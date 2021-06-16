@@ -404,16 +404,22 @@ def HoughLinesSearch(img, houghLength=20, houghDist=5):
         b = 255
         g = 0
         r = 0
-        # * For printing all lines use:
-        for i in range(0, len(linesP)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
-            l = linesP[i] # same as above
-            l = l.astype(int)
-            cv2.line(houghImage, (l[0,0], l[0,1]), (l[0,2], l[0,3]), (b,g,r), 3, cv2.LINE_AA)
-            g+=-255
-            r+=255
-            cv2.imshow('Lines', houghImage)
-            cv2.waitKey(10)
-        '''
+        
+        try:
+            if glassSides == None:
+                        # * For printing all lines use:
+                for i in range(0, len(linesP)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
+                    l = linesP[i] # same as above
+                    l = l.astype(int)
+                    cv2.line(houghImage, (l[0,0], l[0,1]), (l[0,2], l[0,3]), (b,g,r), 3, cv2.LINE_AA)
+                    g+=-255
+                    r+=255
+                    cv2.imshow('Lines', houghImage)
+                    cv2.waitKey(10)
+                return None
+        except:
+            pass
+
         for i in range(0, len(glassSides)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
             l = glassSides[i] # same as above
             l = l.astype(int)
@@ -422,12 +428,6 @@ def HoughLinesSearch(img, houghLength=20, houghDist=5):
             r+=255
             cv2.imshow('Lines', houghImage)
             cv2.waitKey(10)
-        '''
-        try:
-            if glassSides == None:
-                return None
-        except:
-            pass
 
     else:
         glassSides = None

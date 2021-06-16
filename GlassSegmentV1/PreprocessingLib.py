@@ -12,13 +12,16 @@ def PrepImg(img, corners):
     # * Laplacian edge (delta = 5) -> Cvt. to UByte -> ...
     # * Threshold @ 35
     #img = img[155:550, 304:902]
-    if corners == 0: # In case of no calibration
-        corners = np.empty([4, 2], dtype = np.uint32)
-        corners[0] = [267, 132]
-        corners[1] = [930, 133]
-        corners[2] = [270, 607]
-        corners[3] = [933, 601]
-    img = img[corners[0, 1] + 35:corners[2, 1] - 20, corners[0, 0] + 28:corners[1, 0] - 20]
+    try:
+        if corners == 0: # In case of no calibration
+            corners = np.empty([4, 2], dtype = np.uint32)
+            corners[0] = [267, 132]
+            corners[1] = [930, 133]
+            corners[2] = [270, 607]
+            corners[3] = [933, 601]
+    except:
+        pass
+    img = img[corners[0, 1]:corners[2, 1], corners[0, 0]:corners[1, 0]]
     cv2.imshow("Cropped image", img)
     cv2.waitKey(5)
     img = ResizeToFit(img, H= 403, W = 550)
