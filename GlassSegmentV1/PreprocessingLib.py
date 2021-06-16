@@ -16,9 +16,9 @@ def PrepImg(img, corners):
         if corners == 0: # In case of no calibration
             corners = np.empty([4, 2], dtype = np.uint32)
             corners[0] = [267, 132]
-            corners[1] = [930, 133]
-            corners[2] = [270, 607]
-            corners[3] = [933, 601]
+            corners[1] = [931, 135]
+            corners[2] = [268, 608]
+            corners[3] = [932, 604]
     except:
         pass
     img = img[corners[0, 1]:corners[2, 1], corners[0, 0]:corners[1, 0]]
@@ -31,7 +31,7 @@ def PrepImg(img, corners):
     #img = unsharp_mask(img, kernel_size = (3,3), amount = 1, threshold = 0.131)
     img = cv2.Laplacian(img, ddepth = cv2.CV_8U, delta = 5)
     img = img_as_ubyte(img)
-    img = cv2.threshold(img, 20, maxval = 255, type = cv2.THRESH_BINARY)
+    img = cv2.threshold(img, 12, maxval = 255, type = cv2.THRESH_BINARY)
     img = img[1]
 
     # Filter using contour area and remove small noise
@@ -39,7 +39,7 @@ def PrepImg(img, corners):
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
     for c in cnts:
         area = cv2.contourArea(c)
-        if area < 5:
+        if area < 8:
             cv2.drawContours(img, [c], -1, (0,0,0), -1)
 
     return img

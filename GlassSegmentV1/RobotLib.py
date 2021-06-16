@@ -89,6 +89,7 @@ def pickupCommand(x, y, z = -0.014,rx = 0,ry = 0,rz = 0):
     global s
 
     waitPos()
+    rz = rz - 0.14 # slight offset in rz
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
     cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.3)' + '\n'
     s.send(cmdstring.encode())
@@ -100,13 +101,13 @@ def pickupCommand(x, y, z = -0.014,rx = 0,ry = 0,rz = 0):
             and rz_robot >= rz - 0.03 and rz_robot <= rz + 0.03)):
         [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
 
-    z = 0.0295
+    z = 0.0275
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
     cmdstring = 'movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.2,0.09)' + '\n'
     s.send(cmdstring.encode())
 
     [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
-    while(not(x_robot >= x - 0.003 and x_robot <= x + 0.003 and y_robot >= y - 0.003 and y_robot <= y + 0.003 and z_robot >= z - 0.003 and z_robot <= z + 0.003 and rz_robot >= rz - 0.03 and rz_robot <= rz + 0.03)):
+    while(not(x_robot >= x - 0.002 and x_robot <= x + 0.002 and y_robot >= y - 0.002 and y_robot <= y + 0.002 and z_robot >= z - 0.002 and z_robot <= z + 0.002 and rz_robot >= rz - 0.02 and rz_robot <= rz + 0.02)):
         [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
 
     gripperClose()
@@ -182,7 +183,7 @@ def startPos():
     q_w1 = -1.658563888663564
     q_w2 = 1.5707963267948988
     q_w3 = 0
-    cmdstring = 'movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],0.9,0.4)' + '\n'
+    cmdstring = 'movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],0.9,0.6)' + '\n'
     s.send(cmdstring.encode())
     q = get_URdata(True)
     while not(q[0] >= q_b - 0.034 and q[0] <= q_b + 0.034
@@ -193,7 +194,7 @@ def startPos():
             and q[5] >= q_w3 - 0.034 and q[5] <= q_w3 + 0.034):
         q = get_URdata(True)
 
-def gripperOpen(pos=180,speed=255,force=10):
+def gripperOpen(pos=195,speed=50,force=10):
     gripperfunc.set(pos,speed,force)
     gripperfunc.wait()
     return

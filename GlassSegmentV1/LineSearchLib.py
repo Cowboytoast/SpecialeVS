@@ -39,10 +39,10 @@ def LinesGrouping(sortedLines):
     centerLines = np.zeros([100,5])
     edgeLines = np.zeros([100,5])
     sortedLinesArray = np.array(sortedLines)
-    xMin = 100
-    xMax = 450
-    yMin = 70
-    yMax = 330
+    xMin = 115
+    xMax = 435
+    yMin = 115
+    yMax = 285
     j = 0
     l = 0
     np.set_printoptions(precision=6,suppress=True)
