@@ -107,7 +107,7 @@ def pickupCommand(x, y, z = -0.014,rx = 0,ry = 0,rz = 0):
     s.send(cmdstring.encode())
 
     [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
-    while(not(x_robot >= x - 0.002 and x_robot <= x + 0.002 and y_robot >= y - 0.002 and y_robot <= y + 0.002 and z_robot >= z - 0.002 and z_robot <= z + 0.002 and rz_robot >= rz - 0.02 and rz_robot <= rz + 0.02)):
+    while(not(x_robot >= x - 0.003 and x_robot <= x + 0.003 and y_robot >= y - 0.003 and y_robot <= y + 0.003 and z_robot >= z - 0.003 and z_robot <= z + 0.003 and rz_robot >= rz - 0.02 and rz_robot <= rz + 0.02)):
         [x_robot, y_robot, z_robot, rz_robot] = get_URdata()
 
     gripperClose()

@@ -48,7 +48,7 @@ def LinesGrouping(sortedLines):
     np.set_printoptions(precision=6,suppress=True)
 
     for i in range(0,len(sortedLinesArray)):
-        if (sortedLinesArray[i,1] > xMin and sortedLinesArray[i,1] < xMax and sortedLinesArray[i,2] > yMin and sortedLinesArray[i,2] < yMax) or (sortedLinesArray[i,3] > xMin and sortedLinesArray[i,3] < xMax and sortedLinesArray[i,4] > yMin and sortedLinesArray[i,4] < yMax):
+        if (sortedLinesArray[i,1] > xMin and sortedLinesArray[i,1] < xMax and sortedLinesArray[i,2] > yMin and sortedLinesArray[i,2] < yMax) and (sortedLinesArray[i,3] > xMin and sortedLinesArray[i,3] < xMax and sortedLinesArray[i,4] > yMin and sortedLinesArray[i,4] < yMax):
                 centerLines[j,:] = sortedLinesArray[i,:]
                 j += 1
         else:
