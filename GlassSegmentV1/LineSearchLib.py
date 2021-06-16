@@ -39,16 +39,16 @@ def LinesGrouping(sortedLines):
     centerLines = np.zeros([100,5])
     edgeLines = np.zeros([100,5])
     sortedLinesArray = np.array(sortedLines)
-    xMin = 125
-    xMax = 325
-    yMin = 102
-    yMax = 302
+    xMin = 100
+    xMax = 450
+    yMin = 70
+    yMax = 330
     j = 0
     l = 0
     np.set_printoptions(precision=6,suppress=True)
 
     for i in range(0,len(sortedLinesArray)):
-        if sortedLinesArray[i,1] > xMin and sortedLinesArray[i,1] < xMax and sortedLinesArray[i,2] > yMin and sortedLinesArray[i,2] < yMax and sortedLinesArray[i,3] > xMin and sortedLinesArray[i,3] < xMax and sortedLinesArray[i,4] > yMin and sortedLinesArray[i,4] < yMax:
+        if (sortedLinesArray[i,1] > xMin and sortedLinesArray[i,1] < xMax and sortedLinesArray[i,2] > yMin and sortedLinesArray[i,2] < yMax) or (sortedLinesArray[i,3] > xMin and sortedLinesArray[i,3] < xMax and sortedLinesArray[i,4] > yMin and sortedLinesArray[i,4] < yMax):
                 centerLines[j,:] = sortedLinesArray[i,:]
                 j += 1
         else:
@@ -69,9 +69,9 @@ def LinesGrouping(sortedLines):
             k += 1
         lineGroup=glass
     
-    elif edgeLines is not None:
+    else:
         # for-loop to determine the range of allowed difference in slope            
-        for i in range(0,len(centerLines)):
+        for i in range(0,len(edgeLines)):
             if value is None:
                 value=edgeLines[0,0]
                 range_upper=value+angleTolerance
@@ -80,19 +80,7 @@ def LinesGrouping(sortedLines):
             glass[k,:] = edgeLines[i,:]
             k += 1
         lineGroup=glass
-        
-    else:
-        # for-loop to determine the range of allowed difference in slope            
-        for i in range(0,len(sortedLinesArray)):
-            if value is None:
-                value=sortedLinesArray[0,0]
-                range_upper=value+angleTolerance
-            elif range_upper < sortedLinesArray[i,0]:
-                break
-            glass[k,:] = sortedLinesArray[i,:]
-            k += 1
-        lineGroup=glass
-    
+
     return lineGroup[~np.all(lineGroup == 0, axis=1)]
 
 def LineMerge(glassLines,is_nan=False):
@@ -349,7 +337,8 @@ def LineMerge(glassLines,is_nan=False):
                         lineMerged[k,1:5] = coordinates
                         lineMerged[k,5] = c
                         k+=1
-                              
+        
+        #lineMerged = lineMerged[~np.all(lineMerged == 0, axis=1)]
         for i in range(0,len(glassLines)):
             for j in range(1,len(glassLines)):
                 check = False
