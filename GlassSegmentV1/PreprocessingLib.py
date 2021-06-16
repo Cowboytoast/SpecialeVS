@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import CalibrationLib as cb
 from skimage.util import img_as_ubyte
+from skimage import morphology
 
 def PrepImg(img, corners):
     # * Chain should be:
@@ -23,7 +24,41 @@ def PrepImg(img, corners):
     img = img_as_ubyte(img)
     img = cv2.threshold(img, 20, maxval = 255, type = cv2.THRESH_BINARY)
     img = img[1]
+    
+    # Filter using contour area and remove small noise
+    cnts = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+    for c in cnts:
+        area = cv2.contourArea(c)
+        if area < 5:
+            cv2.drawContours(img, [c], -1, (0,0,0), -1)
 
+    '''
+    # Initialize and apply the BLOB detector
+    params = cv2.SimpleBlobDetector_Params()
+    params.blobColor = 255
+    params.filterByArea = True
+    params.minArea = 1
+    params.maxArea = 10
+    params.filterByCircularity = False
+    params.filterByArea = False
+    params.filterByInertia = False
+    params.filterByConvexity = False
+
+    detector = cv2.SimpleBlobDetector_create(params)
+    keypoints = detector.detect(img)
+    # Draw the filtered BLOB(s) on the image
+    xd = np.empty([img.shape[0], img.shape[1]])
+    im_with_keypoints = cv2.drawKeypoints(img, keypoints, xd)
+    #cv2.imshow("hahahhue", im_with_keypoints)
+    #cv2.waitKey(5)
+    im_with_keypoints = cv2.cvtColor(im_with_keypoints, cv2.COLOR_BGR2GRAY)
+    img = img - xd
+    cv2.imshow("hahahhue", xd)
+    cv2.waitKey(5)
+    '''
+    
+            
     return img
 
 # * Histogram stretching function

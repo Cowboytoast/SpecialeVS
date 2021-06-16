@@ -18,15 +18,9 @@ def SortLines(linesP):
         x = [l[0], l[2]]
         y = [l[1], l[3]]
         slope = linregress(x,y)
-        # ! dorment function that can correct for full revolutions if this happens. Remember to activate by adding the +/- comments
-        if slope.slope > 3.1415:
-            slope_fixed = slope.slope#-(2*3.1415)
-        elif slope.slope < -3.1415:
-            slope_fixed = slope.slope#+(2*3.1415)
-        else:
-            slope_fixed = slope.slope
-        if math.isnan(slope.slope):
-            slope_fixed = 200
+        slope_fixed = slope.slope
+        if math.isnan(slope_fixed):
+            slope_fixed = 50
             is_nan = True
         # *               slope         x1   y1     x2   y2
         slope_sorted[i] = [slope_fixed,l[0],l[1],l[2],l[3]]
@@ -346,7 +340,7 @@ def LineMerge(glassLines,is_nan=False):
                     k+=1
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
-def HoughLinesSearch(img, houghLength=40, houghDist=10):
+def HoughLinesSearch(img, houghLength=20, houghDist=5):
     #img has to be the edge detected image.
     #Copy of edge detected image into BGR image for drawing lines.
     houghImage = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
@@ -372,7 +366,6 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
             index+=1
         linesP = np.delete(linesP, idx, axis=0)
 
-
         sortedLines,is_nan = SortLines(linesP)
         LineGrouping = LinesGrouping(sortedLines)
         glassSides = LineMerge(LineGrouping,is_nan)
@@ -396,7 +389,6 @@ def HoughLinesSearch(img, houghLength=40, houghDist=10):
             cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 1, cv2.LINE_AA)
             g+=-255
             r+=255
-
     else:
         glassSides = None
     #return houghImage

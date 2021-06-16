@@ -64,8 +64,7 @@ while True:
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
             #! Fault on 2: Line going the wrong way
-            img = cv2.imread('./final_images/final_setup_16.png')
-            #img = cv2.imread('./tmp/im4.png')
+            img = cv2.imread('./final_images/final_setup_2.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -115,6 +114,8 @@ while True:
             start_time = time.time()
             edges_hough = None
             img_binary = prep.PrepImg(img, corners)
+            print("Preprocessing time: %s s" % (time.time() - start_time))
+            print("#############################################")
             cv2.imwrite('procced.png', img_binary)
             cv2.imshow("Binary image", img_binary)
             cv2.waitKey(5)
