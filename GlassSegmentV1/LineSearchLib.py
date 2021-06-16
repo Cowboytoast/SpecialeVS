@@ -333,22 +333,43 @@ def LineMerge(glassLines,is_nan=False):
                 for j in range(i,len(glassLines)):
                     if j == i:
                         continue
-                a = abs(glassLines[i,1]-glassLines[j,3])
-                b = abs(glassLines[i,2]-glassLines[j,4])
 
-                coordinates = np.array(np.r_[glassLines[i,1:3], glassLines[j, 3:5]]) #xstart ystart xend yend
+                    coordinates = np.array(np.r_[glassLines[i,1:3], glassLines[j, 3:5]]) #xstart ystart xend yend
 
-                angleRangeLower = glassLines[i,0]-angleTolerance
-                angleRangeUpper = glassLines[i,0]+angleTolerance
-                
-                slope = linregress([coordinates[0], coordinates[2]], [coordinates[1], coordinates[3]])
-                if slope.slope > angleRangeLower and slope.slope < angleRangeUpper:
-                    c = np.hypot(a,b)
+                    angleRangeLower = glassLines[i,0]-angleTolerance
+                    angleRangeUpper = glassLines[i,0]+angleTolerance
                     
-                    lineMerged[k,0] = slope.slope
-                    lineMerged[k,1:5] = coordinates
-                    lineMerged[k,5] = c
-                    k+=1
+                    slope = linregress([coordinates[0], coordinates[2]], [coordinates[1], coordinates[3]])
+                    if slope.slope > angleRangeLower and slope.slope < angleRangeUpper:
+                        a = abs(glassLines[i,1]-glassLines[j,3])
+                        b = abs(glassLines[i,2]-glassLines[j,4])
+                        c = np.hypot(a,b)
+                        
+                        lineMerged[k,0] = slope.slope
+                        lineMerged[k,1:5] = coordinates
+                        lineMerged[k,5] = c
+                        k+=1
+                              
+        for i in range(0,len(glassLines)):
+            for j in range(1,len(glassLines)):
+                check = False
+                if i==j:
+                    continue
+                elif (lineMerged[i,1] >= (lineMerged[j,1]-3) and lineMerged[i,1] <= lineMerged[j,1]+3) and (lineMerged[i,2] >= (lineMerged[j,2]-3) and lineMerged[i,2] <= (lineMerged[j,2]+3)) and (lineMerged[i,3] >= (lineMerged[j,3]-3) and lineMerged[i,3] <= (lineMerged[j,3]+3)) and (lineMerged[i,4] >= (lineMerged[j,4]-3) and lineMerged[i,4] <= (lineMerged[j,4]+3)):
+                        lineMerged = np.delete(lineMerged,(j),axis=0)
+                        check = True
+                if check == False:
+                    for m in range(0,len(glassLines)):
+                        for n in range(1,len(glassLines)):
+                            if m == n:
+                                continue
+                            elif ((lineMerged[m,1] >= (lineMerged[n,1]-3) and lineMerged[m,1] <= (lineMerged[n,1]+3) and lineMerged[m,2] >= (lineMerged[n,2]-3) and lineMerged[m,2] <= (lineMerged[n,2]+3)) or (lineMerged[m,3] >= (lineMerged[n,3]-3) and lineMerged[m,3] <= (lineMerged[n,3]+3) and lineMerged[m,4] >= (lineMerged[n,4]-3) and lineMerged[m,4] <= (lineMerged[n,4]+3))):
+                                if lineMerged[m,5] > lineMerged[n,5]:
+                                    lineDelete = n
+                                else:
+                                    lineDelete = m
+                                lineMerged = np.delete(lineMerged,(lineDelete),axis=0)
+        
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
 def HoughLinesSearch(img, houghLength=20, houghDist=5):
@@ -400,6 +421,7 @@ def HoughLinesSearch(img, houghLength=20, houghDist=5):
             cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 1, cv2.LINE_AA)
             g+=-255
             r+=255
+        
     else:
         glassSides = None
     #return houghImage
