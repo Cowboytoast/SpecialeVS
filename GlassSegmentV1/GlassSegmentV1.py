@@ -51,7 +51,6 @@ def exitFunc():
 #**********************Main loop********************************
 while True:
     if state == "init":
-        angleTolerance = 0.3
         extractCounter = 0
         handOffPos = rl.handOffPosLOT()
         global cam

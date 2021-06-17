@@ -5,7 +5,7 @@ import imutils
 from scipy.stats import linregress
 
 #*********** GLOBAL PARAMETERS **************
-angleTolerance = 0.1
+angleTolerance = 0.05
 
 #********************************************
 
@@ -49,7 +49,7 @@ def LinesGrouping(sortedLines,is_nan):
     np.set_printoptions(precision=6,suppress=True)
 
     for i in range(0,len(sortedLinesArray)):
-        if (sortedLinesArray[i,1] > xMin and sortedLinesArray[i,1] < xMax and sortedLinesArray[i,2] > yMin and sortedLinesArray[i,2] < yMax) and (sortedLinesArray[i,3] > xMin and sortedLinesArray[i,3] < xMax and sortedLinesArray[i,4] > yMin and sortedLinesArray[i,4] < yMax):
+        if (sortedLinesArray[i,1] > xMin and sortedLinesArray[i,1] < xMax and sortedLinesArray[i,2] > yMin and sortedLinesArray[i,2] < yMax) or (sortedLinesArray[i,3] > xMin and sortedLinesArray[i,3] < xMax and sortedLinesArray[i,4] > yMin and sortedLinesArray[i,4] < yMax):
                 centerLines[j,:] = sortedLinesArray[i,:]
                 j += 1
         else:
@@ -534,11 +534,12 @@ def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 53):
 def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
     maxval = 0
-    threshold = 185
+    Acceptthreshold = 185
+    Rejectthreshold = 145
     iterations = 1
-    while iterations < 4 and maxval < threshold:
-        h_steps = round((h_steps * iterations))
-        w_steps = round((w_steps * iterations))
+    while iterations < 5 and maxval < Acceptthreshold:
+        h_steps = round((h_steps * iterations / 2))
+        w_steps = round((w_steps * iterations / 2))
         if houghLocation.size == 12:
             slopes = np.array([houghLocation[0], houghLocation[6]])
             if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
@@ -556,6 +557,9 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
             slope_avg = houghLocation[0]
             pointsy = houghLocation[2]
             pointsx = houghLocation[1]
+        if slope_avg >= 50:
+            h_steps = h_steps * 3
+            
 
         max_idx = np.empty([1, 2])
         angle_offset = math.degrees(math.atan(slope_avg))
@@ -655,7 +659,9 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
                 #cv2.waitKey(5)
 
         iterations += 1
-
+    if maxval < Rejectthreshold:
+        print("No suitable match, returning")
+        return None, None, None, None
     max_h = int(max_idx[0])
     max_w = int(max_idx[1])
     grabPoint, grabAngle = grabberPoint([max_w, max_h, template_rot.shape[1], template_rot.shape[0]], UpDown, slope_avg, angle_offset)
