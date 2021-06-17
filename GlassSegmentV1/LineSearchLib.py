@@ -106,7 +106,7 @@ def LineMerge(glassLines,is_nan=False):
         a = abs(glassLines[0,1]-glassLines[0,3])
         b = abs(glassLines[0,2]-glassLines[0,4])
         c = np.hypot(a,b)
-        lineMerged[0,0:4] = glassLines[0,0:4]
+        lineMerged[0,0:5] = glassLines[0,0:5]
         lineMerged[0,5] = c
     
     if len(glassLines) == 2: # check if there exist only 2 lines
