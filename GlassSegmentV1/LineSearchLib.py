@@ -5,7 +5,7 @@ import imutils
 from scipy.stats import linregress
 
 #*********** GLOBAL PARAMETERS **************
-angleTolerance = 0.05
+angleTolerance = 0.07
 
 #********************************************
 
@@ -349,6 +349,7 @@ def LineMerge(glassLines,is_nan=False):
                         k+=1
         
         #lineMerged = lineMerged[~np.all(lineMerged == 0, axis=1)]
+        '''
         for i in range(0,len(glassLines)):
             for j in range(1,len(glassLines)):
                 check = False
@@ -368,7 +369,7 @@ def LineMerge(glassLines,is_nan=False):
                                 else:
                                     lineDelete = m
                                 lineMerged = np.delete(lineMerged,(lineDelete),axis=0)
-        
+        '''
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
 def HoughLinesSearch(img, houghLength=20, houghDist=5):

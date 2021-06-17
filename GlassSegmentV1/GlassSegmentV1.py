@@ -62,7 +62,7 @@ while True:
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
             #! Fault on 2: Line going the wrong way
-            img = cv2.imread('./final_images/final_setup_2.png')
+            img = cv2.imread('./final_images/final_setup_3.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -70,8 +70,8 @@ while True:
         k = cv2.waitKey(0)
         if k%256 == 27:
             exitFunc()
-        if not offlineFlag:
-            rl.robotInit()
+        #if not offlineFlag:
+        rl.robotInit()
         state = "sourceimg"
 
     if state == "sourceimg":
@@ -149,6 +149,5 @@ while True:
         print('Initiating pickup at (x,y) = (%.1f,%.1f) cm' % (x * 100, y * 100))
         print('Angle of %f deg' %(math.degrees(grabAngle)))
         print("#############################################")
-
-        rl.robotRun(x, y, rz = grabAngle)
+        rl.robotRunV2(x, y, rz = grabAngle)
         state = "sourceimg"
