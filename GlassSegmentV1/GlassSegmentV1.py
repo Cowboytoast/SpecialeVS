@@ -57,7 +57,7 @@ while True:
         cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         offlineFlag = False
         start_time = time.time()
-        template = cv2.imread('./images/VialTop.png', 0) # * Load template
+        template = cv2.imread('./images/VialTopHollow.png', 0) # * Load template
         cv2.namedWindow("Image")
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):

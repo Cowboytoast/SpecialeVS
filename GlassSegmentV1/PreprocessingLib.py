@@ -31,7 +31,7 @@ def PrepImg(img, corners):
     #img = unsharp_mask(img, kernel_size = (3,3), amount = 1, threshold = 0.131)
     img = cv2.Laplacian(img, ddepth = cv2.CV_8U, delta = 5)
     img = img_as_ubyte(img)
-    img = cv2.threshold(img, 12, maxval = 255, type = cv2.THRESH_BINARY)
+    img = cv2.threshold(img, 11, maxval = 255, type = cv2.THRESH_BINARY)
     img = img[1]
 
     # Filter using contour area and remove small noise

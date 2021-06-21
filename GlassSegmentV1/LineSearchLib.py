@@ -536,7 +536,7 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
     maxval = 0
     Acceptthreshold = 185
-    Rejectthreshold = 145
+    Rejectthreshold = 120
     iterations = 1
     while iterations < 5 and maxval < Acceptthreshold:
         h_steps = round((h_steps * iterations / 2))

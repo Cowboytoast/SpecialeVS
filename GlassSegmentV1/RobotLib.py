@@ -121,7 +121,7 @@ def robotRunV2(x, y, rz):
     rz = rz - 0.14 # slight offset in rz
     z = -0.014
     t=robot.transform(x,y,z) #* Generate placement of the glass in robot frame
-    cmd_initial_approach = '    movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.3, t=0)' + '\n'
+    cmd_initial_approach = '    movel(p['+str(t[0])+','+str(t[1])+','+str(t[2])+','+str(rx)+','+str(ry)+','+str(rz)+'],0.6,0.3)' + '\n'
     
     #* Pickup slow approach
     z = 0.0275
@@ -136,7 +136,7 @@ def robotRunV2(x, y, rz):
     q_w1 = -1.757837
     q_w2 = 1.570796
     q_w3 = 1.291163
-    cmd_handoff_first = '    movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],1.1,1.3, t=0, r=0.15)' + '\n'
+    cmd_handoff_first = '    movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],1.1,1.3, t=0, r=0.13)' + '\n'
     
     #* Handoff 2
     q = handOffPos[:, extractCounter]
@@ -145,13 +145,14 @@ def robotRunV2(x, y, rz):
     
     cmd_defprogram = ('def runcycle():\n')
     cmd_endprogram = ('end\n')
-    cmd_sleepcommand = ('sleep(0.8)\n')
+    cmd_sleepcommand = ('sleep(0.4)\n')
     if contEmpty == True:
         s.send(cmd_defprogram.encode())
         s.send(cmd_waitpos.encode())
         s.send(cmd_initial_approach.encode())
         s.send(cmd_slow_approach.encode())
         s.send(cmd_sleepcommand.encode())
+        s.send(cmd_waitpos.encode())
         s.send(cmd_handoff_first.encode())
         s.send(cmd_handoff_second.encode())
         s.send(cmd_sleepcommand.encode())
@@ -168,12 +169,12 @@ def robotRunV2(x, y, rz):
 
         while not handoffFlag:
             q_robot = get_URdata(True)
-            if((q_robot[0] >= q[0] - 0.034 and q_robot[0] <= q[0] + 0.034
-                and q_robot[1] >= q[1] - 0.034 and q_robot[1] <= q[1] + 0.034
-                and q_robot[2] >= q[2] - 0.034 and q_robot[2] <= q[2] + 0.034
-                and q_robot[3] >= q[3] - 0.034 and q_robot[3] <= q[3] + 0.034
-                and q_robot[4] >= q[4] - 0.034 and q_robot[4] <= q[4] + 0.034
-                and q_robot[5] >= q[5] - 0.034 and q_robot[5] <= q[5] + 0.034)):
+            if((q_robot[0] >= q[0] - 0.04 and q_robot[0] <= q[0] + 0.04
+                and q_robot[1] >= q[1] - 0.04 and q_robot[1] <= q[1] + 0.04
+                and q_robot[2] >= q[2] - 0.04 and q_robot[2] <= q[2] + 0.04
+                and q_robot[3] >= q[3] - 0.04 and q_robot[3] <= q[3] + 0.04
+                and q_robot[4] >= q[4] - 0.04 and q_robot[4] <= q[4] + 0.04
+                and q_robot[5] >= q[5] - 0.04 and q_robot[5] <= q[5] + 0.04)):
                     gripperOpen()
                     handoffFlag = True
 
@@ -275,7 +276,7 @@ def startPos():
     q_e = 2.230737222704673
     q_w1 = -1.658563888663564
     q_w2 = 1.5707963267948988
-    q_w3 = 0
+    q_w3 = 1.58
     cmdstring = 'movej(['+str(q_b)+','+str(q_s)+','+str(q_e)+','+str(q_w1)+','+str(q_w2)+','+str(q_w3)+'],0.9,0.6)' + '\n'
     s.send(cmdstring.encode())
     q = get_URdata(True)
