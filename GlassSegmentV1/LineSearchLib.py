@@ -372,10 +372,11 @@ def LineMerge(glassLines,is_nan=False):
         '''
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
-def HoughLinesSearch(img, houghLength=20, houghDist=5):
+def HoughLinesSearch(img, imagecounter, houghLength=20, houghDist=5):
     #img has to be the edge detected image.
     #Copy of edge detected image into BGR image for drawing lines.
     houghImage = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
+    houghImageAll = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
     #Find HoughLines on the image. Default houghLengt = 40, houghDist=10
     #linesP = cv2.HoughLinesP(img, 0.5, np.pi / 225, 50, None, houghLength, houghDist)
     #if linesP is None or len(linesP) < 0:
@@ -416,25 +417,36 @@ def HoughLinesSearch(img, houghLength=20, houghDist=5):
                     r+=255
                     cv2.imshow('Lines', houghImage)
                     cv2.waitKey(10)
-                return None
+                return None, None, None
         except:
             pass
+
+        
+        for i in range(0, len(linesP)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
+            l = linesP[i] # same as above
+            l = l.astype(int)
+            cv2.line(houghImageAll, (l[0,0], l[0,1]), (l[0,2], l[0,3]), (b,g,r), 2, cv2.LINE_AA)
+            g+=-255
+            r+=255
+            #cv2.imshow('Lines', houghImageAll)
+            #cv2.waitKey(5)
+        cv2.waitKey(5)
 
         for i in range(0, len(glassSides)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
             l = glassSides[i] # same as above
             l = l.astype(int)
-            cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 1, cv2.LINE_AA)
+            cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 2, cv2.LINE_AA)
             g+=-255
             r+=255
             cv2.imshow('Lines', houghImage)
-            cv2.waitKey(10)
+        cv2.waitKey(5)
 
     else:
         glassSides = None
     #return houghImage
     cv2.imshow('Lines', houghImage)
-    cv2.waitKey(10)
-    return glassSides
+    cv2.waitKey(5)
+    return houghImage, houghImageAll, glassSides
 
 def LineExtend(img, glassSides,lineLength=110):
 
@@ -535,8 +547,8 @@ def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 53):
 def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
     maxval = 0
-    Acceptthreshold = 185
-    Rejectthreshold = 120
+    Acceptthreshold = 190
+    Rejectthreshold = 140
     iterations = 1
     while iterations < 5 and maxval < Acceptthreshold:
         h_steps = round((h_steps * iterations / 2))
@@ -593,7 +605,7 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
                 #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
                 #cv2.imshow('Rotating progress', rotatingim)
                 #cv2.waitKey(5)
-
+        
         template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
         for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
             for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
@@ -609,8 +621,8 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
                 #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
                 #cv2.imshow('Rotating progress', rotatingim)
                 #cv2.waitKey(5)
+        
         template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
-
         if houghLocation.size == 12:
             if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
                 pointsy = max((houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2)
@@ -643,7 +655,6 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
                 #cv2.waitKey(5)
 
         template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
-
         for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
             for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
                 if h - template_rot.shape[0] < 0 or h + template_rot.shape[0] > img.shape[0] or w - template_rot.shape[1] < 0 or w + template_rot.shape[1] > img.shape[1]:

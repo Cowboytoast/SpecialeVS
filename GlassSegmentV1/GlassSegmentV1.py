@@ -49,6 +49,7 @@ def exitFunc():
     exit()
 
 #**********************Main loop********************************
+imagecounter = 51
 while True:
     if state == "init":
         extractCounter = 0
@@ -57,12 +58,11 @@ while True:
         cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         offlineFlag = False
         start_time = time.time()
-        template = cv2.imread('./images/VialTopHollow.png', 0) # * Load template
+        template = cv2.imread('./images/VialTop.png', 0) # * Load template
         cv2.namedWindow("Image")
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
-            #! Fault on 2: Line going the wrong way
-            img = cv2.imread('./final_images/final_setup_3.png')
+            img = cv2.imread('./final_images/final_setup_5.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -70,8 +70,8 @@ while True:
         k = cv2.waitKey(0)
         if k%256 == 27:
             exitFunc()
-        #if not offlineFlag:
-        rl.robotInit()
+        if not offlineFlag:
+            rl.robotInit()
         state = "sourceimg"
 
     if state == "sourceimg":
@@ -108,16 +108,14 @@ while True:
             rl.startPos()
         
         elif k != -1 and corners is not None:
-            cv2.imwrite('unproc.png', img)
             start_time = time.time()
             edges_hough = None
-            img_binary = prep.PrepImg(img, corners)
+            img_cropped, img_binary = prep.PrepImg(img, corners, imagecounter)
             print("Preprocessing time: %s s" % (time.time() - start_time))
             print("#############################################")
-            cv2.imwrite('procced.png', img_binary)
             cv2.imshow("Binary image", img_binary)
             cv2.waitKey(5)
-            houghLocation = ls.HoughLinesSearch(img_binary)
+            houghMerged, houghAll, houghLocation = ls.HoughLinesSearch(img_binary, imagecounter)
             statemsg = False
             if houghLocation is not None and houghLocation.size > 0:
                 houghLocation = ls.LineExtend(img_binary, houghLocation)
@@ -135,12 +133,25 @@ while True:
                     print("Press other to retry")
                     print("#############################################")
                     x,y = ls.pixelstocm([grabPoint[0], grabPoint[1]], final.shape)
+                    imagecounter += 1
                     k = cv2.waitKey(0)
                     if k%256 == 27:
                         exitFunc()
                     if k%256 == 32:
                         state = "pickup"
+                        #img_name = "Crop_{}.png".format(imagecounter)
+                        #cv2.imwrite(img_name, img_cropped)
+                        #img_name = "Binary_{}.png".format(imagecounter)
+                        #cv2.imwrite(img_name, img_binary)
+                        #img_name = "Merged_{}.png".format(imagecounter)
+                        #cv2.imwrite(img_name, houghMerged)
+                        #img_name = "Lines_{}.png".format(imagecounter)
+                        #cv2.imwrite(img_name, houghAll)
+                        #img_name = "Detection_{}.png".format(imagecounter)
+                        #cv2.imwrite(img_name, final)
+                        #imagecounter += 1
             else:
+                imagecounter += 1
                 print("Not enough lines found")
                 print("#############################################")
                 statemsg = False

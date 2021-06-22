@@ -145,7 +145,7 @@ def robotRunV2(x, y, rz):
     
     cmd_defprogram = ('def runcycle():\n')
     cmd_endprogram = ('end\n')
-    cmd_sleepcommand = ('sleep(0.4)\n')
+    cmd_sleepcommand = ('sleep(0.8)\n')
     if contEmpty == True:
         s.send(cmd_defprogram.encode())
         s.send(cmd_waitpos.encode())
@@ -158,16 +158,26 @@ def robotRunV2(x, y, rz):
         s.send(cmd_sleepcommand.encode())
         s.send(cmd_endprogram.encode())
         time.sleep(0.1)
+        start_time = time.time()
+        
         while not pickupFlag:
+            if (time.time() - start_time) > 10:
+                pickupFlag = True # Timeout
+                extractCounter -= 1
+                print("Pickup timed out")
             [x_robot, y_robot, z_robot, rz_robot] = get_URdata() # Get initial data
             if((x_robot >= x_pickup - 0.03 and x_robot <= x_pickup + 0.03 and
                 y_robot >= y_pickup - 0.03 and y_robot <= y_pickup + 0.03 and
                 z_robot >= z_pickup - 0.03 and z_robot <= z_pickup + 0.03 and
-                rz_robot >= rz - 0.04 and rz_robot <= rz + 0.04)):
+                rz_robot >= rz - 0.05 and rz_robot <= rz + 0.05)):
                 gripperClose()
                 pickupFlag = True
 
+        start_time = time.time()
         while not handoffFlag:
+            if (time.time() - start_time) > 10:
+                handoffFlag = True # Timeout
+                print("Handoff timed out")
             q_robot = get_URdata(True)
             if((q_robot[0] >= q[0] - 0.04 and q_robot[0] <= q[0] + 0.04
                 and q_robot[1] >= q[1] - 0.04 and q_robot[1] <= q[1] + 0.04
@@ -305,7 +315,7 @@ def get_URdata(joint_data = False):
         time.sleep(0.1)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((rcfg.HOST_IP, 30003))
-    time.sleep(0.05)
+    time.sleep(0.1)
     data = s.recv(1024)
     x_robot = thread.transform_data_point(data = data, data_name = 'x')
     y_robot = thread.transform_data_point(data = data, data_name = 'y')
@@ -319,17 +329,17 @@ def get_URdata(joint_data = False):
     q_w3 = thread.transform_data_point(data = data, data_name = 'q_w3')
     q = np.array([q_b, q_s, q_e, q_w1, q_w2, q_w3])
     s.close()
-    time.sleep(0.05)
+    time.sleep(0.1)
     [x_robot, y_robot, z_robot] = robotfunc.inverse_transform(x = x_robot, y = y_robot, z = z_robot)
     if joint_data == True:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((rcfg.HOST_IP, 30003))
-        time.sleep(0.05)
+        time.sleep(0.1)
         return q
     else:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((rcfg.HOST_IP, 30003))
-        time.sleep(0.05)
+        time.sleep(0.1)
         return x_robot, y_robot, z_robot, rz_robot
 
 #* The function creates a Look-up Table since we have a finite number of specific places. This is utilized to speed up the program such that the positions only have to be calculated

@@ -4,7 +4,7 @@ import CalibrationLib as cb
 from skimage.util import img_as_ubyte
 from skimage import morphology
 
-def PrepImg(img, corners):
+def PrepImg(img, corners, imagecounter):
     # * Chain should be:
     # * Crop -> Resize to (H,W = 403, 550) -> Cvt to gray -> ...
     # * Hist. stretch -> Blur (rad. = (3,3), SigmaX = 7) -> ...
@@ -21,17 +21,16 @@ def PrepImg(img, corners):
             corners[3] = [932, 604]
     except:
         pass
-    img = img[corners[0, 1]:corners[2, 1], corners[0, 0]:corners[1, 0]]
-    cv2.imshow("Cropped image", img)
-    cv2.waitKey(5)
-    img = ResizeToFit(img, H= 403, W = 550)
+    img_cropped = img[corners[0, 1]:corners[2, 1], corners[0, 0]:corners[1, 0]]
+    cv2.imshow("Cropped image", img_cropped)
+    img = ResizeToFit(img_cropped, H= 403, W = 550)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = cv2.equalizeHist(img)
     img = cv2.GaussianBlur(img, (3,3), 7)
     #img = unsharp_mask(img, kernel_size = (3,3), amount = 1, threshold = 0.131)
     img = cv2.Laplacian(img, ddepth = cv2.CV_8U, delta = 5)
     img = img_as_ubyte(img)
-    img = cv2.threshold(img, 11, maxval = 255, type = cv2.THRESH_BINARY)
+    img = cv2.threshold(img, 12, maxval = 255, type = cv2.THRESH_BINARY)
     img = img[1]
 
     # Filter using contour area and remove small noise
@@ -42,7 +41,7 @@ def PrepImg(img, corners):
         if area < 8:
             cv2.drawContours(img, [c], -1, (0,0,0), -1)
 
-    return img
+    return img_cropped, img
 
 # * Histogram stretching function
 def HistStretch(img):
