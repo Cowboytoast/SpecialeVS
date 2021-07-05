@@ -14,6 +14,8 @@ OnlyHandoffFalse = 0
 OriPickupHandoffFailed = 0
 AllFailed = 0
 
+print("*********Number*********")
+
 for i in range(0,len(MassTestData)):
     if MassTestData[i,1] == 1.0 and MassTestData[i,2] == 1.0 and MassTestData[i,3] == 1.0 and MassTestData[i,4] == 1.0:
         AllTrue += 1
@@ -54,7 +56,22 @@ for i in range(0,len(MassTestData)):
         AllFailed += 1
 print("Failed:",AllFailed)
 
+print("*********Percentages*********")
 
 ProsFailed = ((NumberofTests-AllTrue)/NumberofTests)*100
 print("Percentage of test failed:",ProsFailed)
 
+ProsOrienFailed = 100-(((NumberofTests-OrientationFailed)/NumberofTests)*100)
+print("Percentage of test where orientation was not correct:",ProsOrienFailed)
+
+ProsPickupFailed = 100-(((NumberofTests-PickupFailed)/NumberofTests)*100)
+print("Percentage of tests where PickUp failed:",ProsPickupFailed)
+
+ProsHandoffFailed = 100-(((NumberofTests-HandoffFailed)/NumberofTests)*100)
+print("Percentages of tests where Handoff Failed:",ProsHandoffFailed)
+
+ProsPickupHandoffFailed = 100-(((NumberofTests-PickupHandoffFalse)/NumberofTests)*100)
+print("Percentage of tests where only Pickup and Handoff failed:",ProsPickupHandoffFailed)
+
+ProsOnlyHandoffFailed = 100-(((NumberofTests-OnlyHandoffFalse)/NumberofTests)*100)
+print("Percentage of tests where ONLY HandOff failed:",ProsOnlyHandoffFailed)
