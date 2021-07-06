@@ -28,17 +28,17 @@ for i in range(0,len(MassTestData)):
 print("No vial detected:",NoDetection)
 
 for i in range(0,len(MassTestData)):
-    if MassTestData[i,2] == 0:
+    if MassTestData[i,1] == 1.0 and MassTestData[i,2] == 0 and MassTestData[i,3] == 1.0 and MassTestData[i,4] == 1.0:
         OrientationFailed += 1
 print("Orientation failed:",OrientationFailed)
 
 for i in range(0,len(MassTestData)):
-    if MassTestData[i,3] == 0:
+    if MassTestData[i,1] == 1.0 and MassTestData[i,2] == 1.0 and MassTestData[i,3] == 0 and MassTestData[i,4] == 1.0:
         PickupFailed += 1
 print("Pickup failed:",PickupFailed)
 
 for i in range(0,len(MassTestData)):
-    if MassTestData[i,4] == 0:
+    if MassTestData[i,1] == 1.0 and MassTestData[i,2] == 1.0 and MassTestData[i,3] == 1.0 and MassTestData[i,4] == 0:
         HandoffFailed += 1
 print("Handoff failed:",HandoffFailed)
 
@@ -46,11 +46,6 @@ for i in range(0,len(MassTestData)):
     if MassTestData[i,1] == 1.0 and MassTestData[i,3] == 0 and MassTestData[i,4] == 0:
         PickupHandoffFalse += 1       
 print("Both pick-up and handoff failed:",PickupHandoffFalse)
-
-for i in range(0,len(MassTestData)):
-    if MassTestData[i,1] == 1.0 and MassTestData[i,3] == 1.0 and MassTestData[i,4] == 0:
-        OnlyHandoffFalse += 1
-print("Only handoff failed:",OnlyHandoffFalse)
    
 for i in range(0,len(MassTestData)):
     if MassTestData[i,1] == 1.0 and MassTestData[i,2] == 0 and MassTestData[i,3] == 0 and MassTestData[i,4] == 0:
@@ -64,7 +59,7 @@ print("Failed:",AllFailed)
 
 print("*********Percentages*********")
 
-ProsFailed = ((NumberofTests-AllTrue)/NumberofTests)*100
+ProsFailed = (((NumberofTests-AllTrue)/NumberofTests)*100)
 print("Percentage of tests failed:",ProsFailed)
 
 ProsNoDetection = 100-(((NumberofTests-NoDetection)/NumberofTests)*100)
@@ -82,5 +77,5 @@ print("Percentage of tests where Handoff Failed:",ProsHandoffFailed)
 ProsPickupHandoffFailed = 100-(((NumberofTests-PickupHandoffFalse)/NumberofTests)*100)
 print("Percentage of tests where only Pickup and Handoff failed:",ProsPickupHandoffFailed)
 
-ProsOnlyHandoffFailed = 100-(((NumberofTests-OnlyHandoffFalse)/NumberofTests)*100)
-print("Percentage of tests where ONLY HandOff failed:",ProsOnlyHandoffFailed)
+CombinedPercentage = ProsNoDetection+ProsOrienFailed+ProsPickupFailed+ProsHandoffFailed+ProsPickupHandoffFailed
+print("Combined percentage of tests that failed:",CombinedPercentage)
