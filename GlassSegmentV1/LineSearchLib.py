@@ -26,7 +26,7 @@ def SortLines(linesP):
         slope_sorted[i] = [slope_fixed,l[0],l[1],l[2],l[3]]
     slope_sorted.sort(key=lambda x:x[0])
     sortedLines = slope_sorted
-    
+
     return sortedLines,is_nan
 
 def LinesGrouping(sortedLines,is_nan):
@@ -69,10 +69,8 @@ def LinesGrouping(sortedLines,is_nan):
             glass[k,:] = centerLines[i,:]
             k += 1
         lineGroup=glass
-    
-    
     else:
-        # for-loop to determine the range of allowed difference in slope            
+        # for-loop to determine the range of allowed difference in slope
         for i in range(0,len(edgeLines)):
             if value is None:
                 value=edgeLines[0,0]
@@ -82,8 +80,8 @@ def LinesGrouping(sortedLines,is_nan):
             glass[k,:] = edgeLines[i,:]
             k += 1
         lineGroup=glass
-    
-    lineGroup = lineGroup[~np.all(lineGroup == 0, axis=1)]   
+
+    lineGroup = lineGroup[~np.all(lineGroup == 0, axis=1)]
     if is_nan == True:
         for i in range(0,len(lineGroup)):
             if lineGroup[i,0] == 50:
@@ -94,21 +92,21 @@ def LinesGrouping(sortedLines,is_nan):
     return lineGroup,verticalVial
 
 def LineMerge(glassLines,is_nan=False):
-    # * function that merge the lines of a side to only one line
+    # * function that merges the lines of a side to only one line
     lineMerged = np.zeros([1000,6])
     k = 0
     if glassLines.size < 1:
         print("One or no lines found, aborting")
         print("#############################################")
         return None
-    
+
     elif len(glassLines) == 1:
         a = abs(glassLines[0,1]-glassLines[0,3])
         b = abs(glassLines[0,2]-glassLines[0,4])
         c = np.hypot(a,b)
         lineMerged[0,0:5] = glassLines[0,0:5]
         lineMerged[0,5] = c
-    
+
     if len(glassLines) == 2: # check if there exist only 2 lines
         a0 = abs(glassLines[0,1]-glassLines[0,3])
         b0 = abs(glassLines[0,2]-glassLines[0,4])
@@ -120,7 +118,7 @@ def LineMerge(glassLines,is_nan=False):
         lineMerged[1,0:5] = glassLines[1,0:5]
         lineMerged[0,5] = c0
         lineMerged[1,5] = c1
-        
+
     elif len(glassLines) == 3: # check if there exist only 3 lines
         if is_nan == True:
             rowNumber = np.zeros([3,2])
@@ -132,7 +130,7 @@ def LineMerge(glassLines,is_nan=False):
                     else:
                         if abs(glassLines[i,1]-glassLines[j,1]) < 5 and abs(glassLines[i,3]-glassLines[j,3]) < 5:
                             rowNumber[i,:] = [i,j]
-                            
+
             for i in range(0,len(rowNumber)):
                     if not rowNumber[i,1] == 0:
                         lineMerged[k,0] = 50
@@ -148,7 +146,7 @@ def LineMerge(glassLines,is_nan=False):
                             lineMerged[k,4] = glassLines[linea,2]
                         elif glassLines[lineb,2] < glassLines[linea,2] and glassLines[lineb,2] < glassLines[linea,4]:
                             lineMerged[k,4] = glassLines[lineb,2]
-                            
+
                         if glassLines[linea,4] > glassLines[lineb,4] and glassLines[linea,4] > glassLines[lineb,2]:
                             lineMerged[k,2] = glassLines[linea,4]
                         elif glassLines[lineb,4] > glassLines[linea,4] and glassLines[lineb,4] > glassLines[linea,2]:
@@ -157,11 +155,11 @@ def LineMerge(glassLines,is_nan=False):
                             lineMerged[k,2] = glassLines[linea,2]
                         else:
                             lineMerged[k,2] = glassLines[lineb,2]
-                            
+
                         a = abs(lineMerged[k,1]-lineMerged[k,3])
                         b = abs(lineMerged[k,2]-lineMerged[k,4])
                         lineMerged[k,5] = np.hypot(a,b)
-                        
+
             lineExist = np.where(rowNumber == 0)
             lineExist = np.array(lineExist)
             isEmpty = lineExist.size == 0
@@ -172,8 +170,7 @@ def LineMerge(glassLines,is_nan=False):
                 lineMerged[k+1,3] = glassLines[0,3]
                 lineMerged[k+1,4] = glassLines[0,4]
                 lineMerged[k+1,5] = np.hypot(abs(lineMerged[k+1,1]-lineMerged[k+1,3]),abs(lineMerged[k+1,2]-lineMerged[k+1,4]))
-        
-                        
+
             lineExist = np.where(rowNumber == 1)
             lineExist = np.array(lineExist)
             isEmpty = lineExist.size == 0
@@ -184,7 +181,7 @@ def LineMerge(glassLines,is_nan=False):
                 lineMerged[k+1,3] = glassLines[1,3]
                 lineMerged[k+1,4] = glassLines[1,4]
                 lineMerged[k+1,5] = np.hypot(abs(lineMerged[k+1,1]-lineMerged[k+1,3]),abs(lineMerged[k+1,2]-lineMerged[k+1,4]))
-        
+
             lineExist = np.where(rowNumber == 2)
             lineExist = np.array(lineExist)
             isEmpty = lineExist.size == 0
@@ -195,7 +192,7 @@ def LineMerge(glassLines,is_nan=False):
                 lineMerged[k+1,3] = glassLines[2,3]
                 lineMerged[k+1,4] = glassLines[2,4]
                 lineMerged[k+1,5] = np.hypot(abs(lineMerged[k+1,1]-lineMerged[k+1,3]),abs(lineMerged[k+1,2]-lineMerged[k+1,4]))
-        
+
         else:
             angleRangeLower = glassLines[0,0]-angleTolerance
             angleRangeUpper = glassLines[0,0]+angleTolerance
@@ -207,11 +204,11 @@ def LineMerge(glassLines,is_nan=False):
             slope01 = linregress([x0Start,x1End],[y0Start,y1End])
             slope02 = linregress([x0Start,x2End],[y0Start,y2End])
             slope12 = linregress([x1Start,x2End],[y1Start,y2End])
-            
+
             slope01 = slope01.slope
             slope02 = slope02.slope
             slope12 = slope12.slope
-                
+
             if (slope01 > angleRangeLower) and (slope01 < angleRangeUpper):
                 a1 = abs(glassLines[0,1]-glassLines[1,3])
                 b1 = abs(glassLines[0,2]-glassLines[1,4])
@@ -219,17 +216,17 @@ def LineMerge(glassLines,is_nan=False):
                 a2 = abs(glassLines[1,1]-glassLines[0,3])
                 b2 = abs(glassLines[1,2]-glassLines[0,4])
                 c2 = np.hypot(a2,b2)
-                
+
                 if c1 > c2:
                     lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope01,x0Start,y0Start,x1End,y1End,c1
                 else:
                     lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope01,x1Start,y1Start,x0End,y0End,c2
-                
+
                 a = abs(glassLines[2,1]-glassLines[2,3])
                 b = abs(glassLines[2,2]-glassLines[2,4])
                 c = np.hypot(a,b)
                 lineMerged[1,0],lineMerged[1,1],lineMerged[1,2],lineMerged[1,3],lineMerged[1,4],lineMerged[1,5] = glassLines[2,0],x2Start,y2Start,x2End,y2End,c
-                
+
             elif (slope02 > angleRangeLower and slope02 < angleRangeUpper):
                 a1 = abs(glassLines[0,1]-glassLines[2,3])
                 b1 = abs(glassLines[0,2]-glassLines[2,4])
@@ -237,18 +234,18 @@ def LineMerge(glassLines,is_nan=False):
                 a2 = abs(glassLines[2,1]-glassLines[0,3])
                 b2 = abs(glassLines[2,2]-glassLines[0,4])
                 c2 = np.hypot(a2,b2)
-                
+
                 if c1 > c2:
                     lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope02,x0Start,y0Start,x2End,y2End,c1
 
                 else:
                     lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope02,x2Start,y2Start,x0End,y0End,c2
-                
+
                 a = abs(glassLines[1,1]-glassLines[1,3])
                 b = abs(glassLines[1,2]-glassLines[1,4])
                 c = np.hypot(a,b)
                 lineMerged[1,0],lineMerged[1,1],lineMerged[1,2],lineMerged[1,3],lineMerged[1,4],lineMerged[1,5] = glassLines[1,0],x1Start,y1Start,x1End,y1End,c
-                
+
             else:
                 a1 = abs(glassLines[1,1]-glassLines[2,3])
                 b1 = abs(glassLines[1,2]-glassLines[2,4])
@@ -256,18 +253,18 @@ def LineMerge(glassLines,is_nan=False):
                 a2 = abs(glassLines[2,1]-glassLines[1,3])
                 b2 = abs(glassLines[2,2]-glassLines[1,4])
                 c2 = np.hypot(a2,b2)
-                
+
                 if c1 > c2:
                     lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope12,x1Start,y1Start,x2End,y2End,c1
                 else:
                     lineMerged[0,0],lineMerged[0,1],lineMerged[0,2],lineMerged[0,3],lineMerged[0,4],lineMerged[0,5] = slope12,x2Start,y2Start,x1End,y1End,c2
-                
+
                 a = abs(glassLines[0,1]-glassLines[0,3])
                 b = abs(glassLines[0,2]-glassLines[0,4])
                 c = np.hypot(a,b)
                 lineMerged[1,0],lineMerged[1,1],lineMerged[1,2],lineMerged[1,3],lineMerged[1,4],lineMerged[1,5] = glassLines[0,0],x0Start,y0Start,x0End,y0End,c
 
-            
+
     else: # For 3+ lines
         if is_nan == True:
             row = len(glassLines)
@@ -280,7 +277,7 @@ def LineMerge(glassLines,is_nan=False):
                     else:
                         if abs(glassLines[i,1]-glassLines[j,1]) < 5 and abs(glassLines[i,3]-glassLines[j,3]) < 5:
                             rowNumber[i,:] = [i,j]
-                            
+
             for i in range(0,len(rowNumber)):
                     if not rowNumber[i,1] == 0:
                         lineMerged[k,0] = 50
@@ -296,7 +293,7 @@ def LineMerge(glassLines,is_nan=False):
                             lineMerged[k,4] = glassLines[linea,2]
                         elif glassLines[lineb,2] < glassLines[linea,2] and glassLines[lineb,2] < glassLines[linea,4]:
                             lineMerged[k,4] = glassLines[lineb,2]
-                            
+
                         if glassLines[linea,4] > glassLines[lineb,4] and glassLines[linea,4] > glassLines[lineb,2]:
                             lineMerged[k,2] = glassLines[linea,4]
                         elif glassLines[lineb,4] > glassLines[linea,4] and glassLines[lineb,4] > glassLines[linea,2]:
@@ -305,7 +302,7 @@ def LineMerge(glassLines,is_nan=False):
                             lineMerged[k,2] = glassLines[linea,2]
                         else:
                             lineMerged[k,2] = glassLines[lineb,2]
-                            
+
                         a = abs(lineMerged[k,1]-lineMerged[k,3])
                         b = abs(lineMerged[k,2]-lineMerged[k,4])
                         lineMerged[k,5] = np.hypot(a,b)
@@ -325,69 +322,38 @@ def LineMerge(glassLines,is_nan=False):
                     lineMerged[j,4] = glassLines[1,4]
                     lineMerged[j,5] = np.hypot(abs(lineMerged[j,1]-lineMerged[j,3]),abs(lineMerged[j,2]-lineMerged[j,4]))
                     j += 1
-                    
-        else:    
+
+        else:
             for i in range(0,len(glassLines)):
                 for j in range(i,len(glassLines)):
                     if j == i:
                         continue
 
                     coordinates = np.array(np.r_[glassLines[i,1:3], glassLines[j, 3:5]]) #xstart ystart xend yend
-
                     angleRangeLower = glassLines[i,0]-angleTolerance
                     angleRangeUpper = glassLines[i,0]+angleTolerance
-                    
                     slope = linregress([coordinates[0], coordinates[2]], [coordinates[1], coordinates[3]])
                     if slope.slope > angleRangeLower and slope.slope < angleRangeUpper:
                         a = abs(glassLines[i,1]-glassLines[j,3])
                         b = abs(glassLines[i,2]-glassLines[j,4])
                         c = np.hypot(a,b)
-                        
+
                         lineMerged[k,0] = slope.slope
                         lineMerged[k,1:5] = coordinates
                         lineMerged[k,5] = c
                         k+=1
-        
-        #lineMerged = lineMerged[~np.all(lineMerged == 0, axis=1)]
-        '''
-        for i in range(0,len(glassLines)):
-            for j in range(1,len(glassLines)):
-                check = False
-                if i==j:
-                    continue
-                elif (lineMerged[i,1] >= (lineMerged[j,1]-3) and lineMerged[i,1] <= lineMerged[j,1]+3) and (lineMerged[i,2] >= (lineMerged[j,2]-3) and lineMerged[i,2] <= (lineMerged[j,2]+3)) and (lineMerged[i,3] >= (lineMerged[j,3]-3) and lineMerged[i,3] <= (lineMerged[j,3]+3)) and (lineMerged[i,4] >= (lineMerged[j,4]-3) and lineMerged[i,4] <= (lineMerged[j,4]+3)):
-                        lineMerged = np.delete(lineMerged,(j),axis=0)
-                        check = True
-                if check == False:
-                    for m in range(0,len(glassLines)):
-                        for n in range(1,len(glassLines)):
-                            if m == n:
-                                continue
-                            elif ((lineMerged[m,1] >= (lineMerged[n,1]-3) and lineMerged[m,1] <= (lineMerged[n,1]+3) and lineMerged[m,2] >= (lineMerged[n,2]-3) and lineMerged[m,2] <= (lineMerged[n,2]+3)) or (lineMerged[m,3] >= (lineMerged[n,3]-3) and lineMerged[m,3] <= (lineMerged[n,3]+3) and lineMerged[m,4] >= (lineMerged[n,4]-3) and lineMerged[m,4] <= (lineMerged[n,4]+3))):
-                                if lineMerged[m,5] > lineMerged[n,5]:
-                                    lineDelete = n
-                                else:
-                                    lineDelete = m
-                                lineMerged = np.delete(lineMerged,(lineDelete),axis=0)
-        '''
     return lineMerged[~np.all(lineMerged == 0, axis=1)]
 
-def HoughLinesSearch(img, imagecounter, houghLength=20, houghDist=5):
+def HoughLinesSearch(img, houghLength=20, houghDist=5):
     #img has to be the edge detected image.
     #Copy of edge detected image into BGR image for drawing lines.
     houghImage = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
     houghImageAll = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
-    #Find HoughLines on the image. Default houghLengt = 40, houghDist=10
-    #linesP = cv2.HoughLinesP(img, 0.5, np.pi / 225, 50, None, houghLength, houghDist)
-    #if linesP is None or len(linesP) < 0:
+    #Find HoughLines on the image. Default houghLength = 40, houghDist=10
+
     linesP = cv2.HoughLinesP(img, 1, np.pi / 225, 50, None, houghLength, houghDist)
-    #else:
-    #    pass
-
-
     #If-statement drawing lines on the copy, if any lines are found.
     if linesP is not None:
-
         index = 0
         idx = []
         for cnt in range(0, len(linesP)):
@@ -405,10 +371,10 @@ def HoughLinesSearch(img, imagecounter, houghLength=20, houghDist=5):
         b = 255
         g = 0
         r = 0
-        
+
+        # * Draw lines * #
         try:
             if glassSides == None:
-                        # * For printing all lines use:
                 for i in range(0, len(linesP)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
                     l = linesP[i] # same as above
                     l = l.astype(int)
@@ -416,24 +382,22 @@ def HoughLinesSearch(img, imagecounter, houghLength=20, houghDist=5):
                     g+=-255
                     r+=255
                     cv2.imshow('Lines', houghImage)
-                    cv2.waitKey(10)
+                    cv2.waitKey(5)
                 return None, None, None
         except:
             pass
 
-        
-        for i in range(0, len(linesP)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
-            l = linesP[i] # same as above
+
+        for i in range(0, len(linesP)):
+            l = linesP[i]
             l = l.astype(int)
             cv2.line(houghImageAll, (l[0,0], l[0,1]), (l[0,2], l[0,3]), (b,g,r), 2, cv2.LINE_AA)
             g+=-255
             r+=255
-            #cv2.imshow('Lines', houghImageAll)
-            #cv2.waitKey(5)
-        cv2.waitKey(5)
+            cv2.waitKey(5)
 
-        for i in range(0, len(glassSides)): #for all lines: "linesP", for one glass all lines: "LineGrouping"
-            l = glassSides[i] # same as above
+        for i in range(0, len(glassSides)):
+            l = glassSides[i]
             l = l.astype(int)
             cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 2, cv2.LINE_AA)
             g+=-255
@@ -454,7 +418,7 @@ def LineExtend(img, glassSides,lineLength=110):
         print("Only one or zero lines found, no extension performed")
         return glassSides
 
-    if glassSides[0,5] == lineLength and glassSides[1,5] == lineLength:
+    if glassSides[0,5] >= lineLength and glassSides[1,5] >= lineLength:
         return glassSides # If both lines are long enough, return
 
     if glassSides[0, 5] < lineLength and glassSides[1, 5] < lineLength:
@@ -475,7 +439,6 @@ def LineExtend(img, glassSides,lineLength=110):
         pointDistEnd = math.sqrt((glassSides[lineKeep, 3] - glassSides[lineExtend, 3])**2
                                     + (glassSides[lineKeep, 4] - glassSides[lineExtend, 4])**2)
 
-        # Method from https://math.stackexchange.com/questions/175896/finding-a-point-along-a-line-a-certain-distance-away-from-another-point
         v = np.array([glassSides[lineExtend, 3] - glassSides[lineExtend, 1],
                     glassSides[lineExtend, 4] - glassSides[lineExtend, 2]])
         u = np.array([v[0]/(math.sqrt(v[0]**2 + v[1]**2)),v[1]/(math.sqrt(v[0]**2 + v[1]**2))])
@@ -490,6 +453,7 @@ def LineExtend(img, glassSides,lineLength=110):
 
         glassSides[lineExtend, 5] = lineLength # set the new hypotenuse
 
+    # Draw the extended lines
     houghImage = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
     b = 255
     g = 0
@@ -500,14 +464,12 @@ def LineExtend(img, glassSides,lineLength=110):
         cv2.line(houghImage, (l[1], l[2]), (l[3], l[4]), (b,g,r), 1, cv2.LINE_AA)
         g+=-255
         r+=255
-        
+
     cv2.imshow('Lines Extended', houghImage)
     cv2.waitKey(10)
     return glassSides
 
 def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 53):
-
-    #Solution from https://math.stackexchange.com/questions/656500/given-a-point-slope-and-a-distance-along-that-slope-easily-find-a-second-p
     #* Format of idxs: [max_w, max_h, template shape x, template shape y]
     max_w = idxs[0]
     max_h = idxs[1]
@@ -517,43 +479,42 @@ def grabberPoint(idxs, UpDown, slopes, angle, grabDist = 53):
     template_center_y = round(max_h + templatey / 2)
     template_slope = np.average(slopes)
     r = math.sqrt(1+template_slope**2)
+
     # We have four possible orientation combinations so we need four cases
     # Also, two cases in case the angle is close to 0 (vertical glass)
-    if angle > 1 and UpDown == 1:
+    if angle > 0 and UpDown == 1:
         xgrab = round(template_center_x - grabDist/r)
         ygrab = round(template_center_y - grabDist*template_slope/r)
-    elif angle > 1 and UpDown == 0:
+    elif angle > 0 and UpDown == 0:
         xgrab = round(template_center_x + grabDist/r)
         ygrab = round(template_center_y + grabDist*template_slope/r)
-    elif angle <= -1 and UpDown == 1:
+    elif angle <= 0 and UpDown == 1:
         xgrab = round(template_center_x + grabDist/r)
         ygrab = round(template_center_y + grabDist*template_slope/r)
-    elif angle <= -1 and UpDown == 0:
+    elif angle <= 0 and UpDown == 0:
         xgrab = round(template_center_x - grabDist/r)
         ygrab = round(template_center_y - grabDist*template_slope/r)
-    elif abs(angle) < 1 and UpDown == 1:
-        xgrab = round(template_center_x - grabDist/r)
-        ygrab = round(template_center_y - grabDist*template_slope/r)
-    else:
-        xgrab = round(template_center_x + grabDist/r)
-        ygrab = round(template_center_y + grabDist*template_slope/r)
+
     grabPoint = np.array([xgrab, ygrab])
     grabPointAngle = math.radians(angle) - math.pi / 2
+
+    # Shift the angle by pi to adjust for gripper angle
     if UpDown:
         grabPointAngle += math.pi
-    
+
     return grabPoint, grabPointAngle
 
 def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
-    # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
+    # Performs the template matching
     maxval = 0
-    Acceptthreshold = 190
-    Rejectthreshold = 140
+    Acceptthreshold = 190 # Threshold for "instant" accept
+    Rejectthreshold = 140 # Lower threshold such that bad matches are disregarded
     iterations = 1
-    while iterations < 5 and maxval < Acceptthreshold:
-        h_steps = round((h_steps * iterations / 2))
-        w_steps = round((w_steps * iterations / 2))
-        if houghLocation.size == 12:
+    UpDown = 1 # 1 for up, 0 for down
+    while iterations < 5 and maxval < Acceptthreshold: # Increa
+        h_steps = round((h_steps * iterations / 2)) # Set window size according to iterations
+        w_steps = round((w_steps * iterations / 2)) # Set window size according to iterations
+        if houghLocation.size == 12: # Check if two lines (with 6 parameters each) are found
             slopes = np.array([houghLocation[0], houghLocation[6]])
             if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
                 pointsy = min((houghLocation[2] + houghLocation[8]) / 2, (houghLocation[4] + houghLocation[10]) / 2)
@@ -565,23 +526,21 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
             pointsx = pointsx[pointidx]
             slope_avg = np.average(slopes)
         else:
-            h_steps = round(h_steps * 1.5)
-            w_steps = round(w_steps * 1.5)
+            h_steps = round(h_steps * 1.5 * iterations / 2) # Larger window if one line is found
+            w_steps = round(w_steps * 1.5 * iterations / 2) # Larger window if one line is found
             slope_avg = houghLocation[0]
             pointsy = houghLocation[2]
             pointsx = houghLocation[1]
         if slope_avg >= 50:
-            h_steps = h_steps * 3
-            
+            h_steps = h_steps * 3 # Make the window large if the vial is vertical
+
 
         max_idx = np.empty([1, 2])
         angle_offset = math.degrees(math.atan(slope_avg))
         angle_offset = 90 - abs(angle_offset)
 
-        if angle_offset < 0:
-            angle_offset += 45
         if slope_avg > 0:
-            angle_offset = -angle_offset
+            angle_offset = -angle_offset # Inverted y-axis
 
         template_rot = imutils.rotate_bound(template, angle_offset)
 
@@ -590,7 +549,6 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
 
         # Do & operation in increments, that is moving the template image a few pixels right/down
         # for each iteration and store most pixel hits
-        UpDown = 1 # 1 for up, 0 for down
         max_idx = np.zeros((2,1))
         for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
             for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
@@ -599,13 +557,10 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
                 matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
                 matches = np.count_nonzero(matches)
                 if matches >= maxval:
+                    UpDown = 1
                     maxval = matches
                     max_idx = [h, w]
-                #rotatingim = np.copy(img)
-                #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-                #cv2.imshow('Rotating progress', rotatingim)
-                #cv2.waitKey(5)
-        
+
         template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
         for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
             for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
@@ -617,11 +572,7 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
                     maxval = matches
                     max_idx = [h, w]
                     UpDown = 0
-                #rotatingim = np.copy(img)
-                #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-                #cv2.imshow('Rotating progress', rotatingim)
-                #cv2.waitKey(5)
-        
+
         template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
         if houghLocation.size == 12:
             if (houghLocation[2] + houghLocation[8]) / 2 != (houghLocation[4] + houghLocation[10]) / 2:
@@ -639,8 +590,8 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
         Yshifted = pointsy - template_rot.shape[0] / 2
         Xshifted = pointsx - template_rot.shape[1] / 2
 
-        for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
-            for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
+        for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
+            for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
                 if h - template_rot.shape[0] < 0 or h + template_rot.shape[0] > img.shape[0] or w - template_rot.shape[1] < 0 or w + template_rot.shape[1] > img.shape[1]:
                     break
                 matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
@@ -649,14 +600,10 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
                     UpDown = 1 # 1 for up, 0 for down
                     maxval = matches
                     max_idx = [h, w]
-                #rotatingim = np.copy(img)
-                #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-                #cv2.imshow('Rotating progress', rotatingim)
-                #cv2.waitKey(5)
 
         template_rot = imutils.rotate_bound(template_rot, 180) # Rotate template by 180 deg
-        for h in np.arange(int(Yshifted) + int(h_steps/2), int(Yshifted) - int(h_steps/2), -1):
-            for w in np.arange(int(Xshifted) + int(w_steps/2), int(Xshifted) - int(w_steps/2), -1):
+        for h in np.arange(int(Yshifted) - int(h_steps/2), int(Yshifted) + int(h_steps/2), 1):
+            for w in np.arange(int(Xshifted) - int(w_steps/2), int(Xshifted) + int(w_steps/2), 1):
                 if h - template_rot.shape[0] < 0 or h + template_rot.shape[0] > img.shape[0] or w - template_rot.shape[1] < 0 or w + template_rot.shape[1] > img.shape[1]:
                     break
                 matches = np.logical_and(img[h : h + template_rot.shape[0], w : w + template_rot.shape[1]], template_rot)
@@ -665,10 +612,6 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
                     UpDown = 0 # 1 for up, 0 for down
                     maxval = matches
                     max_idx = [h, w]
-                #rotatingim = np.copy(img)
-                #rotatingim[h : h + template_rot.shape[0], w : w + template_rot.shape[1]] = template_rot
-                #cv2.imshow('Rotating progress', rotatingim)
-                #cv2.waitKey(5)
 
         iterations += 1
     if maxval < Rejectthreshold:
@@ -676,15 +619,15 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
         return None, None, None, None
     max_h = int(max_idx[0])
     max_w = int(max_idx[1])
+    # Get the real world grabbing points
     grabPoint, grabAngle = grabberPoint([max_w, max_h, template_rot.shape[1], template_rot.shape[0]], UpDown, slope_avg, angle_offset)
 
-    # * OVERLAY STUFF***************************************
+    # * OVERLAY * #
     final = np.copy(img)
     final = 255 - final
     final = cv2.cvtColor(final,cv2.COLOR_GRAY2RGB)
 
-    TipOutline = cv2.imread('./images/VialTopRed.png')
-    # * To overlay template use code below
+    TipOutline = cv2.imread('./templates/VialTopRed.png')
     if UpDown == 1:
         Overlay = imutils.rotate_bound(TipOutline, angle_offset)
         final[max_h : max_h + Overlay.shape[0],
@@ -699,7 +642,7 @@ def templatematch(img, template, houghLocation, h_steps = 10, w_steps = 10):
     return final, UpDown, grabPoint, grabAngle
 
 def removeExtras(houghLocation):
-    # * line-pair = |slope1 = a rad | x1start | y1start | x1end | y1end | hyp1 | slope2 = b rad | x2start | y2start | x2end | y2end | hyp2 |
+    # Removes lines in case that more than two lines are passed
     tmp_lines = np.empty([2, 6])
     tmp_dists = 0
     dist_max = 0

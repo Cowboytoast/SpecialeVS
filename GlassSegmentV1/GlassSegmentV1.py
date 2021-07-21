@@ -1,10 +1,6 @@
 import cv2
 import time
-import sys
 import math
-sys.path.append("./images")
-from cv2 import aruco
-
 
 import LineSearchLib as ls
 import PreprocessingLib as prep
@@ -27,21 +23,21 @@ def exitFunc():
     try:
         cam
     except NameError:
-        var_exists = False
+        pass
     else:
         cam.release()
 
     try:
         s
     except NameError:
-        var_exists = False
+        pass
     else:
         s.close()
 
     try:
         thread
     except NameError:
-        var_exists = False
+        pass
     else:
         thread.shutdown()
 
@@ -49,20 +45,20 @@ def exitFunc():
     exit()
 
 #**********************Main loop********************************
-imagecounter = 51
 while True:
     if state == "init":
+        # Sets initial variables and initializes robot connection
         extractCounter = 0
         handOffPos = rl.handOffPosLOT()
         global cam
         cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         offlineFlag = False
         start_time = time.time()
-        template = cv2.imread('./images/VialTop.png', 0) # * Load template
+        template = cv2.imread('./templates/VialTop.png', 0) # * Load template
         cv2.namedWindow("Image")
         ret, img = cam.read()
         if not ret or img.shape != (720, 1280, 3):
-            img = cv2.imread('./final_images/final_setup_5.png')
+            img = cv2.imread('./final_images/final_setup_6.png')
             offlineFlag = True
             cam.release()
         print("Press key to start, ESC to exit")
@@ -72,9 +68,10 @@ while True:
             exitFunc()
         if not offlineFlag:
             rl.robotInit()
-        state = "sourceimg"
+        state = "getimg"
 
-    if state == "sourceimg":
+    if state == "getimg":
+        # Captures images/calibrates/moves the robot to start position
         if statemsg == False:
             print("Press c to calibrate")
             print("Press s to go to start position")
@@ -82,13 +79,14 @@ while True:
             print("Press ESC to exit")
             print("#############################################")
             statemsg = True
+        # Checks if the PC is connected to the camera
         if not offlineFlag:
             ret, img = cam.read()
         cv2.imshow("Image", img)
         k = cv2.waitKey(5)
-        if k%256 == 27:
+        if k%256 == 27: # 'ESC' pressed
             exitFunc()
-        elif k%256 == 99:
+        elif k%256 == 99: # 'c' pressed
             k = -1
             corners = cb.markerCalib(img)
             if corners is not None:
@@ -100,32 +98,29 @@ while True:
                 print("Not enough markers, try again")
                 print("#############################################")
                 statemsg = False
-        elif k%256 == 115:
+        elif k%256 == 115: # 's' pressed
             print("Going to start pos.")
             print("#############################################")
             statemsg = False
-            rl.waitPos()
             rl.startPos()
-        
+        # Processes image
         elif k != -1 and corners is not None:
-            start_time = time.time()
             edges_hough = None
-            img_cropped, img_binary = prep.PrepImg(img, corners, imagecounter)
+            img_cropped, img_binary = prep.PrepImg(img, corners)
             print("Preprocessing time: %s s" % (time.time() - start_time))
             print("#############################################")
             cv2.imshow("Binary image", img_binary)
             cv2.waitKey(5)
-            houghMerged, houghAll, houghLocation = ls.HoughLinesSearch(img_binary, imagecounter)
+            houghMerged, houghAll, houghLocation = ls.HoughLinesSearch(img_binary)
             statemsg = False
             if houghLocation is not None and houghLocation.size > 0:
-                houghLocation = ls.LineExtend(img_binary, houghLocation)
                 houghLocation = ls.removeExtras(houghLocation) # Removes superfluous lines
+                houghLocation = ls.LineExtend(img_binary, houghLocation)
                 houghLocation = np.ndarray.flatten(houghLocation)
                 final, UpDown, grabPoint, grabAngle = ls.templatematch(img_binary, template, houghLocation)
                 if final is not None:
                     statemsg = False
                     k = -1
-                    print("Processing time: %s s" % (time.time() - start_time))
                     print("#############################################")
                     cv2.imshow('Detection', final)
                     print("Press space to initiate pickup")
@@ -133,25 +128,12 @@ while True:
                     print("Press other to retry")
                     print("#############################################")
                     x,y = ls.pixelstocm([grabPoint[0], grabPoint[1]], final.shape)
-                    imagecounter += 1
                     k = cv2.waitKey(0)
                     if k%256 == 27:
                         exitFunc()
                     if k%256 == 32:
                         state = "pickup"
-                        #img_name = "Crop_{}.png".format(imagecounter)
-                        #cv2.imwrite(img_name, img_cropped)
-                        #img_name = "Binary_{}.png".format(imagecounter)
-                        #cv2.imwrite(img_name, img_binary)
-                        #img_name = "Merged_{}.png".format(imagecounter)
-                        #cv2.imwrite(img_name, houghMerged)
-                        #img_name = "Lines_{}.png".format(imagecounter)
-                        #cv2.imwrite(img_name, houghAll)
-                        #img_name = "Detection_{}.png".format(imagecounter)
-                        #cv2.imwrite(img_name, final)
-                        #imagecounter += 1
             else:
-                imagecounter += 1
                 print("Not enough lines found")
                 print("#############################################")
                 statemsg = False
@@ -161,4 +143,4 @@ while True:
         print('Angle of %f deg' %(math.degrees(grabAngle)))
         print("#############################################")
         rl.robotRunV2(x, y, rz = grabAngle)
-        state = "sourceimg"
+        state = "getimg"

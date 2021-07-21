@@ -1,5 +1,0 @@
-Calibration points for our Lumie box on
-the yellow tape:
-P0: [-436, 172.46, 906.56]
-Px: [-457.53, -82.02, 906.27]
-Py: [-268.78, 160.50, 907.45]

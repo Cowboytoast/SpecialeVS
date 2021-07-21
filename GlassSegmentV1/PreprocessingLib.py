@@ -1,17 +1,14 @@
 import cv2
 import numpy as np
-import CalibrationLib as cb
-from skimage.util import img_as_ubyte
-from skimage import morphology
 
-def PrepImg(img, corners, imagecounter):
+def PrepImg(img, corners):
     # * Chain should be:
     # * Crop -> Resize to (H,W = 403, 550) -> Cvt to gray -> ...
     # * Hist. stretch -> Blur (rad. = (3,3), SigmaX = 7) -> ...
     # * Unsharp mask (Size (3,3), amount 1, thresh. .131) -> ...
     # * Laplacian edge (delta = 5) -> Cvt. to UByte -> ...
     # * Threshold @ 35
-    #img = img[155:550, 304:902]
+    # Check if corners is not defined meaning that the system is not calibrated
     try:
         if corners == 0: # In case of no calibration
             corners = np.empty([4, 2], dtype = np.uint32)
@@ -27,9 +24,7 @@ def PrepImg(img, corners, imagecounter):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = cv2.equalizeHist(img)
     img = cv2.GaussianBlur(img, (3,3), 7)
-    #img = unsharp_mask(img, kernel_size = (3,3), amount = 1, threshold = 0.131)
     img = cv2.Laplacian(img, ddepth = cv2.CV_8U, delta = 5)
-    img = img_as_ubyte(img)
     img = cv2.threshold(img, 12, maxval = 255, type = cv2.THRESH_BINARY)
     img = img[1]
 
@@ -42,29 +37,6 @@ def PrepImg(img, corners, imagecounter):
             cv2.drawContours(img, [c], -1, (0,0,0), -1)
 
     return img_cropped, img
-
-# * Histogram stretching function
-def HistStretch(img):
-    tmp = img.copy()
-    maxval = tmp.max()
-    minval = tmp.min()
-    for height in range(img.shape[0]):
-        for width in range(img.shape[1]):
-            tmp[height, width] = ((tmp[height, width] - minval) / (maxval - minval)) * 255
-    return tmp
-
-# https://stackoverflow.com/questions/4993082/how-can-i-sharpen-an-image-in-opencv
-def unsharp_mask(image, kernel_size=(5, 5), sigma=1.0, amount=1.0, threshold=0):
-    #*Return a sharpened version of the image, using an unsharp mask
-    blurred = cv2.GaussianBlur(image, kernel_size, sigma)
-    sharpened = float(amount + 1) * image - float(amount) * blurred
-    sharpened = np.maximum(sharpened, np.zeros(sharpened.shape))
-    sharpened = np.minimum(sharpened, 255 * np.ones(sharpened.shape))
-    sharpened = sharpened.round().astype(np.uint8)
-    if threshold > 0:
-        low_contrast_mask = np.absolute(image - blurred) < threshold
-        np.copyto(sharpened, image, where=low_contrast_mask)
-    return sharpened
 
 # * Resize image to fit screen while keeping aspect ratio
 def ResizeToFit(oriimg, H = 980, W = 1820):
